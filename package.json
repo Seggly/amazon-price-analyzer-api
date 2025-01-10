@@ -1,0 +1,13 @@
+{
+  "name": "amazon-price-analyzer-api",
+  "version": "1.0.0",
+  "description": "Backend API for Amazon Price Analyzer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@vercel/node": "^3.0.7",
+    "cors": "^2.8.5"
+  }
+}
