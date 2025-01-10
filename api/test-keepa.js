@@ -29,22 +29,17 @@ function convertKeepaTime(keepaMinutes) {
 function processKeepaData(rawData) {
     const csvData = rawData.products[0].csv;
     const processedData = {
-      amazon: processTimeSeries(csvData[0]),
-      new: processTimeSeries(csvData[1]),
-      fba: processTimeSeries(csvData[11])
+        new: processTimeSeries(csvData[1]) // Only process NEW price history
     };
-  
+
     const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-    const recentData = {};
-    for (const [category, prices] of Object.entries(processedData)) {
-      let startIndex = prices.findIndex(p => p.timestamp >= ninetyDaysAgo);
-      if (startIndex > 0) startIndex--;
-      recentData[category] = startIndex === -1 ? prices : prices.slice(startIndex);
-    }
-  
+    const recentData = {
+        new: processedData.new.filter(point => point.timestamp >= ninetyDaysAgo)
+    };
+
     const analysis = {};
-    for (const [category, data] of Object.entries(recentData)) {
-      if (data.length > 0) {
+    if (recentData.new.length > 0) {
+        const data = recentData.new;
         const lowestPrice = Math.min(...data.map(p => p.price));
         const highestPrice = Math.max(...data.map(p => p.price));
         const usualPriceAnalysis = findUsualPrice(data);
@@ -52,53 +47,52 @@ function processKeepaData(rawData) {
         const lastMovementAnalysis = analyzeLastPriceMovement(data);
         const stabilityAnalysis = analyzePriceStability(data);
         const lowestPriceMetrics = analyzeTimeAtPrice(data, lowestPrice);
-  
-        analysis[category] = {
-          currentPriceContext: {
-            currentPrice: data[data.length - 1].price,
-            usualPrice: {
-              price: usualPriceAnalysis.price,
-              percentageOfTime: usualPriceAnalysis.percentageOfTime
+
+        analysis.new = {
+            currentPriceContext: {
+                currentPrice: data[data.length - 1].price,
+                usualPrice: {
+                    price: usualPriceAnalysis.price,
+                    percentageOfTime: usualPriceAnalysis.percentageOfTime
+                },
+                lowestPrice: lowestPrice,
+                highestPrice: highestPrice
             },
-            lowestPrice: lowestPrice,
-            highestPrice: highestPrice
-          },
-          priceDrops: {
-            total: priceDropsAnalysis.count,
-            averageDrop: priceDropsAnalysis.averageAmount,
-            daysSinceLastDrop: priceDropsAnalysis.daysSinceLastDrop
-          },
-          recentActivity: {
-            stableDays: stabilityAnalysis.stableDays,
-            lastChange: lastMovementAnalysis ? {
-              amount: lastMovementAnalysis.amount,
-              percentage: lastMovementAnalysis.percentage,
-              direction: lastMovementAnalysis.direction,
-              daysAgo: lastMovementAnalysis.daysAgo
-            } : null
-          },
-          volatilityMetrics: {
-            totalChanges: data.length - 1,
-            priceRange: {
-              min: lowestPrice,
-              max: highestPrice,
-              spread: Math.round((highestPrice - lowestPrice) * 100) / 100
+            priceDrops: {
+                total: priceDropsAnalysis.count,
+                averageDrop: priceDropsAnalysis.averageAmount,
+                daysSinceLastDrop: priceDropsAnalysis.daysSinceLastDrop
+            },
+            recentActivity: {
+                stableDays: stabilityAnalysis.stableDays,
+                lastChange: lastMovementAnalysis ? {
+                    amount: lastMovementAnalysis.amount,
+                    percentage: lastMovementAnalysis.percentage,
+                    direction: lastMovementAnalysis.direction,
+                    daysAgo: lastMovementAnalysis.daysAgo
+                } : null
+            },
+            volatilityMetrics: {
+                totalChanges: data.length - 1,
+                priceRange: {
+                    min: lowestPrice,
+                    max: highestPrice,
+                    spread: Math.round((highestPrice - lowestPrice) * 100) / 100
+                }
+            },
+            lowestPriceMetrics: {
+                price: lowestPrice,
+                durationDays: lowestPriceMetrics.totalDurationDays,
+                lastSeen: Math.floor((Date.now() - data.find(p => Math.abs(p.price - lowestPrice) < 0.01).timestamp) / (24 * 60 * 60 * 1000))
             }
-          },
-          lowestPriceMetrics: {
-            price: lowestPrice,
-            durationDays: lowestPriceMetrics.totalDurationDays,
-            lastSeen: Math.floor((Date.now() - data.find(p => Math.abs(p.price - lowestPrice) < 0.01).timestamp) / (24 * 60 * 60 * 1000))
-          }
         };
-      }
     }
-  
+
     return {
-      analysis: analysis,
-      priceHistory: recentData
+        analysis: analysis,
+        priceHistory: recentData
     };
-  }
+}
 
 // Convert Keepa's raw data into timestamp/price pairs
 function processTimeSeries(data) {
