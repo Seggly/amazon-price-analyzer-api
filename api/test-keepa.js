@@ -192,8 +192,7 @@ export default async function handler(req, res) {
       try {
         const { asin } = req.body;
         const keepaApiKey = process.env.KEEPA_API_KEY;
-        const response = await fetch(`https://api.keepa.com/product?key=${keepaApiKey}&domain=1&asin=${asin}`);
-        const keepaData = await response.json();
+        const response = await fetch(`https://api.keepa.com/product?key=${keepaApiKey}&domain=1&asin=${asin}&maxLength=90`);        const keepaData = await response.json();
         
         const result = processKeepaData(keepaData);
         
