@@ -28,43 +28,46 @@ function convertKeepaTime(keepaMinutes) {
 
 // Process price history from Keepa
 function processKeepaData(rawData) {
-  const csvData = rawData.products[0].csv;
-  const processedData = {
-    amazon: processTimeSeries(csvData[0]), // AMAZON price history
-    new: processTimeSeries(csvData[1]),    // NEW price history
-    fba: processTimeSeries(csvData[11])    // NEW FBA price history
-  };
-
-  // Get last 90 days of data
-  const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+    const csvData = rawData.products[0].csv;
+    const processedData = {
+      amazon: processTimeSeries(csvData[0]),
+      new: processTimeSeries(csvData[1]),
+      fba: processTimeSeries(csvData[11])
+    };
   
-  const analysis = {};
-  for (const [category, data] of Object.entries(processedData)) {
-    const recentData = data.filter(point => point.timestamp >= ninetyDaysAgo);
-    
-    if (recentData.length > 0) {
-      const priceDrops = analyzePriceDrops(recentData);
-      const lastMovement = analyzeLastPriceMovement(recentData);
-      const stability = analyzePriceStability(recentData);
-      const usualPrice = findUsualPrice(recentData);
-
-      analysis[category] = {
-        currentPrice: recentData[recentData.length - 1].price,
-        lowestPrice: Math.min(...recentData.map(p => p.price)),
-        highestPrice: Math.max(...recentData.map(p => p.price)),
-        usualPrice: usualPrice,
-        averagePrice: calculateAverage(recentData.map(p => p.price)),
-        priceDrops: priceDrops,
-        lastMovement: lastMovement,
-        priceStability: stability
-      };
+    const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+    const recentData = {
+      amazon: processedData.amazon.filter(point => point.timestamp >= ninetyDaysAgo),
+      new: processedData.new.filter(point => point.timestamp >= ninetyDaysAgo),
+      fba: processedData.fba.filter(point => point.timestamp >= ninetyDaysAgo)
+    };
+  
+    const analysis = {};
+    for (const [category, data] of Object.entries(recentData)) {
+      if (data.length > 0) {
+        const priceDrops = analyzePriceDrops(data);
+        const lastMovement = analyzeLastPriceMovement(data);
+        const stability = analyzePriceStability(data);
+        const usualPrice = findUsualPrice(data);
+  
+        analysis[category] = {
+          currentPrice: data[data.length - 1].price,
+          lowestPrice: Math.min(...data.map(p => p.price)),
+          highestPrice: Math.max(...data.map(p => p.price)),
+          usualPrice: usualPrice,
+          averagePrice: calculateAverage(data.map(p => p.price)),
+          priceDrops: priceDrops,
+          lastMovement: lastMovement,
+          priceStability: stability
+        };
+      }
     }
+  
+    return {
+      analysis: analysis,
+      priceHistory: processedData
+    };
   }
-  return {
-    analysis: analysis,
-    priceHistory: processedData  // Return the entire processedData object
-  };
-}
 
 // Convert Keepa's raw data into timestamp/price pairs
 function processTimeSeries(data) {
