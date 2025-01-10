@@ -26,7 +26,6 @@ function convertKeepaTime(keepaMinutes) {
   return (keepaMinutes + 21564000) * 60000;
 }
 
-// Process price history from Keepa
 function processKeepaData(rawData) {
     const csvData = rawData.products[0].csv;
     const processedData = {
@@ -65,7 +64,7 @@ function processKeepaData(rawData) {
   
     return {
       analysis: analysis,
-      priceHistory: processedData
+      priceHistory: recentData
     };
   }
 
@@ -196,10 +195,8 @@ export default async function handler(req, res) {
         const response = await fetch(`https://api.keepa.com/product?key=${keepaApiKey}&domain=1&asin=${asin}`);
         const keepaData = await response.json();
         
-        return {
-            analysis: analysis,
-            priceHistory: recentData  // Changed from processedData to recentData
-          };        
+        const result = processKeepaData(keepaData);
+        
         res.status(200).json({
           success: true,
           asin: asin,
