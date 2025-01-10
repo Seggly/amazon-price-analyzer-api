@@ -25,7 +25,22 @@ const corsMiddleware = initMiddleware(
 function convertKeepaTime(keepaMinutes) {
   return (keepaMinutes + 21564000) * 60000;
 }
+// Add this after calculateAverage and before processKeepaData
+function calculateMeterScore(currentPrice, usualPrice, lowestPrice, highestPrice) {
+    // Edge cases
+    if (currentPrice <= lowestPrice) return 100;
+    if (currentPrice >= highestPrice) return 0;
+    if (Math.abs(currentPrice - usualPrice) < 0.01) return 50;
 
+    // Calculate score based on position relative to usual price
+    if (currentPrice < usualPrice) {
+        // Price is below usual price (50-100%)
+        return 50 + (50 * (usualPrice - currentPrice) / (usualPrice - lowestPrice));
+    } else {
+        // Price is above usual price (0-50%)
+        return 50 - (50 * (currentPrice - usualPrice) / (highestPrice - usualPrice));
+    }
+}
 function processKeepaData(rawData) {
     const csvData = rawData.products[0].csv;
     const processedData = {
@@ -49,6 +64,18 @@ function processKeepaData(rawData) {
         const lowestPriceMetrics = analyzeTimeAtPrice(data, lowestPrice);
 
         analysis.new = {
+            meterScore: {
+                score: Math.round(calculateMeterScore(
+                    data[data.length - 1].price,  // Current price
+                    usualPriceAnalysis.price,     // Usual price
+                    lowestPrice,                  // Lowest price
+                    highestPrice                  // Highest price
+                )),
+                currentPrice: data[data.length - 1].price,
+                usualPrice: usualPriceAnalysis.price,
+                lowestPrice: lowestPrice,
+                highestPrice: highestPrice
+            },
             currentPriceContext: {
                 currentPrice: data[data.length - 1].price,
                 usualPrice: {

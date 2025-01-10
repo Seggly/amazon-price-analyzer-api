@@ -132,10 +132,22 @@ function createDataTable(data) {
             // Process insights
             for (const [category, info] of Object.entries(data.analysis)) {
                 insightsHTML += `
-                    <h2>${category.toUpperCase()} Prices</h2>
-                    
-                    <div class="insight-group">
-                        <h3>Current Price Context</h3>
+    <h2>${category.toUpperCase()} Prices</h2>
+    
+    <div class="insight-group">
+        <h3>Buy Now Score</h3>
+        <p style="font-size: 24px; text-align: center;">
+            <span class="highlight" style="font-size: 48px;">
+                ${info.meterScore.score}%
+            </span>
+        </p>
+        <p style="text-align: center; color: ${getScoreColor(info.meterScore.score)};">
+            ${getScoreMessage(info.meterScore.score)}
+        </p>
+    </div>
+
+    <div class="insight-group">
+        <h3>Current Price Context</h3>
                         <p>Current Price: <span class="highlight">${formatPrice(info.currentPriceContext.currentPrice)}</span></p>
                         <p>Usual Price: ${formatPrice(info.currentPriceContext.usualPrice.price)} 
                            (${info.currentPriceContext.usualPrice.percentageOfTime}% of the time)</p>
@@ -175,7 +187,17 @@ function createDataTable(data) {
             }
             
             insightsDiv.innerHTML = insightsHTML;
+            function getScoreColor(score) {
+    if (score >= 70) return '#4CAF50'; // Green
+    if (score >= 40) return '#FFA726'; // Orange
+    return '#F44336'; // Red
+}
 
+function getScoreMessage(score) {
+    if (score >= 70) return 'Great time to buy!';
+    if (score >= 40) return 'Fair price';
+    return 'Wait for a better price';
+}
             // Process price history
             priceDataDiv.innerHTML = createDataTable(data.priceHistory);
         } else {
