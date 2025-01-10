@@ -28,36 +28,37 @@ function convertKeepaTime(keepaMinutes) {
 
 function processKeepaData(rawData) {
     const csvData = rawData.products[0].csv;
+    const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+  
+    // Process each price type (amazon, new, fba)
     const processedData = {
       amazon: processTimeSeries(csvData[0]),
       new: processTimeSeries(csvData[1]),
       fba: processTimeSeries(csvData[11])
     };
   
-    const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-    const recentData = {
-      amazon: processedData.amazon.filter(point => point.timestamp >= ninetyDaysAgo),
-      new: processedData.new.filter(point => point.timestamp >= ninetyDaysAgo),
-      fba: processedData.fba.filter(point => point.timestamp >= ninetyDaysAgo)
-    };
+    // Filter to include prices that were active during the last 90 days
+    const recentData = {};
+    for (const [category, prices] of Object.entries(processedData)) {
+      // Include the last price before 90 days ago (if it exists) as it was still active
+      let startIndex = prices.findIndex(p => p.timestamp >= ninetyDaysAgo);
+      if (startIndex > 0) startIndex--;
+      
+      recentData[category] = startIndex === -1 ? prices : prices.slice(startIndex);
+    }
   
+    // Process analysis for each category
     const analysis = {};
     for (const [category, data] of Object.entries(recentData)) {
       if (data.length > 0) {
-        const priceDrops = analyzePriceDrops(data);
-        const lastMovement = analyzeLastPriceMovement(data);
-        const stability = analyzePriceStability(data);
-        const usualPrice = findUsualPrice(data);
-  
         analysis[category] = {
           currentPrice: data[data.length - 1].price,
           lowestPrice: Math.min(...data.map(p => p.price)),
           highestPrice: Math.max(...data.map(p => p.price)),
-          usualPrice: usualPrice,
-          averagePrice: calculateAverage(data.map(p => p.price)),
-          priceDrops: priceDrops,
-          lastMovement: lastMovement,
-          priceStability: stability
+          usualPrice: findUsualPrice(data),
+          priceDrops: analyzePriceDrops(data),
+          lastMovement: analyzeLastPriceMovement(data),
+          priceStability: analyzePriceStability(data)
         };
       }
     }
@@ -91,91 +92,105 @@ function processTimeSeries(data) {
 
 // Find the most common price
 function findUsualPrice(data) {
-  const priceFrequency = {};
-  let maxFrequency = 0;
-  let usualPrice = null;
-
-  data.forEach(point => {
-    const price = Math.round(point.price * 100) / 100; // Round to 2 decimal places
-    priceFrequency[price] = (priceFrequency[price] || 0) + 1;
+    if (data.length === 0) return null;
     
-    if (priceFrequency[price] > maxFrequency) {
-      maxFrequency = priceFrequency[price];
-      usualPrice = price;
+    const now = Date.now();
+    const priceTimePeriods = {};
+    
+    // For each price, it's valid from its timestamp until the next price change
+    for (let i = 0; i < data.length; i++) {
+      const price = Math.round(data[i].price * 100) / 100;
+      const startTime = data[i].timestamp;
+      const endTime = (i === data.length - 1) ? now : data[i + 1].timestamp;
+      const duration = endTime - startTime;
+      
+      priceTimePeriods[price] = (priceTimePeriods[price] || 0) + duration;
     }
-  });
-
-  return {
-    price: usualPrice,
-    frequency: maxFrequency,
-    percentageOfTime: Math.round((maxFrequency / data.length) * 100)
-  };
-}
+  
+    let maxDuration = 0;
+    let usualPrice = null;
+    const totalDuration = Object.values(priceTimePeriods).reduce((sum, duration) => sum + duration, 0);
+  
+    for (const [price, duration] of Object.entries(priceTimePeriods)) {
+      if (duration > maxDuration) {
+        maxDuration = duration;
+        usualPrice = parseFloat(price);
+      }
+    }
+  
+    return {
+      price: usualPrice,
+      durationDays: Math.round(maxDuration / (1000 * 60 * 60 * 24)),
+      percentageOfTime: Math.round((maxDuration / totalDuration) * 100)
+    };
+  }
 
 // Analyze price drops in the data
 function analyzePriceDrops(data) {
-  const drops = [];
-  for (let i = 1; i < data.length; i++) {
-    const priceDiff = data[i].price - data[i-1].price;
-    if (priceDiff < -0.01) { // Only count drops more than 1 cent
-      drops.push({
-        amount: Math.abs(priceDiff),
-        timestamp: data[i].timestamp
-      });
+    const drops = [];
+    const now = Date.now();
+    let lastDrop = null;
+  
+    for (let i = 1; i < data.length; i++) {
+      const priceDiff = data[i].price - data[i-1].price;
+      if (priceDiff < -0.01) { // Only count drops more than 1 cent
+        drops.push({
+          fromPrice: data[i-1].price,
+          toPrice: data[i].price,
+          amount: Math.abs(priceDiff),
+          timestamp: data[i].timestamp,
+          duration: (i === data.length - 1) ? now - data[i].timestamp : data[i + 1].timestamp - data[i].timestamp
+        });
+        lastDrop = data[i].timestamp;
+      }
     }
+  
+    return {
+      count: drops.length,
+      averageAmount: drops.length > 0 
+        ? Math.round((drops.reduce((sum, drop) => sum + drop.amount, 0) / drops.length) * 100) / 100
+        : 0,
+      daysSinceLastDrop: lastDrop ? Math.floor((now - lastDrop) / (24 * 60 * 60 * 1000)) : null,
+      drops: drops // Including detailed drop history
+    };
   }
-
-  const lastDrop = drops[drops.length - 1];
-  const daysSinceLastDrop = lastDrop 
-    ? Math.floor((Date.now() - lastDrop.timestamp) / (24 * 60 * 60 * 1000))
-    : null;
-
-  return {
-    count: drops.length,
-    averageAmount: drops.length > 0 
-      ? Math.round((drops.reduce((sum, drop) => sum + drop.amount, 0) / drops.length) * 100) / 100
-      : 0,
-    daysSinceLastDrop: daysSinceLastDrop
-  };
-}
 
 // Analyze the most recent price change
 function analyzeLastPriceMovement(data) {
-  if (data.length < 2) return null;
-
-  const lastPrice = data[data.length - 1].price;
-  const previousPrice = data[data.length - 2].price;
-  const change = lastPrice - previousPrice;
-  const percentChange = (change / previousPrice) * 100;
-  const daysAgo = Math.floor((Date.now() - data[data.length - 1].timestamp) / (24 * 60 * 60 * 1000));
-
-  return {
-    amount: Math.round(change * 100) / 100,
-    percentage: Math.round(percentChange * 10) / 10,
-    daysAgo: daysAgo,
-    direction: change > 0 ? 'increase' : change < 0 ? 'decrease' : 'stable'
-  };
-}
+    if (data.length < 2) return null;
+  
+    const lastEntry = data[data.length - 1];
+    const previousEntry = data[data.length - 2];
+    const change = lastEntry.price - previousEntry.price;
+    const percentChange = (change / previousEntry.price) * 100;
+    
+    return {
+      from: previousEntry.price,
+      to: lastEntry.price,
+      amount: Math.round(change * 100) / 100,
+      percentage: Math.round(percentChange * 10) / 10,
+      daysAgo: Math.floor((Date.now() - lastEntry.timestamp) / (24 * 60 * 60 * 1000)),
+      direction: change > 0 ? 'increase' : change < 0 ? 'decrease' : 'stable',
+      timestamp: lastEntry.timestamp
+    };
+  }
 
 // Analyze how long the price has been stable
 function analyzePriceStability(data) {
-  if (data.length < 2) return { stableDays: 0 };
-
-  let stableDays = 0;
-  const lastPrice = data[data.length - 1].price;
-  const threshold = 0.01; // 1 cent threshold
-
-  for (let i = data.length - 2; i >= 0; i--) {
-    if (Math.abs(data[i].price - lastPrice) > threshold) {
-      break;
-    }
-    stableDays = Math.floor((data[data.length - 1].timestamp - data[i].timestamp) / (24 * 60 * 60 * 1000));
+    if (data.length === 0) return { stableDays: 0 };
+  
+    const now = Date.now();
+    const lastPrice = data[data.length - 1].price;
+    const lastPriceStartTime = data[data.length - 1].timestamp;
+    
+    // If there's only one entry or it's the last entry
+    const stableDays = Math.floor((now - lastPriceStartTime) / (24 * 60 * 60 * 1000));
+  
+    return {
+      stableDays: stableDays,
+      price: lastPrice
+    };
   }
-
-  return {
-    stableDays: stableDays
-  };
-}
 
 // Calculate average price
 function calculateAverage(prices) {
