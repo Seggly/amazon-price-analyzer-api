@@ -178,8 +178,16 @@ th {
                 rawDiv.textContent = 'Error occurred';
                 console.error('Full error:', error);
             }
-            document.getElementById('priceData').innerHTML = createDataTable(data.priceHistory);
-
+            if (data.success) {
+    let insightsHTML = ''; // existing insights code here...
+    
+    insightsDiv.innerHTML = insightsHTML;
+    
+    // Add this for price history
+    document.getElementById('priceData').innerHTML = createDataTable(data.priceHistory);
+} else {
+    throw new Error(data.error || 'Unknown error');
+}
         }
     </script>
 </body>
