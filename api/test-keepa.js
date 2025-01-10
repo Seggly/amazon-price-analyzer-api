@@ -60,7 +60,14 @@ function processKeepaData(rawData) {
       };
     }
   }
-
+  return {
+    analysis: analysis,
+    priceHistory: {
+      amazon: processedData.amazon,
+      new: processedData.new,
+      fba: processedData.fba
+    }
+  };
   return analysis;
 }
 
@@ -199,7 +206,8 @@ export default async function handler(req, res) {
       res.status(200).json({
         success: true,
         asin: asin,
-        analysis: analysis
+        analysis: analysis,
+        priceHistory: priceHistory
       });
     } catch (error) {
       res.status(500).json({
