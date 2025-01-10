@@ -62,13 +62,8 @@ function processKeepaData(rawData) {
   }
   return {
     analysis: analysis,
-    priceHistory: {
-      amazon: processedData.amazon,
-      new: processedData.new,
-      fba: processedData.fba
-    }
+    priceHistory: processedData  // Return the entire processedData object
   };
-  return analysis;
 }
 
 // Convert Keepa's raw data into timestamp/price pairs
@@ -189,33 +184,30 @@ function calculateAverage(prices) {
 
 // Main API handler
 export default async function handler(req, res) {
-  await corsMiddleware(req, res);
-
-  if (req.method === 'POST') {
-    try {
-      const { asin } = req.body;
-      
-      // Fetch data from Keepa
-      const keepaApiKey = process.env.KEEPA_API_KEY;
-      const response = await fetch(`https://api.keepa.com/product?key=${keepaApiKey}&domain=1&asin=${asin}`);
-      const keepaData = await response.json();
-      
-      // Process the data
-      const analysis = processKeepaData(keepaData);
-      
-      res.status(200).json({
-        success: true,
-        asin: asin,
-        analysis: analysis,
-        priceHistory: priceHistory
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+    await corsMiddleware(req, res);
+  
+    if (req.method === 'POST') {
+      try {
+        const { asin } = req.body;
+        const keepaApiKey = process.env.KEEPA_API_KEY;
+        const response = await fetch(`https://api.keepa.com/product?key=${keepaApiKey}&domain=1&asin=${asin}`);
+        const keepaData = await response.json();
+        
+        const result = processKeepaData(keepaData);
+        
+        res.status(200).json({
+          success: true,
+          asin: asin,
+          analysis: result.analysis,
+          priceHistory: result.priceHistory
+        });
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
+    } else {
+      res.status(405).json({ error: 'Method not allowed' });
     }
-  } else {
-    res.status(405).json({ error: 'Method not allowed' });
   }
-}
