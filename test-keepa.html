@@ -44,6 +44,22 @@
             width: 300px;
             margin-right: 10px;
         }
+        .price-insights {
+            background: #f3f3f3;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .insight-group {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+        .highlight {
+            color: #2196F3;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -54,7 +70,7 @@
         <button onclick="testAPI()">Test ASIN</button>
     </div>
 
-    <div class="summary" id="summary"></div>
+    <div class="price-insights" id="insights"></div>
     
     <div class="results">
         <div>
@@ -68,14 +84,18 @@
     </div>
 
     <script>
+        function formatPrice(price) {
+            return price ? `$${price.toFixed(2)}` : 'N/A';
+        }
+
         async function testAPI() {
             const asin = document.getElementById('asin').value;
-            const summaryDiv = document.getElementById('summary');
+            const insightsDiv = document.getElementById('insights');
             const processedDiv = document.getElementById('processed');
             const rawDiv = document.getElementById('raw');
 
             try {
-                summaryDiv.innerHTML = 'Loading...';
+                insightsDiv.innerHTML = 'Loading...';
                 processedDiv.textContent = 'Loading...';
                 rawDiv.textContent = 'Loading...';
 
@@ -90,23 +110,35 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Display summary
-                    let summaryHTML = '<h2>Quick Summary:</h2>';
+                    // Display detailed insights
+                    let insightsHTML = '';
                     for (const [category, info] of Object.entries(data.analysis)) {
-                        summaryHTML += `
-                            <h3>${category.toUpperCase()}</h3>
-                            <p>
-                                Current Price: $${info.currentPrice}<br>
-                                Lowest Price: $${info.lowestPrice}<br>
-                                Highest Price: $${info.highestPrice}<br>
-                                Average Price: $${info.averagePrice}<br>
-                                Most Frequent Price: $${info.mostFrequentPrice.price} (${info.mostFrequentPrice.frequency} times)<br>
-                                Price Changes: ${info.priceChanges} times<br>
-                                Price Range: $${info.priceRange.min} - $${info.priceRange.max} (spread: $${info.priceRange.range})
-                            </p>
+                        insightsHTML += `
+                            <h2>${category.toUpperCase()} Prices</h2>
+                            
+                            <div class="insight-group">
+                                <h3>Current Status</h3>
+                                <p>Current Price: <span class="highlight">${formatPrice(info.currentPrice)}</span></p>
+                                <p>Usual Price: ${formatPrice(info.usualPrice)} (occurs ${info.usualPriceFrequency} times, ${info.usualPriceFrequency}% of time)</p>
+                                <p>Price Range: ${formatPrice(info.priceRange.min)} - ${formatPrice(info.priceRange.max)}</p>
+                            </div>
+
+                            <div class="insight-group">
+                                <h3>Historical Price Context</h3>
+                                <p>Price Drops in Last 90 Days: ${info.priceDrops.count}</p>
+                                <p>Average Drop Amount: ${formatPrice(info.priceDrops.averageAmount)}</p>
+                                <p>Days Since Last Drop: ${info.priceDrops.daysSinceLastDrop}</p>
+                                <p>Lowest Price: ${formatPrice(info.lowestPrice)} (seen ${info.lowestPriceFrequency.occurrences} times, last seen ${info.lowestPriceFrequency.lastSeen.daysAgo} days ago)</p>
+                            </div>
+
+                            <div class="insight-group">
+                                <h3>Recent Price Trends</h3>
+                                <p>Last Movement: ${info.lastMovement.formatted}</p>
+                                <p>Price Stability: ${info.priceStability.formatted}</p>
+                            </div>
                         `;
                     }
-                    summaryDiv.innerHTML = summaryHTML;
+                    insightsDiv.innerHTML = insightsHTML;
 
                     // Display processed data
                     processedDiv.textContent = JSON.stringify(data.analysis, null, 2);
@@ -117,7 +149,7 @@
                     throw new Error(data.error || 'Unknown error');
                 }
             } catch (error) {
-                summaryDiv.innerHTML = `<p style="color: red">Error: ${error.message}</p>`;
+                insightsDiv.innerHTML = `<p style="color: red">Error: ${error.message}</p>`;
                 processedDiv.textContent = 'Error occurred';
                 rawDiv.textContent = 'Error occurred';
                 console.error('Full error:', error);
