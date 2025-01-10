@@ -28,8 +28,8 @@ function convertKeepaTime(keepaMinutes) {
 // Add this after calculateAverage and before processKeepaData
 function calculateMeterScore(currentPrice, usualPrice, lowestPrice, highestPrice) {
     // Edge cases
-    if (currentPrice <= lowestPrice) return 100;
-    if (currentPrice >= highestPrice) return 0;
+    if (currentPrice < lowestPrice) return 100;
+    if (currentPrice > highestPrice) return 0;
     if (Math.abs(currentPrice - usualPrice) < 0.01) return 50;
 
     // Calculate score based on position relative to usual price
