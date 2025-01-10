@@ -28,37 +28,68 @@ function convertKeepaTime(keepaMinutes) {
 
 function processKeepaData(rawData) {
     const csvData = rawData.products[0].csv;
-    const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-  
-    // Process each price type (amazon, new, fba)
     const processedData = {
       amazon: processTimeSeries(csvData[0]),
       new: processTimeSeries(csvData[1]),
       fba: processTimeSeries(csvData[11])
     };
   
-    // Filter to include prices that were active during the last 90 days
+    const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
     const recentData = {};
     for (const [category, prices] of Object.entries(processedData)) {
-      // Include the last price before 90 days ago (if it exists) as it was still active
       let startIndex = prices.findIndex(p => p.timestamp >= ninetyDaysAgo);
       if (startIndex > 0) startIndex--;
-      
       recentData[category] = startIndex === -1 ? prices : prices.slice(startIndex);
     }
   
-    // Process analysis for each category
     const analysis = {};
     for (const [category, data] of Object.entries(recentData)) {
       if (data.length > 0) {
+        const lowestPrice = Math.min(...data.map(p => p.price));
+        const highestPrice = Math.max(...data.map(p => p.price));
+        const usualPriceAnalysis = findUsualPrice(data);
+        const priceDropsAnalysis = analyzePriceDrops(data);
+        const lastMovementAnalysis = analyzeLastPriceMovement(data);
+        const stabilityAnalysis = analyzePriceStability(data);
+        const lowestPriceMetrics = analyzeTimeAtPrice(data, lowestPrice);
+  
         analysis[category] = {
-          currentPrice: data[data.length - 1].price,
-          lowestPrice: Math.min(...data.map(p => p.price)),
-          highestPrice: Math.max(...data.map(p => p.price)),
-          usualPrice: findUsualPrice(data),
-          priceDrops: analyzePriceDrops(data),
-          lastMovement: analyzeLastPriceMovement(data),
-          priceStability: analyzePriceStability(data)
+          currentPriceContext: {
+            currentPrice: data[data.length - 1].price,
+            usualPrice: {
+              price: usualPriceAnalysis.price,
+              percentageOfTime: usualPriceAnalysis.percentageOfTime
+            },
+            lowestPrice: lowestPrice,
+            highestPrice: highestPrice
+          },
+          priceDrops: {
+            total: priceDropsAnalysis.count,
+            averageDrop: priceDropsAnalysis.averageAmount,
+            daysSinceLastDrop: priceDropsAnalysis.daysSinceLastDrop
+          },
+          recentActivity: {
+            stableDays: stabilityAnalysis.stableDays,
+            lastChange: lastMovementAnalysis ? {
+              amount: lastMovementAnalysis.amount,
+              percentage: lastMovementAnalysis.percentage,
+              direction: lastMovementAnalysis.direction,
+              daysAgo: lastMovementAnalysis.daysAgo
+            } : null
+          },
+          volatilityMetrics: {
+            totalChanges: data.length - 1,
+            priceRange: {
+              min: lowestPrice,
+              max: highestPrice,
+              spread: Math.round((highestPrice - lowestPrice) * 100) / 100
+            }
+          },
+          lowestPriceMetrics: {
+            price: lowestPrice,
+            durationDays: lowestPriceMetrics.totalDurationDays,
+            lastSeen: Math.floor((Date.now() - data.find(p => Math.abs(p.price - lowestPrice) < 0.01).timestamp) / (24 * 60 * 60 * 1000))
+          }
         };
       }
     }
@@ -198,7 +229,45 @@ function calculateAverage(prices) {
     ? Math.round((prices.reduce((sum, price) => sum + price, 0) / prices.length) * 100) / 100
     : 0;
 }
-
+// Add after calculateAverage
+function analyzeTimeAtPrice(data, targetPrice) {
+    const periods = [];
+    let currentPeriod = null;
+    const now = Date.now();
+  
+    for (let i = 0; i < data.length; i++) {
+      const price = data[i].price;
+      const startTime = data[i].timestamp;
+      const endTime = (i === data.length - 1) ? now : data[i + 1].timestamp;
+  
+      if (Math.abs(price - targetPrice) < 0.01) {
+        if (!currentPeriod) {
+          currentPeriod = {
+            start: startTime,
+            end: endTime
+          };
+        } else {
+          currentPeriod.end = endTime;
+        }
+      } else if (currentPeriod) {
+        periods.push(currentPeriod);
+        currentPeriod = null;
+      }
+    }
+  
+    if (currentPeriod) {
+      periods.push(currentPeriod);
+    }
+  
+    const totalDuration = periods.reduce((sum, period) => 
+      sum + (period.end - period.start), 0);
+  
+    return {
+      price: targetPrice,
+      totalDurationDays: Math.round(totalDuration / (24 * 60 * 60 * 1000)),
+      periods: periods
+    };
+  }
 // Main API handler
 export default async function handler(req, res) {
     await corsMiddleware(req, res);
