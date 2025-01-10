@@ -113,82 +113,76 @@ th {
         }
 
         async function testAPI() {
-            const asin = document.getElementById('asin').value;
-            const insightsDiv = document.getElementById('insights');
-            const rawDiv = document.getElementById('raw');
+    const asin = document.getElementById('asin').value;
+    const insightsDiv = document.getElementById('insights');
+    const rawDiv = document.getElementById('raw');
+    const priceDataDiv = document.getElementById('priceData');
 
-            try {
-                insightsDiv.innerHTML = 'Loading...';
-                rawDiv.textContent = 'Loading...';
+    try {
+        insightsDiv.innerHTML = 'Loading...';
+        rawDiv.textContent = 'Loading...';
+        priceDataDiv.innerHTML = 'Loading...';
 
-                const response = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ asin })
-                });
-                
-                const data = await response.json();
-                rawDiv.textContent = JSON.stringify(data, null, 2);
-                
-                if (data.success) {
-                    let insightsHTML = '';
+        const response = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ asin })
+        });
+        
+        const data = await response.json();
+        rawDiv.textContent = JSON.stringify(data, null, 2);
+        
+        if (data.success) {
+            // Process insights
+            let insightsHTML = '';
+            for (const [category, info] of Object.entries(data.analysis)) {
+                if (!info) continue;
+                insightsHTML += `
+                    <h2>${category.toUpperCase()} Prices</h2>
                     
-                    for (const [category, info] of Object.entries(data.analysis)) {
-                        if (!info) continue;
+                    <div class="insight-group">
+                        <h3>Current Status</h3>
+                        <p>Current Price: <span class="highlight">${formatPrice(info.currentPrice)}</span></p>
+                        <p>Usual Price: ${formatPrice(info.usualPrice?.price)} 
+                           (occurs ${info.usualPrice?.percentageOfTime || 0}% of the time)</p>
+                        <p>Lowest Price: ${formatPrice(info.lowestPrice)}</p>
+                        <p>Highest Price: ${formatPrice(info.highestPrice)}</p>
+                    </div>
 
-                        insightsHTML += `
-                            <h2>${category.toUpperCase()} Prices</h2>
-                            
-                            <div class="insight-group">
-                                <h3>Current Status</h3>
-                                <p>Current Price: <span class="highlight">${formatPrice(info.currentPrice)}</span></p>
-                                <p>Usual Price: ${formatPrice(info.usualPrice?.price)} 
-                                   (occurs ${info.usualPrice?.percentageOfTime || 0}% of the time)</p>
-                                <p>Lowest Price: ${formatPrice(info.lowestPrice)}</p>
-                                <p>Highest Price: ${formatPrice(info.highestPrice)}</p>
-                            </div>
+                    <div class="insight-group">
+                        <h3>Price Drops</h3>
+                        <p>Number of Drops: ${info.priceDrops?.count || 0}</p>
+                        <p>Average Drop Amount: ${formatPrice(info.priceDrops?.averageAmount)}</p>
+                        <p>Days Since Last Drop: ${formatDays(info.priceDrops?.daysSinceLastDrop)}</p>
+                    </div>
 
-                            <div class="insight-group">
-                                <h3>Price Drops</h3>
-                                <p>Number of Drops: ${info.priceDrops?.count || 0}</p>
-                                <p>Average Drop Amount: ${formatPrice(info.priceDrops?.averageAmount)}</p>
-                                <p>Days Since Last Drop: ${formatDays(info.priceDrops?.daysSinceLastDrop)}</p>
-                            </div>
-
-                            <div class="insight-group">
-                                <h3>Recent Activity</h3>
-                                <p>Price Stable For: ${formatDays(info.priceStability?.stableDays)}</p>
-                                ${info.lastMovement ? `
-                                    <p>Last Change: ${formatPrice(Math.abs(info.lastMovement.amount))} 
-                                       (${info.lastMovement.direction}, ${info.lastMovement.percentage}%) 
-                                       ${formatDays(info.lastMovement.daysAgo)} ago</p>
-                                ` : ''}
-                            </div>
-                        `;
-                    }
-                    
-                    insightsDiv.innerHTML = insightsHTML;
-                } else {
-                    throw new Error(data.error || 'Unknown error');
-                }
-            } catch (error) {
-                insightsDiv.innerHTML = `<p style="color: red">Error: ${error.message}</p>`;
-                rawDiv.textContent = 'Error occurred';
-                console.error('Full error:', error);
+                    <div class="insight-group">
+                        <h3>Recent Activity</h3>
+                        <p>Price Stable For: ${formatDays(info.priceStability?.stableDays)}</p>
+                        ${info.lastMovement ? `
+                            <p>Last Change: ${formatPrice(Math.abs(info.lastMovement.amount))} 
+                               (${info.lastMovement.direction}, ${info.lastMovement.percentage}%) 
+                               ${formatDays(info.lastMovement.daysAgo)} ago</p>
+                        ` : ''}
+                    </div>
+                `;
             }
-            if (data.success) {
-    let insightsHTML = ''; // existing insights code here...
-    
-    insightsDiv.innerHTML = insightsHTML;
-    
-    // Add this for price history
-    document.getElementById('priceData').innerHTML = createDataTable(data.priceHistory);
-} else {
-    throw new Error(data.error || 'Unknown error');
-}
+            insightsDiv.innerHTML = insightsHTML;
+
+            // Process price history
+            priceDataDiv.innerHTML = createDataTable(data.priceHistory);
+        } else {
+            throw new Error(data.error || 'Unknown error');
         }
+    } catch (error) {
+        insightsDiv.innerHTML = `<p style="color: red">Error: ${error.message}</p>`;
+        rawDiv.textContent = 'Error occurred';
+        priceDataDiv.innerHTML = 'Error occurred';
+        console.error('Full error:', error);
+    }
+}
     </script>
 </body>
 </html>
