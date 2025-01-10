@@ -135,49 +135,54 @@ th {
         rawDiv.textContent = JSON.stringify(data, null, 2);
         
         if (data.success) {
+            // Initialize insightsHTML
+            let insightsHTML = '';
+            
             // Process insights
-// In your HTML file, update the insights section in testAPI function:
-insightsHTML += `
-    <h2>${category.toUpperCase()} Prices</h2>
-    
-    <div class="insight-group">
-        <h3>Current Price Context</h3>
-        <p>Current Price: <span class="highlight">${formatPrice(info.currentPriceContext.currentPrice)}</span></p>
-        <p>Usual Price: ${formatPrice(info.currentPriceContext.usualPrice.price)} 
-           (${info.currentPriceContext.usualPrice.percentageOfTime}% of the time)</p>
-        <p>Lowest Price: ${formatPrice(info.currentPriceContext.lowestPrice)}</p>
-        <p>Highest Price: ${formatPrice(info.currentPriceContext.highestPrice)}</p>
-    </div>
+            for (const [category, info] of Object.entries(data.analysis)) {
+                insightsHTML += `
+                    <h2>${category.toUpperCase()} Prices</h2>
+                    
+                    <div class="insight-group">
+                        <h3>Current Price Context</h3>
+                        <p>Current Price: <span class="highlight">${formatPrice(info.currentPriceContext.currentPrice)}</span></p>
+                        <p>Usual Price: ${formatPrice(info.currentPriceContext.usualPrice.price)} 
+                           (${info.currentPriceContext.usualPrice.percentageOfTime}% of the time)</p>
+                        <p>Lowest Price: ${formatPrice(info.currentPriceContext.lowestPrice)}</p>
+                        <p>Highest Price: ${formatPrice(info.currentPriceContext.highestPrice)}</p>
+                    </div>
 
-    <div class="insight-group">
-        <h3>Price Drops</h3>
-        <p>Total: ${info.priceDrops.total}</p>
-        <p>Average Drop: ${formatPrice(info.priceDrops.averageDrop)}</p>
-        <p>Last Drop: ${formatDays(info.priceDrops.daysSinceLastDrop)} ago</p>
-    </div>
+                    <div class="insight-group">
+                        <h3>Price Drops</h3>
+                        <p>Total: ${info.priceDrops.total}</p>
+                        <p>Average Drop: ${formatPrice(info.priceDrops.averageDrop)}</p>
+                        <p>Last Drop: ${formatDays(info.priceDrops.daysSinceLastDrop)} ago</p>
+                    </div>
 
-    <div class="insight-group">
-        <h3>Recent Activity</h3>
-        <p>Stable for: ${formatDays(info.recentActivity.stableDays)}</p>
-        ${info.recentActivity.lastChange ? `
-            <p>Last Change: ${formatPrice(Math.abs(info.recentActivity.lastChange.amount))} 
-               (${info.recentActivity.lastChange.percentage}% ${info.recentActivity.lastChange.direction}) 
-               ${formatDays(info.recentActivity.lastChange.daysAgo)} ago</p>
-        ` : ''}
-    </div>
+                    <div class="insight-group">
+                        <h3>Recent Activity</h3>
+                        <p>Stable for: ${formatDays(info.recentActivity.stableDays)}</p>
+                        ${info.recentActivity.lastChange ? `
+                            <p>Last Change: ${formatPrice(Math.abs(info.recentActivity.lastChange.amount))} 
+                               (${info.recentActivity.lastChange.percentage}% ${info.recentActivity.lastChange.direction}) 
+                               ${formatDays(info.recentActivity.lastChange.daysAgo)} ago</p>
+                        ` : ''}
+                    </div>
 
-    <div class="insight-group">
-        <h3>Volatility Metrics</h3>
-        <p>Total Price Changes in 90 Days: ${info.volatilityMetrics.totalChanges}</p>
-        <p>Price Range: ${formatPrice(info.volatilityMetrics.priceRange.min)} - ${formatPrice(info.volatilityMetrics.priceRange.max)}</p>
-    </div>
+                    <div class="insight-group">
+                        <h3>Volatility Metrics</h3>
+                        <p>Total Price Changes in 90 Days: ${info.volatilityMetrics.totalChanges}</p>
+                        <p>Price Range: ${formatPrice(info.volatilityMetrics.priceRange.min)} - ${formatPrice(info.volatilityMetrics.priceRange.max)}</p>
+                    </div>
 
-    <div class="insight-group">
-        <h3>Time at Lowest Price</h3>
-        <p>Stayed at ${formatPrice(info.lowestPriceMetrics.price)} for 
-           ${formatDays(info.lowestPriceMetrics.durationDays)}</p>
-    </div>
-`;
+                    <div class="insight-group">
+                        <h3>Time at Lowest Price</h3>
+                        <p>Stayed at ${formatPrice(info.lowestPriceMetrics.price)} for 
+                           ${formatDays(info.lowestPriceMetrics.durationDays)}</p>
+                    </div>
+                `;
+            }
+            
             insightsDiv.innerHTML = insightsHTML;
 
             // Process price history
@@ -192,6 +197,3 @@ insightsHTML += `
         console.error('Full error:', error);
     }
 }
-    </script>
-</body>
-</html>
