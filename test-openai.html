@@ -1,210 +1,153 @@
 <!DOCTYPE html>
 <html>
 <head>
-   <title>OpenAI Text Generation Test</title>
-   <style>
-       body {
-           font-family: Arial, sans-serif;
-           max-width: 1200px;
-           margin: 0 auto;
-           padding: 20px;
-       }
-       .input-section {
-           margin-bottom: 20px;
-       }
-       .result-section {
-           background: #f3f3f3;
-           padding: 15px;
-           margin: 10px 0;
-           border-radius: 4px;
-       }
-       .text-block {
-           background: white;
-           padding: 15px;
-           margin: 10px 0;
-           border-radius: 4px;
-       }
-       pre {
-           background: #f5f5f5;
-           padding: 10px;
-           overflow: auto;
-           max-height: 500px;
-       }
-   </style>
+    <title>OpenAI Text Generation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .input-section {
+            margin-bottom: 20px;
+        }
+        .result-section {
+            background: #f3f3f3;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .text-block {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow: auto;
+            max-height: 500px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-   <h1>OpenAI Text Generation Test</h1>
-   
-   <div class="input-section">
-       <input type="text" id="asin" placeholder="Enter Amazon ASIN" value="B08X3QVGMS">
-       <button onclick="testGeneration()">Generate Text</button>
-   </div>
+    <h1>OpenAI Text Generation Test</h1>
+    
+    <div class="input-section">
+        <button onclick="testGenerateText()">Test Text Generation</button>
+    </div>
 
-   <div class="input-section">
-       <button onclick="testGenerateTextDirectly()">Test Generate Text Directly</button>
-   </div>
+    <div class="result-section">
+        <h3>Generated Text:</h3>
+        <div class="text-block" id="header"></div>
+        <div class="text-block" id="firstPhrase"></div>
+        <div class="text-block" id="secondPhrase"></div>
+        <div class="text-block" id="thirdPhrase"></div>
+    </div>
 
-   <div class="result-section">
-       <h3>Generated Text:</h3>
-       <div class="text-block" id="header"></div>
-       <div class="text-block" id="firstPhrase"></div>
-       <div class="text-block" id="secondPhrase"></div>
-       <div class="text-block" id="thirdPhrase"></div>
-   </div>
+    <div>
+        <h3>Debug Output:</h3>
+        <pre id="debug"></pre>
+    </div>
 
-   <div>
-       <h3>Price Analysis Data (Used for Generation):</h3>
-       <pre id="analysisData"></pre>
-   </div>
+    <script>
+        async function testGenerateText() {
+            clearResults();
+            setLoading(true);
 
-   <script>
-       async function testGeneration() {
-           const asin = document.getElementById('asin').value;
-           clearResults();
-           setLoading(true);
+            try {
+                // Sample data matching your backend structure
+                const sampleData = {
+                    analysis: {
+                        new: {
+                            meterScore: {
+                                score: 75
+                            },
+                            currentPriceContext: {
+                                currentPrice: 41.95,
+                                usualPrice: {
+                                    price: 41.95,
+                                    percentageOfTime: 76
+                                },
+                                lowestPrice: 35.66,
+                                highestPrice: 41.95
+                            },
+                            volatilityMetrics: {
+                                totalChanges: 5
+                            }
+                        }
+                    }
+                };
 
-           try {
-               // First get price analysis
-               console.log('Fetching price analysis...');
-               const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/analyze-price', {
-                   method: 'POST',
-                   headers: { 'Content-Type': 'application/json' },
-                   body: JSON.stringify({ asin })
-               });
-               
-               const analysisData = await analysisResponse.json();
-               console.log('Analysis data:', analysisData);
-               document.getElementById('analysisData').textContent = JSON.stringify(analysisData, null, 2);
+                logDebug('Sending request with data:', sampleData);
 
-               if (analysisData.success) {
-                   // Then generate text based on analysis
-                   console.log('Generating text...');
-                   const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
-                       method: 'POST',
-                       headers: { 'Content-Type': 'application/json' },
-                       body: JSON.stringify({ analysis: analysisData.analysis })
-                   });
-                   
-                   console.log('Text response status:', textResponse.status);
-                   const textData = await textResponse.json();
-                   console.log('Text data:', textData);
-                   
-                   if (textData.success) {
-                       displayResults(textData.text);
-                   } else {
-                       throw new Error(textData.error || 'Failed to generate text');
-                   }
-               } else {
-                   throw new Error(analysisData.error || 'Failed to analyze price');
-               }
-           } catch (error) {
-               console.error('Full error:', error);
-               showError(error.message);
-           } finally {
-               setLoading(false);
-           }
-       }
+                const response = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sampleData)
+                });
 
-       async function testGenerateTextDirectly() {
-           try {
-               const sampleAnalysis = {
-                   "new": {
-                       "meterScore": {
-                           "score": 75,
-                           "currentPrice": 41.95,
-                           "usualPrice": 41.95,
-                           "lowestPrice": 35.66,
-                           "highestPrice": 41.95
-                       },
-                       "currentPriceContext": {
-                           "currentPrice": 41.95,
-                           "usualPrice": {
-                               "price": 41.95,
-                               "percentageOfTime": 76
-                           },
-                           "lowestPrice": 35.66,
-                           "highestPrice": 41.95
-                       },
-                       "priceDrops": {
-                           "total": 2,
-                           "averageDrop": 6.29,
-                           "daysSinceLastDrop": 17
-                       },
-                       "recentActivity": {
-                           "stableDays": 1,
-                           "lastChange": {
-                               "amount": 6.29,
-                               "percentage": 17.6,
-                               "direction": "increase",
-                               "daysAgo": 1
-                           }
-                       },
-                       "volatilityMetrics": {
-                           "totalChanges": 5,
-                           "priceRange": {
-                               "min": 35.66,
-                               "max": 41.95
-                           }
-                       },
-                       "lowestPriceMetrics": {
-                           "price": 35.66,
-                           "durationDays": 3
-                       }
-                   }
-               };
+                logDebug('Response status:', response.status);
+                
+                const data = await response.json();
+                logDebug('Response data:', data);
 
-               const response = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
-                   method: 'POST',
-                   headers: { 'Content-Type': 'application/json' },
-                   body: JSON.stringify({ analysis: sampleAnalysis })
-               });
+                if (data.success) {
+                    displayResults(data.text);
+                } else {
+                    throw new Error(data.error || 'Failed to generate text');
+                }
+            } catch (error) {
+                logDebug('Error:', error);
+                showError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        }
 
-               console.log('Direct test response status:', response.status);
-               const data = await response.json();
-               console.log('Direct test data:', data);
+        function displayResults(text) {
+            document.getElementById('header').textContent = text.header;
+            document.getElementById('firstPhrase').textContent = text.firstPhrase;
+            document.getElementById('secondPhrase').textContent = text.secondPhrase;
+            document.getElementById('thirdPhrase').textContent = text.thirdPhrase;
+        }
 
-               if (data.success) {
-                   displayResults(data.text);
-               } else {
-                   throw new Error(data.error || 'Failed to generate text');
-               }
-           } catch (error) {
-               console.error('Direct test error:', error);
-               showError(error.message);
-           }
-       }
+        function clearResults() {
+            document.getElementById('header').textContent = '';
+            document.getElementById('firstPhrase').textContent = '';
+            document.getElementById('secondPhrase').textContent = '';
+            document.getElementById('thirdPhrase').textContent = '';
+            document.getElementById('debug').textContent = '';
+        }
 
-       function displayResults(text) {
-           document.getElementById('header').textContent = text.header;
-           document.getElementById('firstPhrase').textContent = text.firstPhrase;
-           document.getElementById('secondPhrase').textContent = text.secondPhrase;
-           document.getElementById('thirdPhrase').textContent = text.thirdPhrase;
-       }
+        function setLoading(isLoading) {
+            const loadingText = 'Loading...';
+            if (isLoading) {
+                document.getElementById('header').textContent = loadingText;
+                document.getElementById('firstPhrase').textContent = loadingText;
+                document.getElementById('secondPhrase').textContent = loadingText;
+                document.getElementById('thirdPhrase').textContent = loadingText;
+            }
+        }
 
-       function clearResults() {
-           document.getElementById('header').textContent = '';
-           document.getElementById('firstPhrase').textContent = '';
-           document.getElementById('secondPhrase').textContent = '';
-           document.getElementById('thirdPhrase').textContent = '';
-           document.getElementById('analysisData').textContent = '';
-       }
+        function showError(message) {
+            document.getElementById('header').innerHTML = `<span class="error">Error: ${message}</span>`;
+        }
 
-       function setLoading(isLoading) {
-           const loadingText = 'Loading...';
-           if (isLoading) {
-               document.getElementById('header').textContent = loadingText;
-               document.getElementById('firstPhrase').textContent = loadingText;
-               document.getElementById('secondPhrase').textContent = loadingText;
-               document.getElementById('thirdPhrase').textContent = loadingText;
-           }
-       }
-
-       function showError(message) {
-           document.getElementById('header').textContent = 'Error: ' + message;
-           document.getElementById('firstPhrase').textContent = '';
-           document.getElementById('secondPhrase').textContent = '';
-           document.getElementById('thirdPhrase').textContent = '';
-       }
-   </script>
+        function logDebug(label, data) {
+            const debug = document.getElementById('debug');
+            const timestamp = new Date().toISOString();
+            debug.textContent += `\n[${timestamp}] ${label} ${data ? JSON.stringify(data, null, 2) : ''}`;
+            debug.scrollTop = debug.scrollHeight;
+        }
+    </script>
 </body>
 </html>
