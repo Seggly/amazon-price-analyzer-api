@@ -1,7 +1,32 @@
+import cors from 'cors';
+
+function initMiddleware(middleware) {
+  return (req, res) =>
+    new Promise((resolve, reject) => {
+      middleware(req, res, (result) => {
+        if (result instanceof Error) {
+          return reject(result);
+        }
+        return resolve(result);
+      });
+    });
+}
+
+const corsMiddleware = initMiddleware(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+  })
+);
+
 export default async function handler(req, res) {
+    await corsMiddleware(req, res);
+    
     if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' });
+        return res.status(405).json({ error: 'Method not allowed' });
     }
+
   
     try {
       const { analysis } = req.body;
