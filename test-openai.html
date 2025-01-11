@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OpenAI Text Generation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .input-section {
+            margin-bottom: 20px;
+        }
+        .result-section {
+            background: #f3f3f3;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .text-block {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow: auto;
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <h1>OpenAI Text Generation Test</h1>
+    
+    <div class="input-section">
+        <input type="text" id="asin" placeholder="Enter Amazon ASIN" value="B08X3QVGMS">
+        <button onclick="testGeneration()">Generate Text</button>
+    </div>
+
+    <div class="result-section">
+        <h3>Generated Text:</h3>
+        <div class="text-block" id="header"></div>
+        <div class="text-block" id="firstPhrase"></div>
+        <div class="text-block" id="secondPhrase"></div>
+        <div class="text-block" id="thirdPhrase"></div>
+    </div>
+
+    <div>
+        <h3>Price Analysis Data (Used for Generation):</h3>
+        <pre id="analysisData"></pre>
+    </div>
+
+    <script>
+        async function testGeneration() {
+            const asin = document.getElementById('asin').value;
+            clearResults();
+            setLoading(true);
+
+            try {
+                // First get price analysis
+                const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/analyze-price', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ asin })
+                });
+                
+                const analysisData = await analysisResponse.json();
+                document.getElementById('analysisData').textContent = JSON.stringify(analysisData, null, 2);
+
+                if (analysisData.success) {
+                    // Then generate text based on analysis
+                    const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ analysis: analysisData.analysis })
+                    });
+
+                    const textData = await textResponse.json();
+                    if (textData.success) {
+                        displayResults(textData.text);
+                    } else {
+                        throw new Error(textData.error);
+                    }
+                }
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function displayResults(text) {
+            document.getElementById('header').textContent = text.header;
+            document.getElementById('firstPhrase').textContent = text.firstPhrase;
+            document.getElementById('secondPhrase').textContent = text.secondPhrase;
+            document.getElementById('thirdPhrase').textContent = text.thirdPhrase;
+        }
+
+        function clearResults() {
+            document.getElementById('header').textContent = '';
+            document.getElementById('firstPhrase').textContent = '';
+            document.getElementById('secondPhrase').textContent = '';
+            document.getElementById('thirdPhrase').textContent = '';
+            document.getElementById('analysisData').textContent = '';
+        }
+
+        function setLoading(isLoading) {
+            const loadingText = 'Loading...';
+            if (isLoading) {
+                document.getElementById('header').textContent = loadingText;
+                document.getElementById('firstPhrase').textContent = loadingText;
+                document.getElementById('secondPhrase').textContent = loadingText;
+                document.getElementById('thirdPhrase').textContent = loadingText;
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('header').textContent = 'Error: ' + message;
+            document.getElementById('firstPhrase').textContent = '';
+            document.getElementById('secondPhrase').textContent = '';
+            document.getElementById('thirdPhrase').textContent = '';
+        }
+    </script>
+</body>
+</html>
