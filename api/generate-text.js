@@ -31,9 +31,6 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
 
     try {
         const { analysis } = req.body;
@@ -49,10 +46,7 @@ export default async function handler(req, res) {
         const prompt = `
 ### Task:
 Generate the following components for a product pricing popup based on the provided inputs:
-1. **Header**: A short, clear, and action-oriented statement that explains the meter score. The output should align with the meter:
-   - High Score (70%-100%): Encourage buying now.
-   - Mid Score (40%-69%): Suggest it's an okay deal.
-   - Low Score (0%-39%): Strongly recommend waiting.
+1. **Header**: A short, clear, and action-oriented statement that explains the meter score. The output should align with the meter.
 2. **First Phrase**: Explain with numbers why the meter score was assigned. Avoid explicitly mentioning the current price but compare it to the lowest price, usual price, or max price to justify the score. 
 3. **Second Phrase**: Reinforce the meter score using additional insights such as price trends, stability, or historical context. 
 4. **Third Phrase (CTA)**: Tie the explanation to a specific call-to-action. Adapt the tone based on the meter score:
