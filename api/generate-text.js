@@ -23,28 +23,71 @@ const corsMiddleware = initMiddleware(
 export default async function handler(req, res) {
     await corsMiddleware(req, res);
     
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
         const { analysis } = req.body;
-        
-        // Log the received data for debugging
-        console.log('Received request body:', JSON.stringify(req.body, null, 2));
-
         if (!analysis || !analysis.new) {
             throw new Error('Invalid analysis data received');
         }
 
         const priceData = analysis.new;
-        
-        // Debug log for price data
-        console.log('Processing price data:', JSON.stringify(priceData, null, 2));
+        if (!priceData.meterScore || !priceData.currentPriceContext || !priceData.priceDrops) {
+            throw new Error('Missing required price data fields');
+        }
+
+        const prompt = `
+### Task:
+Generate the following components for a product pricing popup based on the provided inputs:
+1. **Header**: A short, clear, and action-oriented statement that explains the meter score. The output should align with the meter:
+   - High Score (70%-100%): Encourage buying now.
+   - Mid Score (40%-69%): Suggest it's an okay deal.
+   - Low Score (0%-39%): Strongly recommend waiting.
+2. **First Phrase**: Explain with numbers why the meter score was assigned. Avoid explicitly mentioning the current price but compare it to the lowest price, usual price, or max price to justify the score. 
+3. **Second Phrase**: Reinforce the meter score using additional insights such as price trends, stability, or historical context. 
+4. **Third Phrase (CTA)**: Tie the explanation to a specific call-to-action. Adapt the tone based on the meter score:
+   - High Score: Encourage buying but offer tracking as optional.
+   - Mid Score: Not a bad price but recommend tracking to find a better deal soon.
+   - Low Score: Strongly urge tracking to avoid overpaying.
+
+### Inputs:
+Current Price Context:
+- Meter Score: ${priceData.meterScore.score}%
+- Current Price: $${priceData.currentPriceContext.currentPrice}
+- Usual Price: $${priceData.currentPriceContext.usualPrice.price} (${priceData.currentPriceContext.usualPrice.percentageOfTime}% of the time)
+- Lowest Price: $${priceData.currentPriceContext.lowestPrice}
+- Highest Price: $${priceData.currentPriceContext.highestPrice}
+
+Price Drops:
+- Total: ${priceData.priceDrops.total}
+- Average Drop: $${priceData.priceDrops.averageDrop}
+- Last Drop: ${priceData.priceDrops.daysSinceLastDrop} days ago
+
+Recent Activity:
+- Stable for: ${priceData.recentActivity.stableDays} days
+- Last Change: $${Math.abs(priceData.recentActivity.lastChange.amount)} 
+  (${priceData.recentActivity.lastChange.percentage}% ${priceData.recentActivity.lastChange.direction}) 
+  ${priceData.recentActivity.lastChange.daysAgo} days ago
+
+Volatility Metrics:
+- Total Price Changes in 90 Days: ${priceData.volatilityMetrics.totalChanges}
+- Price Range: $${priceData.volatilityMetrics.priceRange.min} - $${priceData.volatilityMetrics.priceRange.max}
+
+Time at Lowest Price:
+- Stayed at $${priceData.lowestPriceMetrics.price} for ${priceData.lowestPriceMetrics.durationDays} days
+
+### Instructions:
+- Keep sentences concise and clear (3rd-grade reading level).
+- Ensure the tone and flow are cohesive across all four components.
+- Base the outputs strictly on the provided inputs and meter score logic.
+- Return the response in this format:
+  Header: [Your text]
+  First Phrase: [Your text]
+  Second Phrase: [Your text]
+  Third Phrase: [Your text]
+`;
 
         if (!process.env.OPENAI_API_KEY) {
             throw new Error('OpenAI API key not configured');
@@ -65,18 +108,7 @@ export default async function handler(req, res) {
                     },
                     {
                         role: "user",
-                        content: `Generate pricing recommendations in this format:
-                        Header: A clear recommendation based on the price analysis
-                        First Phrase: Numerical justification
-                        Second Phrase: Additional context
-                        Third Phrase: Call to action
-
-                        Based on this data:
-                        - Meter Score: ${priceData.meterScore.score}%
-                        - Current Price: $${priceData.currentPriceContext.currentPrice}
-                        - Price History: The price has changed ${priceData.volatilityMetrics.totalChanges} times in 90 days
-                        - Lowest Recent Price: $${priceData.currentPriceContext.lowestPrice}
-                        - Usual Price: $${priceData.currentPriceContext.usualPrice.price}`
+                        content: prompt
                     }
                 ],
                 temperature: 0.7,
@@ -84,30 +116,25 @@ export default async function handler(req, res) {
             })
         });
 
-        // Debug log for OpenAI response
-        console.log('OpenAI response status:', response.status);
-        
         const data = await response.json();
-        console.log('OpenAI response data:', JSON.stringify(data, null, 2));
 
         if (!data.choices?.[0]?.message?.content) {
-            console.error('Invalid OpenAI response:', data);
             throw new Error('Invalid response from OpenAI');
         }
 
         const content = data.choices[0].message.content;
         const lines = content.split('\n').filter(line => line.trim());
 
-        console.log('Parsed lines:', lines);
-
         const text = {
-            header: lines.find(l => l.toLowerCase().includes('header:'))?.split('Header:')[1]?.trim() || 'Price analysis unavailable',
-            firstPhrase: lines.find(l => l.toLowerCase().includes('first phrase:'))?.split('First Phrase:')[1]?.trim() || '',
-            secondPhrase: lines.find(l => l.toLowerCase().includes('second phrase:'))?.split('Second Phrase:')[1]?.trim() || '',
-            thirdPhrase: lines.find(l => l.toLowerCase().includes('third phrase:'))?.split('Third Phrase:')[1]?.trim() || ''
+            header: lines.find(l => l.toLowerCase().startsWith('header:'))?.replace(/^header:/i, '').trim() || 'Price analysis unavailable',
+            firstPhrase: lines.find(l => l.toLowerCase().startsWith('first phrase:'))?.replace(/^first phrase:/i, '').trim() || '',
+            secondPhrase: lines.find(l => l.toLowerCase().startsWith('second phrase:'))?.replace(/^second phrase:/i, '').trim() || '',
+            thirdPhrase: lines.find(l => l.toLowerCase().startsWith('third phrase:'))?.replace(/^third phrase:/i, '').trim() || ''
         };
 
-        console.log('Generated text:', text);
+        if (!text.header || !text.firstPhrase || !text.secondPhrase || !text.thirdPhrase) {
+            throw new Error('Failed to generate all required text components');
+        }
 
         res.status(200).json({
             success: true,
