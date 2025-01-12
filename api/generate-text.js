@@ -23,6 +23,14 @@ const corsMiddleware = initMiddleware(
 export default async function handler(req, res) {
     await corsMiddleware(req, res);
     
+    // Handle OPTIONS request
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
