@@ -54,46 +54,80 @@
     </div>
 
     <script>
-async function testGeneration() {
-    const asin = document.getElementById('asin').value;
-    clearResults();
-    setLoading(true);
-
-    try {
-        // First get price analysis from test-keepa endpoint
-        const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ asin })
-        });
-        
-        const analysisData = await analysisResponse.json();
-        document.getElementById('analysisData').textContent = JSON.stringify(analysisData, null, 2);
-
-        if (analysisData.success) {
-            // Then generate text using generate-text endpoint
-            const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ analysis: analysisData.analysis })
-            });
-
-            const textData = await textResponse.json();
-            if (textData.success) {
-                displayResults(textData.text);
-            } else {
-                throw new Error(textData.error || 'Failed to generate text');
-            }
-        } else {
-            throw new Error(analysisData.error || 'Failed to analyze price');
+        // Helper Functions
+        function clearResults() {
+            document.getElementById('header').textContent = '';
+            document.getElementById('firstPhrase').textContent = '';
+            document.getElementById('secondPhrase').textContent = '';
+            document.getElementById('thirdPhrase').textContent = '';
+            document.getElementById('analysisData').textContent = '';
         }
-    } catch (error) {
-        console.error('Full error:', error);
-        showError(error.message);
-    } finally {
-        setLoading(false);
-    }
-}
+
+        function setLoading(isLoading) {
+            const loadingText = 'Loading...';
+            if (isLoading) {
+                document.getElementById('header').textContent = loadingText;
+                document.getElementById('firstPhrase').textContent = loadingText;
+                document.getElementById('secondPhrase').textContent = loadingText;
+                document.getElementById('thirdPhrase').textContent = loadingText;
+            }
+        }
+
+        function displayResults(text) {
+            document.getElementById('header').textContent = text.header;
+            document.getElementById('firstPhrase').textContent = text.firstPhrase;
+            document.getElementById('secondPhrase').textContent = text.secondPhrase;
+            document.getElementById('thirdPhrase').textContent = text.thirdPhrase;
+        }
+
+        function showError(message) {
+            document.getElementById('header').textContent = 'Error: ' + message;
+            document.getElementById('firstPhrase').textContent = '';
+            document.getElementById('secondPhrase').textContent = '';
+            document.getElementById('thirdPhrase').textContent = '';
+        }
+
+        // Main Function
+        async function testGeneration() {
+            const asin = document.getElementById('asin').value;
+            clearResults();
+            setLoading(true);
+
+            try {
+                // First get price analysis from test-keepa endpoint
+                const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ asin })
+                });
+                
+                const analysisData = await analysisResponse.json();
+                document.getElementById('analysisData').textContent = JSON.stringify(analysisData, null, 2);
+
+                if (analysisData.success) {
+                    // Then generate text using generate-text endpoint
+                    const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ analysis: analysisData.analysis })
+                    });
+
+                    const textData = await textResponse.json();
+                    if (textData.success) {
+                        displayResults(textData.text);
+                    } else {
+                        throw new Error(textData.error || 'Failed to generate text');
+                    }
+                } else {
+                    throw new Error(analysisData.error || 'Failed to analyze price');
+                }
+            } catch (error) {
+                console.error('Full error:', error);
+                showError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        }
     </script>
 </body>
 </html>
