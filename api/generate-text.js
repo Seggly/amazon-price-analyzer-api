@@ -45,10 +45,10 @@ export default async function handler(req, res) {
 
         const prompt = `
 ### Task:
-Generate the following components for a product pricing popup based on the provided inputs:
+Generate the following components for a product pricing popup based on the provided inputs at he reading level of 3rd-grade:
 1. **Header**: A short, clear, and action-oriented statement that explains the meter score. The output should align with the meter.
 2. **First Phrase**: Explain with numbers why the meter score was assigned. Avoid explicitly mentioning the current price but compare it to the lowest price, usual price, or max price to justify the score. 
-3. **Second Phrase**: Reinforce the meter score using additional insights such as price trends, stability, or historical context. 
+3. **Second Phrase**: Estimate the future price trend. 
 4. **Third Phrase (CTA)**: Tie the explanation to a specific call-to-action. Adapt the tone based on the meter score:
    - High Score: Encourage buying but offer tracking as optional.
    - Mid Score: Not a bad price but recommend tracking to find a better deal soon.
