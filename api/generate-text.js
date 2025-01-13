@@ -173,22 +173,25 @@ Header: [Your conclusion text]
             text.subject2 = text.subject2 || sections[2]?.trim() || 'Buying advice unavailable';
         }
 
-        // Validate we have all components with content
-        if (!text.header || !text.subject1 || !text.subject2) {
-            console.error('Failed to parse sections:', sections);
-            throw new Error('Failed to generate all required text components');
-        }
+// Validate we have all components with content
+if (!text.header || !text.subject1 || !text.subject2) {
+    console.error('Failed to parse sections:', sections);
+    throw new Error('Failed to generate all required text components');
+}
 
-        // Return the formatted response with debug info
-        res.status(200).json({
-            success: true,
-            text,
-            debug: {
-                prompt: prompt,
-                rawResponse: content,
-                parsedSections: sections
-            }
-        });
+// Create debug info object
+const debugInfo = {
+    prompt: prompt,  // Include the complete prompt
+    rawResponse: content,
+    parsedSections: sections
+};
+
+// Return the formatted response with debug info
+res.status(200).json({
+    success: true,
+    text,
+    debug: debugInfo
+});
 
     } catch (error) {
         console.error('Error in generate-text:', error);
