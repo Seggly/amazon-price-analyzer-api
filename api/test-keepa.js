@@ -256,45 +256,51 @@ function calculateAverage(prices) {
     ? Math.round((prices.reduce((sum, price) => sum + price, 0) / prices.length) * 100) / 100
     : 0;
 }
-// Add after calculateAverage
 function analyzeTimeAtPrice(data, targetPrice) {
     const periods = [];
     let currentPeriod = null;
     const now = Date.now();
-  
+
+    // Find all periods at the target price
     for (let i = 0; i < data.length; i++) {
-      const price = data[i].price;
-      const startTime = data[i].timestamp;
-      const endTime = (i === data.length - 1) ? now : data[i + 1].timestamp;
-  
-      if (Math.abs(price - targetPrice) < 0.01) {
-        if (!currentPeriod) {
-          currentPeriod = {
-            start: startTime,
-            end: endTime
-          };
-        } else {
-          currentPeriod.end = endTime;
+        const price = data[i].price;
+        const startTime = data[i].timestamp;
+        const endTime = (i === data.length - 1) ? now : data[i + 1].timestamp;
+
+        if (Math.abs(price - targetPrice) < 0.01) {
+            if (!currentPeriod) {
+                currentPeriod = {
+                    start: startTime,
+                    end: endTime
+                };
+            } else {
+                currentPeriod.end = endTime;
+            }
+        } else if (currentPeriod) {
+            periods.push(currentPeriod);
+            currentPeriod = null;
         }
-      } else if (currentPeriod) {
-        periods.push(currentPeriod);
-        currentPeriod = null;
-      }
     }
-  
+
     if (currentPeriod) {
-      periods.push(currentPeriod);
+        periods.push(currentPeriod);
     }
-  
-    const totalDuration = periods.reduce((sum, period) => 
-      sum + (period.end - period.start), 0);
-  
+
+    // Calculate average duration of periods
+    const periodDurations = periods.map(period => 
+        Math.round((period.end - period.start) / (24 * 60 * 60 * 1000)) // Convert to days
+    );
+
+    const averageDuration = periodDurations.length > 0
+        ? Math.round(periodDurations.reduce((sum, duration) => sum + duration, 0) / periodDurations.length)
+        : 0;
+
     return {
-      price: targetPrice,
-      totalDurationDays: Math.round(totalDuration / (24 * 60 * 60 * 1000)),
-      periods: periods
+        price: targetPrice,
+        averageDurationDays: averageDuration,
+        numberOfPeriods: periods.length
     };
-  }
+}
 // Main API handler
 export default async function handler(req, res) {
     await corsMiddleware(req, res);
