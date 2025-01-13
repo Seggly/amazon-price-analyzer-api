@@ -23,7 +23,6 @@ const corsMiddleware = initMiddleware(
 export default async function handler(req, res) {
     await corsMiddleware(req, res);
     
-    // Handle OPTIONS request
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
@@ -39,24 +38,36 @@ export default async function handler(req, res) {
         }
 
         const priceData = analysis.new;
-        if (!priceData.meterScore || !priceData.currentPriceContext || !priceData.priceDrops) {
-            throw new Error('Missing required price data fields');
-        }
+        
+        const prompt = `### Task:
+You are a friendly Amazon price analyzer AI.
+You are appearing on a Google Chrome extension popup on an Amazon product page.
+You are provided with the last 90 days price history of this product.
+The user wants to know if the product is at a good price or not.
+Format your answer in a conversational way like if you are texting a very good friend in a hurry who needs a concise answer.
+Put personality in your message.
+Start each Subject block with a title.
+Don't use any complicated words.
 
-        const prompt = `
-### Task:
-Generate the following components for a product pricing popup based on the provided inputs at a 3rd-grade reading level:
-1. **Header**: A short, clear, and action-oriented statement that explains the meter score. The output should align with the meter.
-2. **First Phrase**: Explain with numbers why the meter score was assigned. Avoid explicitly mentioning the current price but compare it to the lowest price, usual price, or max price to justify the score. 
-3. **Second Phrase**: Reinforce the meter score using additional insights such as price trends, stability, or historical context. 
-4. **Third Phrase (CTA)**: Tie the explanation to a specific call-to-action. Adapt the tone based on the meter score:
-   - High Score: Encourage buying but offer tracking as optional.
-   - Mid Score: Not a bad price but recommend tracking to find a better deal soon.
-   - Low Score: Strongly urge tracking to avoid overpaying.
+### Outputs:
+Follow this conversational framework:
+Header: give your conclusion (e.g., "Lowest price in a year—BUY NOW! 🎯").
+Subject 1: give a price insight explanation with key insights 
+Subject 2: Should you buy now? Guidance on whether to buy or wait and if the price likely to go up, down
+
+### Output Example:
+
+Lowest price in a year—BUY NOW! 🎯
+
+💡 Price Insight
+I'd call this a WOW! moment for your wallet. The product is at its lowest price of $16.99 right now, which is a solid deal! Most of the time, it's priced at $19.99, so you're saving $3. It just dropped to this price 6 days ago, so it's fresh in the bargain zone.💸
+
+🤔 Should You Buy Now?
+Oh, absolutely YES! 💯 At $16.99, you're grabbing it at its very best. The price doesn't stay here forever (only about 10 days on average), so don't sleep on this deal.🚀
+
 
 ### Inputs:
-Current Price Context:
-- Meter Score: ${priceData.meterScore.score}%
+Price Context:
 - Current Price: $${priceData.currentPriceContext.currentPrice}
 - Usual Price: $${priceData.currentPriceContext.usualPrice.price} (${priceData.currentPriceContext.usualPrice.percentageOfTime}% of the time)
 - Lowest Price: $${priceData.currentPriceContext.lowestPrice}
@@ -69,7 +80,7 @@ Price Drops:
 
 Recent Activity:
 - Stable for: ${priceData.recentActivity.stableDays} days
-- Last Change: $${Math.abs(priceData.recentActivity.lastChange.amount)} 
+- Last Change: ${priceData.recentActivity.lastChange.direction === 'decrease' ? '-' : '+'}$${Math.abs(priceData.recentActivity.lastChange.amount)} 
   (${priceData.recentActivity.lastChange.percentage}% ${priceData.recentActivity.lastChange.direction}) 
   ${priceData.recentActivity.lastChange.daysAgo} days ago
 
@@ -77,19 +88,19 @@ Volatility Metrics:
 - Total Price Changes in 90 Days: ${priceData.volatilityMetrics.totalChanges}
 - Price Range: $${priceData.volatilityMetrics.priceRange.min} - $${priceData.volatilityMetrics.priceRange.max}
 
-Time at Lowest Price:
+Average Time at Lowest Price each time:
 - Stayed at $${priceData.lowestPriceMetrics.price} for ${priceData.lowestPriceMetrics.durationDays} days
 
 ### Instructions:
-- Keep sentences concise and clear (3rd-grade reading level).
-- Ensure the tone and flow are cohesive across all four components.
-- Base the outputs strictly on the provided inputs and meter score logic.
-- Return the response in this format:
-  Header: [Your text]
-  First Phrase: [Your text]
-  Second Phrase: [Your text]
-  Third Phrase: [Your text]
-`;
+Return your response exactly in this format without any line numbers or additional text:
+
+Header: [Your conclusion text]
+
+💡 Price Insight
+[Your price insight text]
+
+🤔 Should You Buy Now?
+[Your buying advice text]`;
 
         if (!process.env.OPENAI_API_KEY) {
             throw new Error('OpenAI API key not configured');
@@ -106,7 +117,7 @@ Time at Lowest Price:
                 messages: [
                     {
                         role: "system",
-                        content: "You are a helpful assistant that generates clear, concise pricing recommendations."
+                        content: "You are a friendly and helpful price analysis assistant that gives clear, concise advice in a conversational tone."
                     },
                     {
                         role: "user",
@@ -114,7 +125,7 @@ Time at Lowest Price:
                     }
                 ],
                 temperature: 0.7,
-                max_tokens: 200
+                max_tokens: 300
             })
         });
 
@@ -125,29 +136,64 @@ Time at Lowest Price:
         }
 
         const content = data.choices[0].message.content;
-        const lines = content.split('\n').filter(line => line.trim());
+        console.log('Raw OpenAI response:', content);
 
-        const text = {
-            header: lines.find(l => l.toLowerCase().startsWith('header:'))?.replace(/^header:/i, '').trim() || 'Price analysis unavailable',
-            firstPhrase: lines.find(l => l.toLowerCase().startsWith('first phrase:'))?.replace(/^first phrase:/i, '').trim() || '',
-            secondPhrase: lines.find(l => l.toLowerCase().startsWith('second phrase:'))?.replace(/^second phrase:/i, '').trim() || '',
-            thirdPhrase: lines.find(l => l.toLowerCase().startsWith('third phrase:'))?.replace(/^third phrase:/i, '').trim() || ''
+        // Split content into sections
+        const sections = content.split('\n\n');
+        let text = {
+            header: '',
+            subject1: '',
+            subject2: ''
         };
 
-        if (!text.header || !text.firstPhrase || !text.secondPhrase || !text.thirdPhrase) {
+        // Parse header (first section that starts with "Header:")
+        const headerSection = sections.find(s => s.toLowerCase().startsWith('header:'));
+        if (headerSection) {
+            text.header = headerSection.replace(/^header:/i, '').trim();
+        }
+
+        // Find the price insight section
+        const insightSection = sections.find(s => s.includes('💡 Price Insight'));
+        if (insightSection) {
+            text.subject1 = insightSection.trim();
+        }
+
+        // Find the buying advice section
+        const adviceSection = sections.find(s => s.includes('🤔 Should You Buy Now?'));
+        if (adviceSection) {
+            text.subject2 = adviceSection.trim();
+        }
+
+        // If we're missing any sections, try alternate format
+        if (!text.header || !text.subject1 || !text.subject2) {
+            console.log('Failed to parse sections using emojis, trying alternate format');
+            text.header = text.header || sections[0]?.trim() || 'Price analysis unavailable';
+            text.subject1 = text.subject1 || sections[1]?.trim() || 'Price insight unavailable';
+            text.subject2 = text.subject2 || sections[2]?.trim() || 'Buying advice unavailable';
+        }
+
+        // Validate we have all components with content
+        if (!text.header || !text.subject1 || !text.subject2) {
+            console.error('Failed to parse sections:', sections);
             throw new Error('Failed to generate all required text components');
         }
 
+        // Return the formatted response
         res.status(200).json({
             success: true,
-            text
+            text,
+            debug: {
+                rawResponse: content,
+                parsedSections: sections
+            }
         });
 
     } catch (error) {
         console.error('Error in generate-text:', error);
         res.status(500).json({
             success: false,
-            error: error.message || 'Failed to generate text'
+            error: error.message || 'Failed to generate text',
+            errorDetails: error
         });
     }
 }
