@@ -51,7 +51,7 @@ Don't use any complicated words.
 
 ### Outputs:
 Follow this conversational framework:
-Header: give your conclusion (e.g., "Lowest price in a year—BUY NOW! 🎯").
+Header: give your conclusion
 Subject 1: give a price insight explanation with key insights 
 Subject 2: Should you buy now? Guidance on whether to buy or wait and if the price likely to go up, down
 
@@ -125,7 +125,6 @@ Header: [Your conclusion text]
                         content: prompt
                     }
                 ],
-                temperature: 0.7,
             })
         });
 
