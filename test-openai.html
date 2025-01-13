@@ -60,6 +60,9 @@
 
     <div class="section-title">OpenAI Debug Info:</div>
     <div class="text-block">
+        <h4>Prompt Sent to OpenAI:</h4>
+        <pre id="promptSent"></pre>
+
         <h4>Raw OpenAI Response:</h4>
         <pre id="rawResponse"></pre>
         
@@ -73,6 +76,7 @@
             document.getElementById('subject1').textContent = '';
             document.getElementById('subject2').textContent = '';
             document.getElementById('analysisData').textContent = '';
+            document.getElementById('promptSent').textContent = '';
             document.getElementById('rawResponse').textContent = '';
             document.getElementById('parsedSections').textContent = '';
         }
@@ -83,6 +87,9 @@
                 document.getElementById('header').textContent = loadingText;
                 document.getElementById('subject1').textContent = loadingText;
                 document.getElementById('subject2').textContent = loadingText;
+                document.getElementById('promptSent').textContent = loadingText;
+                document.getElementById('rawResponse').textContent = loadingText;
+                document.getElementById('parsedSections').textContent = loadingText;
             }
         }
 
@@ -97,7 +104,7 @@
             document.getElementById('subject1').textContent = '';
             document.getElementById('subject2').textContent = '';
             if (details) {
-                document.getElementById('rawResponse').textContent = details;
+                document.getElementById('rawResponse').textContent = 'Error Details:\n' + details;
             }
         }
 
@@ -129,6 +136,7 @@
 
                     // Display OpenAI debug info
                     if (textData.debug) {
+                        document.getElementById('promptSent').textContent = textData.debug.prompt || 'No prompt data';
                         document.getElementById('rawResponse').textContent = textData.debug.rawResponse || 'No raw response';
                         document.getElementById('parsedSections').textContent = 
                             JSON.stringify(textData.debug.parsedSections || [], null, 2);

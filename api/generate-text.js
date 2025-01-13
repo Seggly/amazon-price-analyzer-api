@@ -15,7 +15,7 @@ function initMiddleware(middleware) {
 const corsMiddleware = initMiddleware(
   cors({
     origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
+    methods: ['GET, POST, OPTIONS'],
     allowedHeaders: ['Content-Type'],
   })
 );
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         }
 
         const priceData = analysis.new;
-        
+
         const prompt = `### Task:
 You are a friendly Amazon price analyzer AI.
 You are appearing on a Google Chrome extension popup on an Amazon product page.
@@ -64,7 +64,6 @@ I'd call this a WOW! moment for your wallet. The product is at its lowest price 
 
 🤔 Should You Buy Now?
 Oh, absolutely YES! 💯 At $16.99, you're grabbing it at its very best. The price doesn't stay here forever (only about 10 days on average), so don't sleep on this deal.🚀
-
 
 ### Inputs:
 Price Context:
@@ -101,6 +100,8 @@ Header: [Your conclusion text]
 
 🤔 Should You Buy Now?
 [Your buying advice text]`;
+
+        console.log('Sending to OpenAI:', prompt);
 
         if (!process.env.OPENAI_API_KEY) {
             throw new Error('OpenAI API key not configured');
@@ -178,11 +179,12 @@ Header: [Your conclusion text]
             throw new Error('Failed to generate all required text components');
         }
 
-        // Return the formatted response
+        // Return the formatted response with debug info
         res.status(200).json({
             success: true,
             text,
             debug: {
+                prompt: prompt,
                 rawResponse: content,
                 parsedSections: sections
             }
