@@ -87,8 +87,8 @@ Volatility Metrics:
 - Total Price Changes in 90 Days: ${priceData.volatilityMetrics.totalChanges}
 - Price Range: $${priceData.volatilityMetrics.priceRange.min} - $${priceData.volatilityMetrics.priceRange.max}
 
-Average Time at Lowest Price each time:
-- Stayed at $${priceData.lowestPriceMetrics.price} for ${priceData.lowestPriceMetrics.durationDays} days
+Average Time at Lowest Price:
+- On average, stays at $${priceData.lowestPriceMetrics.price} for ${priceData.lowestPriceMetrics.averageDurationDays} days (occurred ${priceData.lowestPriceMetrics.numberOfPeriods} times)
 
 ### Instructions:
 Return your response exactly in this format without any line numbers or additional text:
