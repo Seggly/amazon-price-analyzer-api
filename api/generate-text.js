@@ -128,9 +128,15 @@ Header: [Your conclusion text]
             })
         });
 
+        if (!response.ok) {
+            throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+        }
+    
         const data = await response.json();
-
+        console.log('OpenAI response:', data);  // Add logging
+    
         if (!data.choices?.[0]?.message?.content) {
+            console.error('Invalid OpenAI response:', data);  // Add logging
             throw new Error('Invalid response from OpenAI');
         }
 
