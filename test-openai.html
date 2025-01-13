@@ -31,10 +31,12 @@
             max-height: 500px;
             white-space: pre-wrap;
         }
-        .highlight {
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 5px;
             background: #e3f2fd;
-            padding: 2px 5px;
-            border-radius: 3px;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -46,26 +48,23 @@
         <button onclick="testGeneration()">Generate Text</button>
     </div>
 
+    <div class="section-title">Generated Text:</div>
     <div class="result-section">
-        <h3>Generated Text:</h3>
         <div class="text-block" id="header"></div>
         <div class="text-block" id="subject1"></div>
         <div class="text-block" id="subject2"></div>
     </div>
 
-    <div>
-        <h3>Price Analysis Data:</h3>
-        <pre id="analysisData"></pre>
-    </div>
+    <div class="section-title">Keepa Price Analysis:</div>
+    <pre id="analysisData"></pre>
 
-    <div>
-        <h3>OpenAI Prompt:</h3>
-        <pre id="openaiPrompt"></pre>
-    </div>
-
-    <div>
-        <h3>OpenAI Response:</h3>
-        <pre id="openaiResponse"></pre>
+    <div class="section-title">OpenAI Debug Info:</div>
+    <div class="text-block">
+        <h4>Raw OpenAI Response:</h4>
+        <pre id="rawResponse"></pre>
+        
+        <h4>Parsed Sections:</h4>
+        <pre id="parsedSections"></pre>
     </div>
 
     <script>
@@ -74,8 +73,8 @@
             document.getElementById('subject1').textContent = '';
             document.getElementById('subject2').textContent = '';
             document.getElementById('analysisData').textContent = '';
-            document.getElementById('openaiPrompt').textContent = '';
-            document.getElementById('openaiResponse').textContent = '';
+            document.getElementById('rawResponse').textContent = '';
+            document.getElementById('parsedSections').textContent = '';
         }
 
         function setLoading(isLoading) {
@@ -93,10 +92,13 @@
             document.getElementById('subject2').textContent = text.subject2;
         }
 
-        function showError(message) {
-            document.getElementById('header').textContent = 'Error: ' + message;
+        function showError(message, details = '') {
+            document.getElementById('header').innerHTML = `<span style="color: red">Error: ${message}</span>`;
             document.getElementById('subject1').textContent = '';
             document.getElementById('subject2').textContent = '';
+            if (details) {
+                document.getElementById('rawResponse').textContent = details;
+            }
         }
 
         async function testGeneration() {
@@ -106,7 +108,6 @@
 
             try {
                 // First get price analysis
-                console.log('Fetching price analysis...');
                 const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -118,7 +119,6 @@
 
                 if (analysisData.success) {
                     // Then generate text
-                    console.log('Generating text...');
                     const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -127,11 +127,12 @@
 
                     const textData = await textResponse.json();
 
-                    // Display OpenAI prompt and response
-                    if (textData.prompt) {
-                        document.getElementById('openaiPrompt').textContent = textData.prompt;
+                    // Display OpenAI debug info
+                    if (textData.debug) {
+                        document.getElementById('rawResponse').textContent = textData.debug.rawResponse || 'No raw response';
+                        document.getElementById('parsedSections').textContent = 
+                            JSON.stringify(textData.debug.parsedSections || [], null, 2);
                     }
-                    document.getElementById('openaiResponse').textContent = JSON.stringify(textData, null, 2);
 
                     if (textData.success) {
                         displayResults(textData.text);
@@ -143,7 +144,7 @@
                 }
             } catch (error) {
                 console.error('Full error:', error);
-                showError(error.message);
+                showError(error.message, JSON.stringify(error, null, 2));
             } finally {
                 setLoading(false);
             }
