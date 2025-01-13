@@ -40,30 +40,22 @@ export default async function handler(req, res) {
         const priceData = analysis.new;
 
         const prompt = `### Task:
-You are a friendly Amazon price analyzer AI.
+You are a friendly Amazon price analyzer AI. 
+You have a slight bias toward purchasing a product 
 You are appearing on a Google Chrome extension popup on an Amazon product page.
 You are provided with the last 90 days price history of this product.
 The user wants to know if the product is at a good price or not.
-Format your answer in a conversational way like if you are texting a very good friend in a hurry who needs a concise answer.
+Format your answer in 2 short action-driven lines per subject.
 Put personality in your message.
 Start each Subject block with a title.
 Don't use any complicated words.
+You can use emoji.
 
 ### Outputs:
 Follow this conversational framework:
-Header: give your conclusion
+Header: give your conclusion (eg: Lowest price in a year—BUY NOW! 🎯)
 Subject 1: give a price insight explanation with key insights 
 Subject 2: Should you buy now? Guidance on whether to buy or wait and if the price likely to go up, down
-
-### Output Example:
-
-Lowest price in a year—BUY NOW! 🎯
-
-💡 Price Insight
-I'd call this a WOW! moment for your wallet. The product is at its lowest price of $16.99 right now, which is a solid deal! Most of the time, it's priced at $19.99, so you're saving $3. It just dropped to this price 6 days ago, so it's fresh in the bargain zone.💸
-
-🤔 Should You Buy Now?
-Oh, absolutely YES! 💯 At $16.99, you're grabbing it at its very best. The price doesn't stay here forever (only about 10 days on average), so don't sleep on this deal.🚀
 
 ### Inputs:
 Price Context:
@@ -91,15 +83,13 @@ Average Time at Lowest Price:
 - On average, stays at $${priceData.lowestPriceMetrics.price} for ${priceData.lowestPriceMetrics.averageDurationDays} days (occurred ${priceData.lowestPriceMetrics.numberOfPeriods} times)
 
 ### Instructions:
-Return your response exactly in this format without any line numbers or additional text:
+- Return the response in this format:
 
 Header: [Your conclusion text]
 
-💡 Price Insight
-[Your price insight text]
+Subject 1 - Price Insight: [Your price insight text]
 
-🤔 Should You Buy Now?
-[Your buying advice text]`;
+Subject 2 - Should You Buy Now?:[Your buying advice text]`;
 
         console.log('Sending to OpenAI:', prompt);
 
