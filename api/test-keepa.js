@@ -49,9 +49,27 @@ function calculateMeterScore(currentPrice, usualPrice, lowestPrice, highestPrice
 }
 function processKeepaData(rawData) {
     const csvData = rawData.products[0].csv;
+
+    // Try to get price data in order of preference:
+    // 1. Buy Box (18)
+    // 2. Amazon (0)
+    // 3. New (1)
+    const buyBoxPrices = processTimeSeries(csvData[18]); // Buy Box
+    const amazonPrices = processTimeSeries(csvData[0]);  // Amazon
+    const newPrices = processTimeSeries(csvData[1]);     // New
+
+    // Use first available price data
     const processedData = {
-        new: processTimeSeries(csvData[1]) // Only process NEW price history
+        new: buyBoxPrices.length > 0 ? buyBoxPrices : 
+             amazonPrices.length > 0 ? amazonPrices : 
+             newPrices
     };
+
+    console.log('Price source:', 
+        buyBoxPrices.length > 0 ? 'Buy Box' : 
+        amazonPrices.length > 0 ? 'Amazon' : 
+        'New Third Party'
+    );
 
     const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
     const recentData = {
@@ -68,15 +86,14 @@ function processKeepaData(rawData) {
         const lastMovementAnalysis = analyzeLastPriceMovement(data);
         const stabilityAnalysis = analyzePriceStability(data);
         const lowestPriceMetrics = analyzeTimeAtPrice(data, lowestPrice);
-        console.log('lowestPriceMetrics:', lowestPriceMetrics);  // Add this line
 
         analysis.new = {
             meterScore: {
                 score: Math.round(calculateMeterScore(
-                    data[data.length - 1].price,  // Current price
-                    usualPriceAnalysis.price,     // Usual price
-                    lowestPrice,                  // Lowest price
-                    highestPrice                  // Highest price
+                    data[data.length - 1].price,
+                    usualPriceAnalysis.price,
+                    lowestPrice,
+                    highestPrice
                 )),
                 currentPrice: data[data.length - 1].price,
                 usualPrice: usualPriceAnalysis.price,
@@ -90,7 +107,10 @@ function processKeepaData(rawData) {
                     percentageOfTime: usualPriceAnalysis.percentageOfTime
                 },
                 lowestPrice: lowestPrice,
-                highestPrice: highestPrice
+                highestPrice: highestPrice,
+                priceSource: buyBoxPrices.length > 0 ? 'Buy Box' : 
+                           amazonPrices.length > 0 ? 'Amazon' : 
+                           'New Third Party'
             },
             priceDrops: {
                 total: priceDropsAnalysis.count,
@@ -116,8 +136,8 @@ function processKeepaData(rawData) {
             },
             lowestPriceMetrics: {
                 price: lowestPrice,
-                averageDurationDays: lowestPriceMetrics.averageDurationDays,  // This matches the property name
-                numberOfPeriods: lowestPriceMetrics.numberOfPeriods,  // Add this
+                averageDurationDays: lowestPriceMetrics.averageDurationDays,
+                numberOfPeriods: lowestPriceMetrics.numberOfPeriods,
                 lastSeen: Math.floor((Date.now() - data.find(p => Math.abs(p.price - lowestPrice) < 0.01).timestamp) / (24 * 60 * 60 * 1000))
             }
         };
@@ -125,7 +145,10 @@ function processKeepaData(rawData) {
 
     return {
         analysis: analysis,
-        priceHistory: recentData
+        priceHistory: recentData,
+        priceSource: buyBoxPrices.length > 0 ? 'Buy Box' : 
+                    amazonPrices.length > 0 ? 'Amazon' : 
+                    'New Third Party'
     };
 }
 
