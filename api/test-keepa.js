@@ -68,6 +68,7 @@ function processKeepaData(rawData) {
         const lastMovementAnalysis = analyzeLastPriceMovement(data);
         const stabilityAnalysis = analyzePriceStability(data);
         const lowestPriceMetrics = analyzeTimeAtPrice(data, lowestPrice);
+        console.log('lowestPriceMetrics:', lowestPriceMetrics);  // Add this line
 
         analysis.new = {
             meterScore: {
@@ -300,6 +301,9 @@ function analyzeTimeAtPrice(data, targetPrice) {
         averageDurationDays: averageDuration,
         numberOfPeriods: periods.length
     };
+
+    console.log('analyzeTimeAtPrice result:', result);  // Add this line
+    return result;
 }
 // Main API handler
 export default async function handler(req, res) {
