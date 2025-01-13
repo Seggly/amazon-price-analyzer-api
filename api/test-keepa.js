@@ -116,7 +116,8 @@ function processKeepaData(rawData) {
             },
             lowestPriceMetrics: {
                 price: lowestPrice,
-                durationDays: lowestPriceMetrics.totalDurationDays,
+                averageDurationDays: lowestPriceMetrics.averageDurationDays,  // This matches the property name
+                numberOfPeriods: lowestPriceMetrics.numberOfPeriods,  // Add this
                 lastSeen: Math.floor((Date.now() - data.find(p => Math.abs(p.price - lowestPrice) < 0.01).timestamp) / (24 * 60 * 60 * 1000))
             }
         };
