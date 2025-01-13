@@ -114,7 +114,7 @@ Header: [Your conclusion text]
                 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
             },
             body: JSON.stringify({
-                model: "GPT-4o",
+                model: "gpt-3.5-turbo",
                 messages: [
                     {
                         role: "system",
