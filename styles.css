@@ -4,20 +4,65 @@
   font-weight: 700;
 }
 
+@font-face {
+  font-family: 'Baloo2';
+  src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-Medium.ttf) format('truetype');
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: 'Baloo2';
+  src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-Regular.ttf) format('truetype');
+  font-weight: 400;
+}
+
+#amazon-price-analyzer-container {
+  position: relative;
+  z-index: 9999;
+  font-family: 'Baloo2', sans-serif;
+}
+
+#price-analyzer-fab {
+  position: fixed;
+  top: 120px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #FF6100;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+#price-analyzer-fab img {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+}
+
+#price-analyzer-fab:hover {
+  transform: scale(1.1);
+}
+
 #price-analyzer-popup {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 380px; /* Reduced width */
-  height: auto; /* Changed to auto */
+  width: 440px;
   background: #FFE4D6;
-  border-radius: 12px;
+  border-radius: 20px;  /* Increased border radius */
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
 .popup-content {
-  padding: 32px 24px; /* Increased top/bottom padding */
+  padding: 32px 24px;  /* Increased top padding */
   position: relative;
 }
 
@@ -27,60 +72,64 @@
   right: 16px;
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
   color: #666;
-  opacity: 0.6;
-  font-family: system-ui, -apple-system, sans-serif;
+  padding: 8px;
+}
+
+.initial-view {
+  text-align: center;
 }
 
 .mascot {
-  margin-bottom: 24px;
+  margin-bottom: 32px;  /* Increased margin */
 }
 
 .mascot img {
-  width: 96px; /* Slightly larger mascot */
-  height: 96px;
+  width: 100px;  /* Increased size */
+  height: 100px;
 }
 
 .initial-view h2 {
   font-family: 'Baloo2';
   font-weight: 700;
-  font-size: 36px;
-  line-height: 1.2;
-  margin-bottom: 32px;
-  text-align: center;
+  font-size: 42px;
+  line-height: 1.1;
+  margin-bottom: 32px;  /* Increased margin */
+  color: #000000;
 }
 
 .analyze-button {
-  font-family: 'Baloo2';
-  font-weight: 600;
-  background: #FF4B12;  /* Updated orange color */
+  background: #FF6100;  /* Changed to match FAB color */
   color: white;
   border: none;
-  border-radius: 16px; /* More rounded corners */
-  padding: 16px;
+  border-radius: 12px;  /* Increased border radius */
+  padding: 16px 32px;
   font-size: 20px;
+  font-weight: 500;
   cursor: pointer;
   width: 100%;
+  margin-top: 32px;
   transition: background-color 0.2s;
+  font-family: 'Baloo2';
 }
 
 .analyze-button:hover {
-  background: #E54410;
+  background: #E55500;
 }
 
 .disclaimer {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   color: #666;
   margin-top: 16px;
   text-align: center;
-  max-width: 300px;
-  margin-left: auto;
-  margin-right: auto;
+  padding: 0 24px;
+  line-height: 1.4;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;  /* System font for disclaimer */
 }
 
+/* Results View Styles */
 .loading-spinner {
   text-align: center;
   padding: 40px 20px;
@@ -89,8 +138,8 @@
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #F26B3C33;
-  border-top: 4px solid #F26B3C;
+  border: 4px solid rgba(255, 97, 0, 0.2);
+  border-top: 4px solid #FF6100;
   border-radius: 50%;
   margin: 0 auto 16px;
   animation: spin 1s linear infinite;
@@ -108,16 +157,17 @@
 .header-text {
   font-family: 'Baloo2';
   font-weight: 700;
-  font-size: 28px;
+  font-size: 32px;
   margin-bottom: 24px;
   text-align: center;
+  line-height: 1.2;
 }
 
 .subject1-text, .subject2-text {
-  font-family: 'Baloo2';
-  font-weight: 500;
   margin-bottom: 16px;
   line-height: 1.5;
+  font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .gif-container {
@@ -127,5 +177,24 @@
 
 .gif-container img {
   max-width: 100%;
-  border-radius: 8px;
+  border-radius: 12px;
+}
+
+.track-button {
+  background: #FF6100;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 24px;
+  transition: background-color 0.2s;
+  font-family: 'Baloo2';
+}
+
+.track-button:hover {
+  background: #E55500;
 }
