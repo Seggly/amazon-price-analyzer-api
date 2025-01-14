@@ -30,22 +30,33 @@ if (fabImg) {
       <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
     </div>
       <!-- Analysis View -->
-      <div class="analysis-content" style="display: none;">
-        <div class="loading-spinner" style="display: none;">
-          <div class="spinner"></div>
-          <p>Analyzing price history...</p>
-        </div>
-        <div class="results" style="display: none;">
-          <h2 class="header-text"></h2>
+    <div class="analysis-content" style="display: none;">
+      <div class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>Analyzing price history...</p>
+      </div>
+      <div class="results" style="display: none;">
+        <h2 class="header-text"></h2>
+        
+        <div class="price-insight">
+          <span class="emoji">💡</span>
+          <h3>Price Insight:</h3>
           <p class="subject1-text"></p>
-          <p class="subject2-text"></p>
-          <div class="gif-container"></div>
-          <button class="track-button">Track Price</button>
-          <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
         </div>
+
+        <div class="buy-advice">
+          <span class="emoji">🤔</span>
+          <h3>Should You Buy Now?</h3>
+          <p class="subject2-text"></p>
+        </div>
+
+        <div class="gif-container"></div>
+        <button class="track-button">Track Price</button>
+        <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
       </div>
     </div>
-  `;
+  </div>
+`;
   
   container.appendChild(fab);
   container.appendChild(popup);
