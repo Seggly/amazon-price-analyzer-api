@@ -44,14 +44,14 @@
   left: 50%;
   transform: translate(-50%, -50%);
   width: 465px;
-  height: 392px; /* Exact height */
-  background: #FFE4D6;
+  height: 392px;
+  background: #FFD4C2; /* Lighter, more peachy color */
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
 .popup-content {
-  padding: 32px;
+  padding: 48px 32px; /* Increased top padding */
   height: 100%;
   box-sizing: border-box;
   display: flex;
@@ -65,58 +65,56 @@
   right: 16px;
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
-  color: rgba(0, 0, 0, 0.4); /* More transparent gray */
-  font-weight: 300; /* Thinner X */
+  color: #999; /* Darker gray for X button */
   padding: 8px;
 }
 
-.initial-view {
-  text-align: center;
-}
-
 .mascot {
-  margin-bottom: 24px;
+  margin-bottom: 32px; /* Increased spacing */
 }
 
 .mascot img {
-  width: 96px;
-  height: 96px;
+  width: 120px; /* Larger mascot */
+  height: 120px;
 }
 
 .initial-view h2 {
   font-family: 'Baloo2';
   font-weight: 700;
-  font-size: 36px;
-  line-height: 1.2;
-  margin-bottom: 24px;
+  font-size: 42px; /* Larger font size */
+  line-height: 1.1;
+  margin-bottom: 32px;
   color: #000000;
+  max-width: 400px; /* Control line breaks */
 }
 
 .analyze-button {
-  background: #FF4D00;
+  background: #FF4500; /* Brighter orange */
   color: white;
   border: none;
   border-radius: 12px;
   padding: 16px 0;
-  font-size: 20px;
-  font-weight: 500;
+  font-size: 24px; /* Larger font size */
+  font-weight: 700;
   cursor: pointer;
-  width: 400px; /* Adjusted width */
-  margin: 24px 0;
+  width: 100%;
+  max-width: 400px;
+  margin: 0; /* Remove margin */
+  font-family: 'Baloo2';
 }
 
 .analyze-button:hover {
-  background: #E54900;
+  background: #FF5722;
 }
 
 .disclaimer {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.6);
-  margin-top: 16px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.7);
+  margin-top: auto; /* Push to bottom */
   text-align: center;
-  padding: 0 32px;
+  padding: 0 48px;
   line-height: 1.4;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
