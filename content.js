@@ -6,7 +6,7 @@ function createUI() {
   // Create the FAB
   const fab = document.createElement('button');
   fab.id = 'price-analyzer-fab';
-  fab.innerHTML = `<img src="${chrome.runtime.getURL('icons/icon48.png')}" alt="Price Analyzer" />`;
+  fab.innerHTML = '$';
   
   // Create the popup
   const popup = document.createElement('div');
