@@ -1,52 +1,49 @@
+// Create and inject the UI container
 function createUI() {
   const container = document.createElement('div');
   container.id = 'amazon-price-analyzer-container';
   
-  // Create FAB
-  const fab = document.createElement('button');
-  fab.id = 'price-analyzer-fab';
-  fab.innerHTML = `<img src="${chrome.runtime.getURL('icons/icon48.png')}" alt="Price Analyzer" style="pointer-events: none;" />`;
-  
-  // Create popup
+ // In createUI function, modify fab creation
+const fab = document.createElement('button');
+fab.id = 'price-analyzer-fab';
+fab.innerHTML = `<img src="${chrome.runtime.getURL('icons/icon48.png')}" alt="Price Analyzer" />`;
+fab.style.zIndex = '999999';  // Make sure button is clickable
+
+// Add these styles to the image directly to ensure it doesn't interfere with clicks
+const fabImg = fab.querySelector('img');
+if (fabImg) {
+    fabImg.style.pointerEvents = 'none';  // This prevents the image from capturing clicks
+}
+  // Create the popup
   const popup = document.createElement('div');
   popup.id = 'price-analyzer-popup';
   popup.style.display = 'none';
   popup.innerHTML = `
   <div class="popup-content">
     <button class="close-button">×</button>
+
+
     <div class="initial-view">
       <div class="mascot">
-        <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+        <img src="${chrome.runtime.getURL('icons/mascot.svg')}" alt="Mascot" />
       </div>
       <h2>Don't Buy Until Our AI Check The Price First!</h2>
       <button class="analyze-button">Analyze The Price</button>
       <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
     </div>
+
+      <!-- Analysis View -->
       <div class="analysis-content" style="display: none;">
         <div class="loading-spinner" style="display: none;">
           <div class="spinner"></div>
           <p>Analyzing price history...</p>
         </div>
-        
         <div class="results" style="display: none;">
           <h2 class="header-text"></h2>
-          
-          <div class="price-insight">
-            <h3><span class="emoji">💡</span>Price Insight:</h3>
-            <p class="subject1-text"></p>
-          </div>
-
-          <div class="buy-advice">
-            <h3><span class="emoji">🤔</span>Should You Buy Now?</h3>
-            <p class="subject2-text"></p>
-          </div>
-
-          <div class="gif-container">
-            <!-- GIF will be inserted here dynamically -->
-          </div>
-
+          <p class="subject1-text"></p>
+          <p class="subject2-text"></p>
+          <div class="gif-container"></div>
           <button class="track-button">Track Price</button>
-          
           <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
         </div>
       </div>
