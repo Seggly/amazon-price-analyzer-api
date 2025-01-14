@@ -6,6 +6,7 @@ let lastAnalysisResult = null;
 
 // Create and inject the UI container
 function createUI() {
+  console.log('Creating UI elements'); // Add this line
     const container = document.createElement('div');
     container.id = 'amazon-price-analyzer-container';
     
