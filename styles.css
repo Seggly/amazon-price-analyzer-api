@@ -43,9 +43,9 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 400px;
+  width: 380px;
   background: #FFE4D6;
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
@@ -60,9 +60,10 @@
   right: 16px;
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
-  color: #888;
+  color: rgba(0, 0, 0, 0.4); /* More transparent gray */
+  font-weight: 300; /* Thinner X */
   padding: 8px;
 }
 
@@ -83,23 +84,26 @@
   font-family: 'Baloo2';
   font-weight: 700;
   font-size: 36px;
-  line-height: 1.1;
+  line-height: 1.2;
   margin-bottom: 32px;
   color: #000000;
-  padding: 0 20px;
+  padding: 0;
+  max-width: 320px; /* Control line breaks */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .analyze-button {
-  background: #FF5100;
+  background: #FF4D00;
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 18px 0;
   font-size: 20px;
   font-weight: 500;
   cursor: pointer;
-  width: calc(100% - 48px);
-  margin: 0 24px;
+  width: 90%;
+  margin: 24px auto;
   transition: background-color 0.2s;
   font-family: 'Baloo2';
 }
@@ -110,10 +114,10 @@
 
 .disclaimer {
   font-size: 11px;
-  color: #666;
+  color: rgba(0, 0, 0, 0.6);
   margin-top: 16px;
   text-align: center;
-  padding: 0 40px;
+  padding: 0 32px;
   line-height: 1.4;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
