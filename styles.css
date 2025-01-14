@@ -1,59 +1,7 @@
 @font-face {
   font-family: 'Baloo2';
-  src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-Regular.ttf) format('truetype');
-  font-weight: 400;
-}
-
-@font-face {
-  font-family: 'Baloo2';
-  src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-Medium.ttf) format('truetype');
-  font-weight: 500;
-}
-
-@font-face {
-  font-family: 'Baloo2';
-  src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-SemiBold.ttf) format('truetype');
-  font-weight: 600;
-}
-
-@font-face {
-  font-family: 'Baloo2';
   src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-Bold.ttf) format('truetype');
   font-weight: 700;
-}
-
-#amazon-price-analyzer-container {
-  position: relative;
-  z-index: 9999;
-  font-family: 'Baloo2', sans-serif;
-}
-
-#price-analyzer-fab {
-  position: fixed;
-  top: 120px;
-  right: 20px;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #FF6100;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  transition: transform 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-#price-analyzer-fab img {
-  width: 100%;
-  height: 100%;
-  padding: 12px;
-}
-
-#price-analyzer-fab:hover {
-  transform: scale(1.1);
 }
 
 #price-analyzer-popup {
@@ -61,15 +9,15 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 440px;
-  height: 520px;
+  width: 380px; /* Reduced width */
+  height: auto; /* Changed to auto */
   background: #FFE4D6;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
 .popup-content {
-  padding: 24px;
+  padding: 32px 24px; /* Increased top/bottom padding */
   position: relative;
 }
 
@@ -79,61 +27,58 @@
   right: 16px;
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
   color: #666;
-  font-family: 'Baloo2';
-  font-weight: 500;
-}
-
-.initial-view {
-  text-align: center;
-  padding-top: 20px;
+  opacity: 0.6;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 .mascot {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .mascot img {
-  width: 80px;
-  height: 80px;
+  width: 96px; /* Slightly larger mascot */
+  height: 96px;
 }
 
 .initial-view h2 {
   font-family: 'Baloo2';
   font-weight: 700;
-  font-size: 42px;
-  margin-bottom: 24px;
+  font-size: 36px;
   line-height: 1.2;
+  margin-bottom: 32px;
+  text-align: center;
 }
 
-.analyze-button, .track-button {
+.analyze-button {
   font-family: 'Baloo2';
   font-weight: 600;
-  background: #F26B3C;
+  background: #FF4B12;  /* Updated orange color */
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 16px 32px;
-  font-size: 18px;
+  border-radius: 16px; /* More rounded corners */
+  padding: 16px;
+  font-size: 20px;
   cursor: pointer;
   width: 100%;
-  margin-top: 24px;
   transition: background-color 0.2s;
 }
 
-.analyze-button:hover, .track-button:hover {
-  background: #E55B2D;
+.analyze-button:hover {
+  background: #E54410;
 }
 
 .disclaimer {
-  font-family: 'Baloo2';
-  font-weight: 400;
-  font-size: 12px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
   color: #666;
   margin-top: 16px;
   text-align: center;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .loading-spinner {

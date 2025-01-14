@@ -22,15 +22,15 @@ if (fabImg) {
     <div class="popup-content">
       <button class="close-button">✕</button>
       
-      <!-- Initial View -->
-<div class="initial-view">
-    <div class="mascot">
+    <!-- Initial View -->
+    <div class="initial-view">
+      <div class="mascot">
         <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+      </div>
+      <h2>Don't Buy Until Our<br>AI<br>Check The Price<br>First!</h2>
+      <button class="analyze-button">Analyze The Price</button>
+      <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
     </div>
-    <h2>Don't Buy Until Our AI<br>Check The Price First!</h2>
-    <button class="analyze-button">Analyze The Price</button>
-    <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
-</div>
 
       <!-- Analysis View -->
       <div class="analysis-content" style="display: none;">
