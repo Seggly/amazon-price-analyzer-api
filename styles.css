@@ -2,14 +2,14 @@
 
 #amazon-price-analyzer-container {
   position: relative;
-  z-index: 9999;
+  z-index: 999999; /* Increased z-index */
   font-family: 'Baloo 2', cursive;
 }
   
  
 #price-analyzer-fab {
   position: fixed;
-  top: 120px; /* Moved down to avoid cart button */
+  top: 120px;
   right: 20px;
   width: 48px;
   height: 48px;
@@ -23,6 +23,7 @@
   align-items: center;
   justify-content: center;
   padding: 0;
+  z-index: 999998; /* Added z-index */
 }
 #price-analyzer-fab img {
   width: 100%;
@@ -33,25 +34,38 @@
     transform: scale(1.1);
   }
   
-/* Update popup dimensions */
+/* Update the popup z-index */
 #price-analyzer-popup {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 440px; /* Fixed width */
-  height: 520px; /* Fixed height */
+  width: 440px;
+  height: 520px;
   background: #FFE4D6;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  overflow: hidden; /* Prevent content overflow */
+  overflow: hidden;
+  z-index: 999999; /* Added z-index */
 }
   
-  .popup-content {
-    padding: 24px;
-    position: relative;
-  }
-  
+.popup-content {
+  padding: 24px;
+  position: relative;
+  background: #FFE4D6;
+  height: 100%;
+  box-sizing: border-box;
+}
+  /* Update the overlay style */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999997;
+}
   .close-button {
     position: absolute;
     top: 16px;
