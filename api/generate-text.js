@@ -82,7 +82,7 @@ Average Time at Lowest Price:
 ### Instructions:
 - Return the response in this format:
 
-Price Grade: [Your Price Grade]
+priceGrade: [Your Price Grade]
 
 Header: [Your conclusion text]
 

@@ -6,7 +6,7 @@ function createUI() {
     const container = document.createElement('div');
     container.id = 'amazon-price-analyzer-container';
     
-    // Create the FAB
+    // Create the FAB with the correct icon
     const fab = document.createElement('button');
     fab.id = 'price-analyzer-fab';
     fab.innerHTML = `<img src="${chrome.runtime.getURL('icons/icon48.png')}" alt="Price Analyzer" />`;
@@ -122,24 +122,10 @@ function triggerConfetti() {
     }
 }
 
-// Set GIF based on conclusion
-function setGifForConclusion(conclusionText) {
+// Set GIF based on price grade
+function setGifForPriceGrade(priceGrade) {
     const gifContainer = document.querySelector('.gif-container');
-    let gifUrl = '';
-
-    conclusionText = conclusionText.toLowerCase();
-    if (conclusionText.includes('excellent') || conclusionText.includes('great deal')) {
-        gifUrl = 'excellent-price.gif';
-    } else if (conclusionText.includes('good')) {
-        gifUrl = 'good-price.gif';
-    } else if (conclusionText.includes('average')) {
-        gifUrl = 'average-price.gif';
-    } else if (conclusionText.includes('not so good')) {
-        gifUrl = 'not-good-price.gif';
-    } else {
-        gifUrl = 'bad-price.gif';
-    }
-
+    const gifUrl = `${priceGrade}-price.gif`;
     gifContainer.innerHTML = `<img src="${chrome.runtime.getURL('gifs/' + gifUrl)}" alt="Price reaction">`;
 }
 
@@ -172,7 +158,7 @@ function init() {
             subject1El.textContent = lastAnalysisResult.text.subject1;
             subject2El.textContent = lastAnalysisResult.text.subject2;
             
-            setGifForConclusion(lastAnalysisResult.text.header);
+            setGifForPriceGrade(lastAnalysisResult.priceGrade);
         } else {
             initialView.style.display = 'block';
             analysisContent.style.display = 'none';
@@ -208,10 +194,11 @@ function init() {
                 await typeText(subject1El, response.text.subject1);
                 await typeText(subject2El, response.text.subject2);
 
-                setGifForConclusion(response.text.header);
+                setGifForPriceGrade(response.priceGrade);
 
-                if (['excellent', 'good', 'average'].some(term => 
-                    response.text.header.toLowerCase().includes(term))) {
+                // Only trigger confetti for positive grades
+                const positiveGrades = ['excellent', 'good', 'average'];
+                if (positiveGrades.includes(response.priceGrade)) {
                     triggerConfetti();
                 }
             }
@@ -242,5 +229,12 @@ function init() {
     });
 }
 
-// Start the extension
-init();
+// Start the extension when DOM is fully loaded
+document.addEventListener('DOMContentLoaded', init);
+
+// Also run init immediately in case DOMContentLoaded already fired
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
