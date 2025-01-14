@@ -1,16 +1,16 @@
 @font-face {
   font-family: 'Baloo2';
-  src: url(chrome-extension://MSG_@@extension_id/fonts/Baloo2/Baloo2-Bold.ttf) format('truetype');
+  src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-Bold.ttf) format('truetype');
   font-weight: 700;
-}
-
-#amazon-price-analyzer-container {
+ }
+ 
+ #amazon-price-analyzer-container {
   position: relative;
   z-index: 2147483647;
   font-family: 'Baloo2', sans-serif;
-}
-
-#price-analyzer-fab {
+ }
+ 
+ #price-analyzer-fab {
   position: fixed;
   top: 120px;
   right: 20px;
@@ -26,18 +26,19 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-}
-
-#price-analyzer-fab img {
+ }
+ 
+ #price-analyzer-fab img {
   width: 100%;
   height: 100%;
   padding: 12px;
-}
-
-#price-analyzer-fab:hover {
+ }
+ 
+ #price-analyzer-fab:hover {
   transform: scale(1.1);
-}
-#price-analyzer-popup {
+ }
+ 
+ #price-analyzer-popup {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -47,40 +48,53 @@
   background: #FFD4C2;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  overflow: hidden; /* This prevents content from spilling out */
-}
-
-.popup-content {
+  overflow: hidden;
+ }
+ 
+ .popup-content {
   padding: 32px;
   height: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between; /* This helps distribute space evenly */
-}
-
-.mascot {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.mascot img {
-  width: 96px;
-  height: 96px;
-}
-
-.initial-view {
+  justify-content: space-between;
+ }
+ 
+ .close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #999;
+  padding: 8px;
+ }
+ 
+ /* Initial View */
+ .initial-view {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 0 20px;
   box-sizing: border-box;
-}
-
-.initial-view h2 {
+ }
+ 
+ .mascot {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+ }
+ 
+ .mascot img {
+  width: 96px;
+  height: 96px;
+ }
+ 
+ .initial-view h2 {
   font-family: 'Baloo2';
   font-weight: 700;
   font-size: 36px;
@@ -88,9 +102,9 @@
   margin: 0 0 24px 0;
   color: #000000;
   text-align: center;
-}
-
-.analyze-button {
+ }
+ 
+ .analyze-button {
   background: #FF4500;
   color: white;
   border: none;
@@ -103,9 +117,9 @@
   max-width: 400px;
   margin: 0 0 16px 0;
   font-family: 'Baloo2';
-}
-
-.disclaimer {
+ }
+ 
+ .disclaimer {
   font-size: 11px;
   color: rgba(0, 0, 0, 0.7);
   text-align: center;
@@ -113,110 +127,96 @@
   line-height: 1.4;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-.close-button {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #999;
-  padding: 8px;
-}
-
-/* Results View Styles */
-.loading-spinner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
-.spinner {
+ }
+ 
+ /* Results View */
+ .loading-spinner {
+  text-align: center;
+  padding: 40px 20px;
+ }
+ 
+ .spinner {
   width: 40px;
   height: 40px;
   border: 4px solid rgba(255, 69, 0, 0.2);
   border-top: 4px solid #FF4500;
   border-radius: 50%;
+  margin: 0 auto 16px;
   animation: spin 1s linear infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes spin {
+ }
+ 
+ @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-.results {
+ }
+ 
+ .results {
   width: 100%;
   padding: 0;
   text-align: left;
-}
-.emoji {
-  font-size: 18px;
-  margin-right: 8px;
-}
-.analysis-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 20px;
-  box-sizing: border-box;
-}
-.header-text {
+ }
+ 
+ .header-text {
   font-family: 'Baloo2';
   font-weight: 700;
   font-size: 32px;
   line-height: 1.2;
   margin-bottom: 20px;
   text-align: center;
-}
-.price-insight, .buy-advice {
+ }
+ 
+ .price-insight, .buy-advice {
   display: flex;
   align-items: flex-start;
   margin-bottom: 16px;
-}
-.subject1-text, .subject2-text {
-  margin: 4px 0 0 0;
-  line-height: 1.5;
-  font-size: 14px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  padding: 0;
-}
-
-.gif-container {
-  margin: 16px 0;
-  text-align: center;
-}
-
-.gif-container img {
-  width: 100%;
-  max-width: 360px;
-  border-radius: 4px;
-}
-.price-insight h3, .buy-advice h3 {
+ }
+ 
+ .emoji {
+  font-size: 18px;
+  margin-right: 8px;
+ }
+ 
+ .price-insight h3, .buy-advice h3 {
   font-family: 'Baloo2';
   font-weight: 700;
   font-size: 16px;
   margin: 0;
   display: inline;
-}
-
-.track-button {
+ }
+ 
+ .subject1-text, .subject2-text {
+  margin: 4px 0 0 0;
+  line-height: 1.5;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 0;
+ }
+ 
+ .gif-container {
+  margin: 16px 0;
+  text-align: center;
+ }
+ 
+ .gif-container img {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 4px;
+ }
+ 
+ .track-button {
   width: 100%;
   background: #FF4500;
-  padding: 14px 0;
+  color: white;
+  border: none;
   border-radius: 8px;
+  padding: 14px 0;
   margin: 16px 0;
   font-size: 18px;
-}
-
-.track-button:hover {
-  background: #E55500;
-}
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Baloo2';
+ }
+ 
+ .track-button:hover {
+  background: #E54000;
+ }
