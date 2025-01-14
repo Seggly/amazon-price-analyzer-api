@@ -86,9 +86,9 @@ priceGrade: [Your Price Grade]
 
 Header: [Your conclusion text]
 
-💡 Price Insight: [Your price insight text]
+[Your price insight text]
 
-🤔 Should You Buy Now?[Your buying advice text]`;
+[Your buying advice text]`;
 
         console.log('Sending to OpenAI:', prompt);
 
