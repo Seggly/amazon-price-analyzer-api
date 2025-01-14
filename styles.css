@@ -96,11 +96,13 @@
 }
 
 .initial-view h2 {
-  font-family: 'Baloo 2', cursive;
-  font-size: 32px;
-  font-weight: bold;
-  margin-bottom: 24px;
+  font-family: 'Baloo 2';
+  font-weight: 700;  /* Bold weight */
+  font-size: 42px;   /* Increased size */
   line-height: 1.2;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em; /* Slightly tighter letter spacing */
+  color: #000000;    /* Pure black for stronger contrast */
 }
 
 .analyze-button {
