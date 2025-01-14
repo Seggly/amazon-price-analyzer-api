@@ -25,7 +25,7 @@ if (fabImg) {
 
     <div class="initial-view">
       <div class="mascot">
-        <img src="${chrome.runtime.getURL('icons/mascot.svg')}" alt="Mascot" />
+        <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
       </div>
       <h2>Don't Buy Until Our AI Check The Price First!</h2>
       <button class="analyze-button">Analyze The Price</button>

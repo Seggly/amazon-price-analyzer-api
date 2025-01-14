@@ -45,9 +45,10 @@
   transform: translate(-50%, -50%);
   width: 465px;
   height: 392px;
-  background: #FFD4C2; /* Updated to match reference */
+  background: #FFD4C2;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  overflow: hidden; /* This prevents content from spilling out */
 }
 
 .popup-content {
@@ -57,37 +58,46 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-}
+  justify-content: space-between; /* This helps distribute space evenly */
 
-.close-button {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #999;
-  padding: 8px;
+
+
+
+
+
+
+
+
+
+
 }
 
 .mascot {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 
 .mascot img {
+  width: 96px;
+  height: 96px;
+}
+
+.initial-view {
   width: 100%;
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .initial-view h2 {
   font-family: 'Baloo2';
   font-weight: 700;
-  font-size: 42px;
-  line-height: 1.1;
-  margin: 0 0 32px 0;
+  font-size: 36px;
+  line-height: 1.2;
+  margin: 0 0 24px 0;
   color: #000000;
   text-align: center;
 }
@@ -98,28 +108,42 @@
   border: none;
   border-radius: 12px;
   padding: 16px 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   cursor: pointer;
   width: 100%;
-
-
+  max-width: 400px;
+  margin: 0 0 16px 0;
   font-family: 'Baloo2';
 }
 
-.analyze-button:hover {
-  background: #FF5722;
-}
+
+
+
 
 .disclaimer {
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(0, 0, 0, 0.7);
-  margin-top: 16px;
+
   text-align: center;
   max-width: 360px;
   line-height: 1.4;
+  margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+
+.close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #999;
+  padding: 8px;
+}
+
 
 /* Results View Styles */
 .loading-spinner {
