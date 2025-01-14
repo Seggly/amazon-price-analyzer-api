@@ -39,10 +39,42 @@ function createUI() {
     return { fab, popup };
   }
   
-  // Extract ASIN from Amazon URL
-  function getAsin() {
-    const match = window.location.pathname.match(/\/dp\/([A-Z0-9]{10})/);
-    return match ? match[1] : null;
+// Replace your current getAsin() function with this one
+function getAsin() {
+    // Try different URL patterns
+    const patterns = [
+      /\/dp\/([A-Z0-9]{10})/, // Standard product URL
+      /\/product\/([A-Z0-9]{10})/, // Alternative product URL
+      /\/gp\/product\/([A-Z0-9]{10})/, // Another alternative format
+      /\/?([A-Z0-9]{10})(\/|\?|$)/ // Catch-all for other formats
+    ];
+  
+    // Check URL pathname
+    for (const pattern of patterns) {
+      const match = window.location.pathname.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+  
+    // Check URL parameters (some Amazon URLs include ASIN as a parameter)
+    const urlParams = new URLSearchParams(window.location.search);
+    const asinParam = urlParams.get('asin');
+    if (asinParam && asinParam.match(/^[A-Z0-9]{10}$/)) {
+      return asinParam;
+    }
+  
+    // If not found in URL, try looking for it in the page content
+    const asinElement = document.querySelector('[data-asin]');
+    if (asinElement && asinElement.getAttribute('data-asin').match(/^[A-Z0-9]{10}$/)) {
+      return asinElement.getAttribute('data-asin');
+    }
+  
+    // Add console log for debugging
+    console.log('Current URL:', window.location.href);
+    console.log('Current pathname:', window.location.pathname);
+    
+    return null;
   }
   
   // Type text effect
@@ -89,11 +121,12 @@ function showError(message) {
     
     // Handle FAB click
     fab.addEventListener('click', async () => {
-      const asin = getAsin();
-      if (!asin) {
-        console.error('Could not find ASIN');
-        return;
-      }
+        const asin = getAsin();
+        if (!asin) {
+          console.error('Could not find ASIN in URL:', window.location.href);
+          showError('Sorry, this doesnt appear to be a valid Amazon product page. Please make sure youre on a product page and try again.');
+          return;
+        }
       
       popup.style.display = 'block';
       loadingSpinner.style.display = 'block';
