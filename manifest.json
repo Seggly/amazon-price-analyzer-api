@@ -9,7 +9,8 @@
   ],
   "host_permissions": [
     "https://*.amazon.com/*",
-    "https://amazon-price-analyzer-api.vercel.app/*"
+    "https://amazon-price-analyzer-api.vercel.app/*",
+    "https://api.keepa.com/*"
   ],
   "content_scripts": [
     {
