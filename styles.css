@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'Baloo2';
-  src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-Bold.ttf) format('truetype');
+  src: url(chrome-extension://MSG_@@extension_id/fonts/Baloo2/Baloo2-Bold.ttf) format('truetype');
   font-weight: 700;
 }
 
@@ -32,33 +32,87 @@
   width: 100%;
   height: 100%;
   padding: 12px;
-  pointer-events: none;
 }
 
 #price-analyzer-fab:hover {
   transform: scale(1.1);
 }
-
 #price-analyzer-popup {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 300px;
-  height: 300px;
-  background: #FFE4DC;
-  border-radius: 24px;
+  width: 465px;
+  height: 392px;
+  background: #FFD4C2;
+  border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  overflow: hidden; /* This prevents content from spilling out */
 }
 
 .popup-content {
-  position: relative;
+  padding: 32px;
   height: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px;
+  justify-content: space-between; /* This helps distribute space evenly */
+}
+
+.mascot {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.mascot img {
+  width: 96px;
+  height: 96px;
+}
+
+.initial-view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
   box-sizing: border-box;
+}
+
+.initial-view h2 {
+  font-family: 'Baloo2';
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1.2;
+  margin: 0 0 24px 0;
+  color: #000000;
+  text-align: center;
+}
+
+.analyze-button {
+  background: #FF4500;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 0;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 0 16px 0;
+  font-family: 'Baloo2';
+}
+
+.disclaimer {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.7);
+  text-align: center;
+  max-width: 360px;
+  line-height: 1.4;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .close-button {
@@ -68,87 +122,23 @@
   background: none;
   border: none;
   font-size: 20px;
-  color: #666;
   cursor: pointer;
-  padding: 4px;
-  line-height: 1;
+  color: #999;
+  padding: 8px;
 }
 
-.initial-view {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.mascot {
-  margin: 0 0 12px 0;
-}
-
-.mascot img {
-  width: 72px;
-  height: 72px;
-}
-
-.initial-view h2 {
-  font-family: 'Baloo2';
-  font-weight: 700;
-  font-size: 28px;
-  line-height: 1.2;
-  text-align: center;
-  margin: 0 0 20px 0;
-  max-width: 260px;
-}
-
-.analyze-button {
-  width: 100%;
-  height: 48px;
-  background: #FF4500;
-  color: white;
-  border: none;
-  border-radius: 16px;
-  font-family: 'Baloo2';
-  font-weight: 700;
-  font-size: 20px;
-  cursor: pointer;
-  margin: 0 0 8px 0;
-  transition: background-color 0.2s;
-}
-
-.analyze-button:hover {
-  background: #E63E00;
-}
-
-.disclaimer {
-  font-size: 9px;
-  color: rgba(0, 0, 0, 0.5);
-  text-align: center;
-  line-height: 1.2;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  max-width: 260px;
-}
-
-/* Analysis Content Styles */
-.analysis-content {
-  width: 100%;
-  height: 100%;
-  display: none;
-}
-
+/* Results View Styles */
 .loading-spinner {
-  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  display: none;
+  height: 100%;
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border: 4px solid rgba(255, 69, 0, 0.2);
   border-top: 4px solid #FF4500;
   border-radius: 50%;
@@ -162,42 +152,42 @@
 }
 
 .results {
-  height: 100%;
-  display: none;
+  width: 100%;
+  padding: 0;
+  text-align: left;
 }
-
+.emoji {
+  font-size: 18px;
+  margin-right: 8px;
+}
+.analysis-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
 .header-text {
   font-family: 'Baloo2';
   font-weight: 700;
   font-size: 32px;
   line-height: 1.2;
+  margin-bottom: 20px;
   text-align: center;
-  margin: 0 0 24px 0;
 }
-
 .price-insight, .buy-advice {
+  display: flex;
+  align-items: flex-start;
   margin-bottom: 16px;
 }
-
-.price-insight h3, .buy-advice h3 {
-  font-family: 'Baloo2';
-  font-weight: 700;
-  font-size: 18px;
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-}
-
-.emoji {
-  font-size: 20px;
-  margin-right: 8px;
-}
-
 .subject1-text, .subject2-text {
-  margin: 0;
+  margin: 4px 0 0 0;
   line-height: 1.5;
-  font-size: 16px;
+  font-size: 14px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 0;
 }
 
 .gif-container {
@@ -206,26 +196,27 @@
 }
 
 .gif-container img {
-  max-width: 100%;
-  border-radius: 8px;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 4px;
+}
+.price-insight h3, .buy-advice h3 {
+  font-family: 'Baloo2';
+  font-weight: 700;
+  font-size: 16px;
+  margin: 0;
+  display: inline;
 }
 
 .track-button {
   width: 100%;
-  height: 48px;
   background: #FF4500;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-family: 'Baloo2';
-  font-weight: 700;
-  font-size: 20px;
-  cursor: pointer;
-  margin-top: auto;
-  margin-bottom: 16px;
-  transition: background-color 0.2s;
+  padding: 14px 0;
+  border-radius: 8px;
+  margin: 16px 0;
+  font-size: 18px;
 }
 
 .track-button:hover {
-  background: #E63E00;
+  background: #E55500;
 }
