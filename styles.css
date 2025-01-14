@@ -44,10 +44,10 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 400px;
-  height: 360px;
-  background: #FFD4C2;
-  border-radius: 16px;
+  width: 300px;
+  height: 300px;
+  background: #FFE4DC;
+  border-radius: 24px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
 
@@ -67,12 +67,11 @@
   right: 16px;
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   color: #666;
   cursor: pointer;
-  padding: 8px;
+  padding: 4px;
   line-height: 1;
-  font-family: sans-serif;
 }
 
 .initial-view {
@@ -84,37 +83,36 @@
 }
 
 .mascot {
-  margin: 0 0 20px 0;
+  margin: 0 0 12px 0;
 }
 
 .mascot img {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
 }
 
 .initial-view h2 {
   font-family: 'Baloo2';
   font-weight: 700;
-  font-size: 32px;
+  font-size: 28px;
   line-height: 1.2;
   text-align: center;
-  margin: 0 0 32px 0;
-  max-width: 320px;
+  margin: 0 0 20px 0;
+  max-width: 260px;
 }
 
 .analyze-button {
   width: 100%;
-  max-width: 320px;
-  height: 56px;
+  height: 48px;
   background: #FF4500;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 16px;
   font-family: 'Baloo2';
   font-weight: 700;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
-  margin: 0 0 20px 0;
+  margin: 0 0 8px 0;
   transition: background-color 0.2s;
 }
 
@@ -123,16 +121,13 @@
 }
 
 .disclaimer {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.6);
+  font-size: 9px;
+  color: rgba(0, 0, 0, 0.5);
   text-align: center;
-  line-height: 1.4;
+  line-height: 1.2;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  position: absolute;
-  bottom: 24px;
-  left: 24px;
-  right: 24px;
+  max-width: 260px;
 }
 
 /* Analysis Content Styles */
