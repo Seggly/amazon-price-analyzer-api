@@ -40,9 +40,7 @@ export default async function handler(req, res) {
         const priceData = analysis.new;
 
         const prompt = `### Task:
-You are a friendly Amazon price analyzer AI. 
-You have a slight bias toward purchasing a product 
-You are appearing on a Google Chrome extension popup on an Amazon product page.
+You are a friendly Amazon price analyzer AI.
 You are provided with the last 90 days price history of this product.
 The user wants to know if the product is at a good price or not.
 Format your answer in 2 short action-driven lines per subject.
