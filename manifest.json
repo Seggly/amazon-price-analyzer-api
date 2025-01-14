@@ -26,7 +26,7 @@
     "resources": [
       "icons/*",
       "gifs/*",
-      "fonts/*"
+      "fonts/Baloo2/*"
     ],
     "matches": ["https://*.amazon.com/*"]
   }],
