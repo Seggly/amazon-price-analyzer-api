@@ -40,20 +40,18 @@ export default async function handler(req, res) {
         const priceData = analysis.new;
 
         const prompt = `### Task:
-You are a friendly Amazon price analyzer AI.
+You are texting your friend who ask if a product is at a good price or not on Amazon
 You are provided with the last 90 days price history of this product.
-The user wants to know if the product is at a good price or not.
-Format your answer in 2 short action-driven lines per subject.
+You will respond in a convivial way using simple term to convey why you think this is a good price or not.
+Format your answer in 2 short and concise action-driven lines per subject.
 Put personality in your message.
-Start each Subject block with a title.
-Don't use any complicated words.
-You can use emoji.
+Use emoji's.
 
 ### Outputs:
 Follow this conversational framework:
 Header: give your conclusion (eg: Lowest price in a year—BUY NOW! 🎯)
 Subject 1: give a price insight explanation with key insights 
-Subject 2: Should you buy now? Guidance on whether to buy or wait and if the price likely to go up, down
+Subject 2: should you buy now? Guidance on whether to buy or wait and if the price likely to go up, down
 
 ### Inputs:
 Price Context:
@@ -85,9 +83,9 @@ Average Time at Lowest Price:
 
 Header: [Your conclusion text]
 
-Subject 1 - Price Insight: [Your price insight text]
+💡 Price Insight: [Your price insight text]
 
-Subject 2 - Should You Buy Now?:[Your buying advice text]`;
+🤔 Should You Buy Now?[Your buying advice text]`;
 
         console.log('Sending to OpenAI:', prompt);
 
