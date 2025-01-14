@@ -32,77 +32,94 @@
   width: 100%;
   height: 100%;
   padding: 12px;
+  pointer-events: none;
 }
 
 #price-analyzer-fab:hover {
   transform: scale(1.1);
 }
+
 #price-analyzer-popup {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 465px;
-  height: 392px;
+  width: 400px;
+  height: 360px;
   background: #FFD4C2;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  overflow: hidden; /* This prevents content from spilling out */
 }
 
 .popup-content {
-  padding: 32px;
+  position: relative;
   height: 100%;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between; /* This helps distribute space evenly */
+  padding: 24px;
+  box-sizing: border-box;
 }
 
-.mascot {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.mascot img {
-  width: 96px;
-  height: 96px;
+.close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 8px;
+  line-height: 1;
+  font-family: sans-serif;
 }
 
 .initial-view {
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 20px;
-  box-sizing: border-box;
+}
+
+.mascot {
+  margin: 0 0 20px 0;
+}
+
+.mascot img {
+  width: 64px;
+  height: 64px;
 }
 
 .initial-view h2 {
   font-family: 'Baloo2';
   font-weight: 700;
-  font-size: 36px;
+  font-size: 32px;
   line-height: 1.2;
-  margin: 0 0 24px 0;
-  color: #000000;
   text-align: center;
+  margin: 0 0 32px 0;
+  max-width: 320px;
 }
 
 .analyze-button {
+  width: 100%;
+  max-width: 320px;
+  height: 56px;
   background: #FF4500;
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 16px 0;
-  font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
-  width: 100%;
-  max-width: 400px;
-  margin: 0 0 16px 0;
   font-family: 'Baloo2';
+  font-weight: 700;
+  font-size: 24px;
+  cursor: pointer;
+  margin: 0 0 20px 0;
+  transition: background-color 0.2s;
+}
+
+.analyze-button:hover {
+  background: #E63E00;
 }
 
 .disclaimer {
@@ -112,29 +129,26 @@
   line-height: 1.4;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-
-.close-button {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #999;
-  padding: 8px;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
 }
 
-/* Results View Styles */
+/* Analysis Content Styles */
+.analysis-content {
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+
 .loading-spinner {
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  padding: 24px;
+  display: none;
 }
 
 .spinner {
@@ -153,25 +167,8 @@
 }
 
 .results {
-  width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.emoji {
-  font-size: 20px;
-  margin-right: 8px;
-}
-
-.analysis-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  box-sizing: border-box;
-  font-family: 'Baloo2', sans-serif;
+  display: none;
 }
 
 .header-text {
@@ -179,35 +176,13 @@
   font-weight: 700;
   font-size: 32px;
   line-height: 1.2;
-  margin: 0 0 24px 0;
   text-align: center;
-  color: #000000;
+  margin: 0 0 24px 0;
 }
 
 .price-insight, .buy-advice {
   margin-bottom: 16px;
 }
-
-.subject1-text, .subject2-text {
-  margin: 0;
-  line-height: 1.5;
-  font-size: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: rgba(0, 0, 0, 0.8);
-}
-
-.gif-container {
-  margin: 24px 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.gif-container img {
-  max-width: 100%;
-  border-radius: 8px;
-}
-
 
 .price-insight h3, .buy-advice h3 {
   font-family: 'Baloo2';
@@ -216,20 +191,41 @@
   margin: 0 0 8px 0;
   display: flex;
   align-items: center;
-  color: #000000;
+}
+
+.emoji {
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.subject1-text, .subject2-text {
+  margin: 0;
+  line-height: 1.5;
+  font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.gif-container {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.gif-container img {
+  max-width: 100%;
+  border-radius: 8px;
 }
 
 .track-button {
   width: 100%;
+  height: 48px;
   background: #FF4500;
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 16px 0;
-  font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
   font-family: 'Baloo2';
+  font-weight: 700;
+  font-size: 20px;
+  cursor: pointer;
   margin-top: auto;
   margin-bottom: 16px;
   transition: background-color 0.2s;
