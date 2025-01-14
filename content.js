@@ -125,42 +125,45 @@ function init() {
   analyzeButton.addEventListener('click', async () => {
     const asin = getAsin();
     if (!asin) {
-      alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
-      return;
+        alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
+        return;
     }
-
+    // Add the showing-results class to change dimensions
+    popup.classList.add('showing-results');
+    
     initialView.style.display = 'none';
     analysisContent.style.display = 'block';
     loadingSpinner.style.display = 'block';
     results.style.display = 'none';
 
     try {
-      const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
-      
-      if (response.success) {
+        const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
+        
+        if (response.success) {
+            loadingSpinner.style.display = 'none';
+            results.style.display = 'block';
+
+            const headerEl = results.querySelector('.header-text');
+            const subject1El = results.querySelector('.subject1-text');
+            const subject2El = results.querySelector('.subject2-text');
+
+            await typeText(headerEl, response.text.header);
+            await typeText(subject1El, response.text.subject1);
+            await typeText(subject2El, response.text.subject2);
+        }
+    } catch (error) {
+        console.error('Error during price analysis:', error);
         loadingSpinner.style.display = 'none';
         results.style.display = 'block';
-
-        const headerEl = results.querySelector('.header-text');
-        const subject1El = results.querySelector('.subject1-text');
-        const subject2El = results.querySelector('.subject2-text');
-
-        await typeText(headerEl, response.text.header);
-        await typeText(subject1El, response.text.subject1);
-        await typeText(subject2El, response.text.subject2);
-      }
-    } catch (error) {
-      console.error('Error during price analysis:', error);
-      loadingSpinner.style.display = 'none';
-      results.style.display = 'block';
-      results.querySelector('.header-text').textContent = 'Oops! Something went wrong. Please try again.';
+        results.querySelector('.header-text').textContent = 'Oops! Something went wrong. Please try again.';
     }
-  });
+});
 
-  // Handle close button click
-  closeButton.addEventListener('click', () => {
-    popup.style.display = 'none';
-  });
+// In your close button handler, remove the class
+closeButton.addEventListener('click', () => {
+  popup.classList.remove('showing-results');
+  popup.style.display = 'none';
+});
 
   // Close popup when clicking outside
   window.addEventListener('click', (event) => {

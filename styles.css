@@ -48,7 +48,12 @@
   background: #FFD4C2;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  overflow: hidden; /* This prevents content from spilling out */
+  overflow: hidden;
+}
+
+#price-analyzer-popup.showing-results {
+  height: 600px;
+  transition: height 0.3s ease-out;
 }
 
 .popup-content {
@@ -58,18 +63,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between; /* This helps distribute space evenly */
-
-
-
-
-
-
-
-
-
-
-
+  justify-content: space-between;
 }
 
 .mascot {
@@ -117,14 +111,9 @@
   font-family: 'Baloo2';
 }
 
-
-
-
-
 .disclaimer {
   font-size: 11px;
   color: rgba(0, 0, 0, 0.7);
-
   text-align: center;
   max-width: 360px;
   line-height: 1.4;
@@ -144,13 +133,14 @@
   padding: 8px;
 }
 
-
 /* Results View Styles */
 .analysis-content {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .loading-spinner {
@@ -159,7 +149,6 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 20px;
 }
 
 .spinner {
@@ -179,9 +168,9 @@
 
 .results {
   height: 100%;
-  padding: 0;
   display: flex;
   flex-direction: column;
+  padding: 0;
 }
 
 .header-text {
@@ -189,30 +178,50 @@
   font-weight: 700;
   font-size: 32px;
   line-height: 1.2;
+  margin: 0 0 24px 0;
   text-align: center;
-  margin: 0 0 20px 0;
   color: #000000;
 }
 
+.price-insight, .buy-advice {
+  margin-bottom: 20px;
+}
+
+.price-insight h3, .buy-advice h3 {
+  font-family: 'Baloo2';
+  font-weight: 700;
+  font-size: 16px;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+}
+
+.emoji {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
 .subject1-text, .subject2-text {
-  font-size: 14px;
+  margin: 0;
   line-height: 1.5;
-  margin: 0 0 16px 0;
+  font-size: 14px;
   color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .gif-container {
-  margin: 16px 0;
-  text-align: center;
-  flex-grow: 0;
-  flex-shrink: 0;
+  margin: 24px 0;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .gif-container img {
-  max-width: 100%;
+  max-height: 200px;
+  width: auto;
   border-radius: 8px;
-  height: auto;
+  object-fit: contain;
 }
 
 .track-button {
@@ -225,7 +234,7 @@
   font-size: 18px;
   font-weight: 700;
   cursor: pointer;
-  margin: auto 0 16px 0;
+  margin: 0 0 16px 0;
   font-family: 'Baloo2';
 }
 
@@ -233,21 +242,6 @@
   background: #E63E00;
 }
 
-/* Add styles for the emoji and text layout */
-.price-insight, .buy-advice {
-  margin-bottom: 16px;
-}
-
-.price-insight h3, .buy-advice h3 {
-  font-family: 'Baloo2';
-  font-weight: 700;
-  font-size: 16px;
-  margin: 0 0 4px 0;
-  display: flex;
-  align-items: center;
-}
-
-.emoji {
-  font-size: 18px;
-  margin-right: 8px;
+.results .disclaimer {
+  margin-bottom: 0;
 }
