@@ -12,18 +12,16 @@ function createUI() {
   popup.id = 'price-analyzer-popup';
   popup.style.display = 'none';
   popup.innerHTML = `
-    <div class="popup-content">
-      <button class="close-button">×</button>
-      
-      <div class="initial-view">
-        <div class="mascot">
-          <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
-        </div>
-        <h2>Don't Buy Until Our AI Checks The Price First!</h2>
-        <button class="analyze-button">Analyze The Price</button>
-        <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
+  <div class="popup-content">
+    <button class="close-button">×</button>
+    <div class="initial-view">
+      <div class="mascot">
+        <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
       </div>
-
+      <h2>Don't Buy Until Our AI Check The Price First!</h2>
+      <button class="analyze-button">Analyze The Price</button>
+      <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
+    </div>
       <div class="analysis-content" style="display: none;">
         <div class="loading-spinner" style="display: none;">
           <div class="spinner"></div>
