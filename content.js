@@ -3,11 +3,17 @@ function createUI() {
   const container = document.createElement('div');
   container.id = 'amazon-price-analyzer-container';
   
-  // Create the FAB
-  const fab = document.createElement('button');
-  fab.id = 'price-analyzer-fab';
-  fab.innerHTML = `<img src="${chrome.runtime.getURL('icons/icon48.png')}" alt="Price Analyzer" />`;
-  
+ // In createUI function, modify fab creation
+const fab = document.createElement('button');
+fab.id = 'price-analyzer-fab';
+fab.innerHTML = `<img src="${chrome.runtime.getURL('icons/icon48.png')}" alt="Price Analyzer" />`;
+fab.style.zIndex = '999999';  // Make sure button is clickable
+
+// Add these styles to the image directly to ensure it doesn't interfere with clicks
+const fabImg = fab.querySelector('img');
+if (fabImg) {
+    fabImg.style.pointerEvents = 'none';  // This prevents the image from capturing clicks
+}
   // Create the popup
   const popup = document.createElement('div');
   popup.id = 'price-analyzer-popup';
