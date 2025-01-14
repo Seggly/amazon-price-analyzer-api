@@ -48,6 +48,7 @@ Put personality in your message.
 Use emoji's.
 
 ### Outputs:
+Assign a grade to the price between: excellent, good, average, not-good and bad-price
 Follow this conversational framework:
 Header: give your conclusion (eg: Lowest price in a year—BUY NOW! 🎯)
 Subject 1: give a price insight explanation with key insights 
@@ -80,6 +81,8 @@ Average Time at Lowest Price:
 
 ### Instructions:
 - Return the response in this format:
+
+Price Grade: [Your Price Grade]
 
 Header: [Your conclusion text]
 

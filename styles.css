@@ -1,42 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&display=swap');
+
 #amazon-price-analyzer-container {
-    position: relative;
-    z-index: 9999;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
+  position: relative;
+  z-index: 9999;
+  font-family: 'Baloo 2', cursive;
+}
   
-  #price-analyzer-fab {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: transform 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-  }
-  
+ 
+#price-analyzer-fab {
+  position: fixed;
+  top: 120px; /* Moved down to avoid cart button */
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #FF6100;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+#price-analyzer-fab img {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+}
   #price-analyzer-fab:hover {
     transform: scale(1.1);
   }
   
-  #price-analyzer-popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 400px;
-    background: #FFE4D6;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  }
+/* Update popup dimensions */
+#price-analyzer-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 440px; /* Fixed width */
+  height: 520px; /* Fixed height */
+  background: #FFE4D6;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  overflow: hidden; /* Prevent content overflow */
+}
   
   .popup-content {
     padding: 24px;
@@ -119,7 +128,8 @@
   }
   
   .results {
-    padding: 20px 0;
+    height: 400px; /* Fixed height for results */
+    overflow-y: auto; /* Allow scrolling if content is too long */
   }
   
   .header-text {
@@ -133,7 +143,22 @@
     margin-bottom: 16px;
     line-height: 1.5;
   }
-  
+  /* Add styles for confetti */
+.confetti {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  animation: confettiDrop 2s linear forwards;
+}
+
+@keyframes confettiDrop {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+  }
+}
   .gif-container {
     margin: 24px 0;
     text-align: center;
