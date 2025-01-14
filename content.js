@@ -1,3 +1,6 @@
+// Add at the very top of your file
+console.log('Content script loaded');
+
 // Store last analysis result
 let lastAnalysisResult = null;
 
@@ -142,6 +145,7 @@ function init() {
 
     // Handle FAB click
     fab.addEventListener('click', () => {
+      console.log('FAB clicked');  // Add this line
         popup.style.display = 'block';
         
         if (lastAnalysisResult) {
@@ -229,12 +233,5 @@ function init() {
     });
 }
 
-// Start the extension when DOM is fully loaded
-document.addEventListener('DOMContentLoaded', init);
-
-// Also run init immediately in case DOMContentLoaded already fired
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+// Start the extension
+init();
