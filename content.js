@@ -111,6 +111,33 @@ async function typeText(element, text, speed = 30) {
   }
 }
 
+function determineGifCategory(priceGrade) {
+  if (!priceGrade) return 'average-price';
+  
+  switch(priceGrade.toLowerCase()) {
+    case 'excellent':
+      return 'excellent-price';
+    case 'good':
+      return 'good-price';
+    case 'average':
+      return 'average-price';
+    case 'not-good':
+      return 'not-good-price';
+    case 'bad-price':
+      return 'bad-price';
+    default:
+      return 'average-price';
+  }
+}
+
+function getRandomGif(category) {
+  console.log('Getting GIF for category:', category); // Debug log
+  const randomNumber = Math.floor(Math.random() * 30) + 1;
+  const gifUrl = chrome.runtime.getURL(`gifs/${category}/${randomNumber}.gif`);
+  console.log('Generated GIF URL:', gifUrl); // Debug log
+  return gifUrl;
+}
+
 // Initialize the extension
 function init() {
   const { fab, popup } = createUI();
@@ -129,74 +156,74 @@ function init() {
   });
 
   // Handle analyze button click
-  analyzeButton.addEventListener('click', async () => {
-    const asin = getAsin();
-    if (!asin) {
-        alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
-        return;
-    }
+// Inside your init() function, replace the existing analyzeButton click handler
+analyzeButton.addEventListener('click', async () => {
+  const asin = getAsin();
+  if (!asin) {
+      alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
+      return;
+  }
 
-    try {
-        // Show loading state
-        popup.classList.add('showing-results');
-        initialView.style.display = 'none';
-        analysisContent.style.display = 'block';
-        loadingSpinner.style.display = 'flex';  // Changed to flex
-        results.style.display = 'none';
+  try {
+      // Show loading state
+      popup.classList.add('showing-results');
+      initialView.style.display = 'none';
+      analysisContent.style.display = 'block';
+      loadingSpinner.style.display = 'flex';
+      results.style.display = 'none';
 
-        const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
-        
-        if (response && response.success && response.text) {
-            // Hide loading, show results
-            loadingSpinner.style.display = 'none';
-            results.style.display = 'block';
+      const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
+      
+      if (response && response.success && response.text) {
+          loadingSpinner.style.display = 'none';
+          results.style.display = 'block';
 
-            const headerEl = results.querySelector('.header-text');
-            const subject1El = results.querySelector('.subject1-text');
-            const subject2El = results.querySelector('.subject2-text');
-            
-            // Clean the text responses
-            const subject1Text = response.text.subject1.replace('💡 Price Insight:', '').trim();
-            const subject2Text = response.text.subject2.replace('🤔 Should You Buy Now?', '').trim();
+          const headerEl = results.querySelector('.header-text');
+          const subject1El = results.querySelector('.subject1-text');
+          const subject2El = results.querySelector('.subject2-text');
+          
+          // Only remove the emoji from the text, keep the headers in HTML
+          const subject1Text = response.text.subject1.split(':')[1]?.trim() || response.text.subject1;
+          const subject2Text = response.text.subject2.split('?')[1]?.trim() || response.text.subject2;
 
-            // Type the text
-            await typeText(headerEl, response.text.header);
-            await typeText(subject1El, subject1Text);
-            await typeText(subject2El, subject2Text);
+          await typeText(headerEl, response.text.header);
+          await typeText(subject1El, subject1Text);
+          await typeText(subject2El, subject2Text);
 
-            // Handle GIF
-            if (response.text.priceGrade) {
-                const gifCategory = determineGifCategory(response.text.priceGrade);
-                const gifUrl = getRandomGif(gifCategory);
-                const gifContainer = results.querySelector('.gif-container');
-                if (gifContainer) {
-                    gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
-                }
-            }
-        } else {
-            throw new Error('Invalid response format');
-        }
-    } catch (error) {
-        console.error('Error during price analysis:', error);
-        
-        // Hide loading, show error state
-        loadingSpinner.style.display = 'none';
-        results.style.display = 'block';
-        
-        const headerEl = results.querySelector('.header-text');
-        if (headerEl) {
-            headerEl.textContent = 'Oops! Something went wrong. Please try again.';
-        }
+          // Handle GIF
+          const priceGrade = response.text.priceGrade || 'average';
+          console.log('Price Grade:', priceGrade); // Debug log
+          const gifCategory = determineGifCategory(priceGrade);
+          const gifUrl = getRandomGif(gifCategory);
+          
+          const gifContainer = results.querySelector('.gif-container');
+          if (gifContainer) {
+              console.log('Updating GIF container with URL:', gifUrl); // Debug log
+              gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
+          }
+      } else {
+          throw new Error('Invalid response format');
+      }
+  } catch (error) {
+      console.error('Error during price analysis:', error);
+      
+      loadingSpinner.style.display = 'none';
+      results.style.display = 'block';
+      
+      const headerEl = results.querySelector('.header-text');
+      if (headerEl) {
+          headerEl.textContent = 'Oops! Something went wrong. Please try again.';
+      }
 
-        // Clear other elements
-        const subject1El = results.querySelector('.subject1-text');
-        const subject2El = results.querySelector('.subject2-text');
-        const gifContainer = results.querySelector('.gif-container');
-        
-        if (subject1El) subject1El.textContent = '';
-        if (subject2El) subject2El.textContent = '';
-        if (gifContainer) gifContainer.innerHTML = '';
-    }
+      // Clear other elements
+      const subject1El = results.querySelector('.subject1-text');
+      const subject2El = results.querySelector('.subject2-text');
+      const gifContainer = results.querySelector('.gif-container');
+      
+      if (subject1El) subject1El.textContent = '';
+      if (subject2El) subject2El.textContent = '';
+      if (gifContainer) gifContainer.innerHTML = '';
+  }
 });
 
 // In your close button handler, remove the class

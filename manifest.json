@@ -25,7 +25,7 @@
   "web_accessible_resources": [{
     "resources": [
       "icons/*",
-      "gifs/*",
+      "gifs/**/*", 
       "fonts/Baloo2/*"
     ],
     "matches": ["https://*.amazon.com/*"]
