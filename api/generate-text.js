@@ -107,13 +107,14 @@ Header: [Your conclusion text]
                 messages: [
                     {
                         role: "system",
-                        content: "You are a friendly and helpful price analysis assistant that gives clear, concise advice in a conversational tone."
+                        content: "You are a friendly and helpful price analysis assistant that gives clear, concise advice in a conversational tone. You MUST follow the format provided in the prompt EXACTLY, including the priceGrade line."
                     },
                     {
                         role: "user",
                         content: prompt
                     }
                 ],
+                temperature: 0.7
             })
         });
 
@@ -122,76 +123,72 @@ Header: [Your conclusion text]
         }
     
         const data = await response.json();
-        console.log('OpenAI response:', data);  // Add logging
+        console.log('OpenAI response:', data);
     
         if (!data.choices?.[0]?.message?.content) {
-            console.error('Invalid OpenAI response:', data);  // Add logging
+            console.error('Invalid OpenAI response:', data);
             throw new Error('Invalid response from OpenAI');
         }
 
         const content = data.choices[0].message.content;
         console.log('Raw OpenAI response:', content);
 
-// Split content into sections
-const sections = content.split('\n\n');
-let text = {
-    priceGrade: '',  // Add this
-    header: '',
-    subject1: '',
-    subject2: ''
-};
+        // Split content into sections
+        const sections = content.split('\n\n');
+        console.log('Split sections:', sections);
 
-// Parse price grade (first section)
-const priceGradeSection = sections.find(s => s.toLowerCase().startsWith('pricegrade:'));
-if (priceGradeSection) {
-    text.priceGrade = priceGradeSection.split(':')[1].trim().toLowerCase();
-}
+        let text = {
+            priceGrade: '',
+            header: '',
+            subject1: '',
+            subject2: ''
+        };
 
-// Parse header (section that starts with "Header:")
-const headerSection = sections.find(s => s.toLowerCase().startsWith('header:'));
-if (headerSection) {
-    text.header = headerSection.replace(/^header:/i, '').trim();
-}
-
-// Find the price insight section
-const insightSection = sections.find(s => s.includes('💡 Price Insight'));
-if (insightSection) {
-    text.subject1 = insightSection.trim();
-}
-
-// Find the buying advice section
-const adviceSection = sections.find(s => s.includes('🤔 Should You Buy Now?'));
-if (adviceSection) {
-    text.subject2 = adviceSection.trim();
-}
-
-        // If we're missing any sections, try alternate format
-        if (!text.header || !text.subject1 || !text.subject2) {
-            console.log('Failed to parse sections using emojis, trying alternate format');
-            text.header = text.header || sections[0]?.trim() || 'Price analysis unavailable';
-            text.subject1 = text.subject1 || sections[1]?.trim() || 'Price insight unavailable';
-            text.subject2 = text.subject2 || sections[2]?.trim() || 'Buying advice unavailable';
+        // Parse each section
+        for (const section of sections) {
+            const lowerSection = section.toLowerCase().trim();
+            
+            if (lowerSection.startsWith('pricegrade:')) {
+                text.priceGrade = section.split(':')[1].trim().toLowerCase();
+                console.log('Found price grade:', text.priceGrade);
+            }
+            else if (lowerSection.startsWith('header:')) {
+                text.header = section.replace(/^header:/i, '').trim();
+            }
+            else if (section.includes('💡 Price Insight:')) {
+                text.subject1 = section.trim();
+            }
+            else if (section.includes('🤔 Should You Buy Now?')) {
+                text.subject2 = section.trim();
+            }
         }
 
-// Validate we have all components with content
-if (!text.header || !text.subject1 || !text.subject2) {
-    console.error('Failed to parse sections:', sections);
-    throw new Error('Failed to generate all required text components');
-}
+        // Validate the price grade
+        if (!text.priceGrade || !['excellent', 'good', 'average', 'not-good', 'bad-price'].includes(text.priceGrade)) {
+            console.warn('Invalid or missing price grade:', text.priceGrade);
+            text.priceGrade = 'average'; // Default fallback
+        }
 
-// Create debug info object
-const debugInfo = {
-    prompt: prompt,  // Include the complete prompt
-    rawResponse: content,
-    parsedSections: sections
-};
+        // If any sections are missing, try alternate format
+        if (!text.header || !text.subject1 || !text.subject2) {
+            console.log('Missing sections, trying alternate format');
+            text.header = text.header || sections[1]?.trim() || 'Price analysis unavailable';
+            text.subject1 = text.subject1 || sections[2]?.trim() || 'Price insight unavailable';
+            text.subject2 = text.subject2 || sections[3]?.trim() || 'Buying advice unavailable';
+        }
 
-// Return the formatted response with debug info
-res.status(200).json({
-    success: true,
-    text,
-    debug: debugInfo
-});
+        console.log('Final processed text:', text);
+
+        res.status(200).json({
+            success: true,
+            text,
+            debug: {
+                prompt,
+                rawResponse: content,
+                parsedSections: sections,
+                processedText: text
+            }
+        });
 
     } catch (error) {
         console.error('Error in generate-text:', error);
