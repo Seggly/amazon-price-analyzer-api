@@ -149,7 +149,7 @@ function determineGifCategory(priceGrade) {
 function getRandomGif(category) {
   try {
       // Reduce number of GIFs to what you actually have
-      const maxGifs = 5; // Adjust this number based on how many GIFs you actually have
+      const maxGifs = 10; // Adjust this number based on how many GIFs you actually have
       const randomNumber = Math.floor(Math.random() * maxGifs) + 1;
       const gifUrl = chrome.runtime.getURL(`gifs/${category}/${randomNumber}.gif`);
       console.log('Attempting to load GIF:', gifUrl);
