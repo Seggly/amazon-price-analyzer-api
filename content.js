@@ -127,11 +127,18 @@ function determineGifCategory(priceGrade) {
 }
 
 function getRandomGif(category) {
-  console.log('Getting GIF for category:', category); // Debug log
-  const randomNumber = Math.floor(Math.random() * 30) + 1;
-  const gifUrl = chrome.runtime.getURL(`gifs/${category}/${randomNumber}.gif`);
-  console.log('Generated GIF URL:', gifUrl); // Debug log
-  return gifUrl;
+  try {
+      // Reduce number of GIFs to what you actually have
+      const maxGifs = 5; // Adjust this number based on how many GIFs you actually have
+      const randomNumber = Math.floor(Math.random() * maxGifs) + 1;
+      const gifUrl = chrome.runtime.getURL(`gifs/${category}/${randomNumber}.gif`);
+      console.log('Attempting to load GIF:', gifUrl);
+      return gifUrl;
+  } catch (error) {
+      console.error('Error generating GIF URL:', error);
+      // Return a fallback GIF
+      return chrome.runtime.getURL('gifs/default.gif');
+  }
 }
 
 // Initialize the extension
@@ -192,16 +199,17 @@ if (response && response.success && response.text) {
   const gifCategory = determineGifCategory(priceGrade);
   const gifUrl = chrome.runtime.getURL(`gifs/${gifCategory}/${Math.floor(Math.random() * 30) + 1}.gif`);
   
-  const gifContainer = results.querySelector('.gif-container');
-  if (gifContainer) {
-      gifContainer.innerHTML = `
-          <img 
-              src="${gifUrl}" 
-              alt="Price reaction" 
-              onerror="console.error('Failed to load GIF:', this.src)"
-              onload="console.log('Successfully loaded GIF:', this.src)"
-          />`;
-  }
+// When setting the GIF:
+const gifContainer = results.querySelector('.gif-container');
+if (gifContainer) {
+    const gifUrl = getRandomGif(gifCategory);
+    gifContainer.innerHTML = `
+        <img 
+            src="${gifUrl}" 
+            alt="Price reaction" 
+            onerror="this.onerror=null; this.src='${chrome.runtime.getURL('gifs/default.gif')}'"
+        />`;
+}
 }
   } catch (error) {
       console.error('Error during price analysis:', error);
