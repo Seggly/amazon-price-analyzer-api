@@ -176,41 +176,46 @@ analyzeButton.addEventListener('click', async () => {
       results.style.display = 'none';
 
       const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
-      
-// Inside your analyze button click handler
-if (response && response.success && response.text) {
-  loadingSpinner.style.display = 'none';
-  results.style.display = 'block';
-
-  const headerEl = results.querySelector('.header-text');
-  const subject1El = results.querySelector('.subject1-text');
-  const subject2El = results.querySelector('.subject2-text');
+    
+      if (response && response.success && response.text) {
+          // Debug logging
+          console.log('OpenAI Response:', {
+              priceGrade: response.text.priceGrade,
+              header: response.text.header,
+              rawResponse: response.text // Log full response
+          });
   
-  // Remove headers if they exist in the text
-  const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-  const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-
-  await typeText(headerEl, response.text.header);
-  await typeText(subject1El, subject1Text);
-  await typeText(subject2El, subject2Text);
-
-  // Handle GIF display
-  const priceGrade = response.text.priceGrade || 'average';
-  const gifCategory = determineGifCategory(priceGrade);
-  const gifUrl = chrome.runtime.getURL(`gifs/${gifCategory}/${Math.floor(Math.random() * 30) + 1}.gif`);
+          loadingSpinner.style.display = 'none';
+          results.style.display = 'block';
   
-// When setting the GIF:
-const gifContainer = results.querySelector('.gif-container');
-if (gifContainer) {
-    const gifUrl = getRandomGif(gifCategory);
-    gifContainer.innerHTML = `
-        <img 
-            src="${gifUrl}" 
-            alt="Price reaction" 
-            onerror="this.onerror=null; this.src='${chrome.runtime.getURL('gifs/default.gif')}'"
-        />`;
-}
-}
+          const headerEl = results.querySelector('.header-text');
+          const subject1El = results.querySelector('.subject1-text');
+          const subject2El = results.querySelector('.subject2-text');
+          
+          // Clean text and handle overflow
+          const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+          const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+  
+          await typeText(headerEl, response.text.header);
+          await typeText(subject1El, subject1Text);
+          await typeText(subject2El, subject2Text);
+  
+          // Handle GIF with debug logging
+          const priceGrade = response.text.priceGrade || 'average';
+          console.log('Price Analysis:', {
+              detectedGrade: priceGrade,
+              headerText: response.text.header,
+              selectedCategory: determineGifCategory(priceGrade)
+          });
+  
+          const gifCategory = determineGifCategory(priceGrade);
+          const gifUrl = getRandomGif(gifCategory);
+          
+          const gifContainer = results.querySelector('.gif-container');
+          if (gifContainer) {
+              gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
+          }
+      }
   } catch (error) {
       console.error('Error during price analysis:', error);
       
