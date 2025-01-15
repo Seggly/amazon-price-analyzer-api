@@ -1,3 +1,6 @@
+let currentAnalysis = null;
+let currentAsin = null;
+
 // Create and inject the UI container
 function createUI() {
   const container = document.createElement('div');
@@ -208,9 +211,6 @@ function init() {
   const loadingSpinner = popup.querySelector('.loading-spinner');
   const results = popup.querySelector('.results');
   watchForVariationChanges();
-
-// Add state management
-let currentAnalysis = null;
 
 // Handle FAB click
 fab.addEventListener('click', () => {
