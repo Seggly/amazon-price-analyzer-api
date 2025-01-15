@@ -40,10 +40,10 @@ export default async function handler(req, res) {
         const priceData = analysis.new;
 
         const prompt = `### Task:
-You are texting your friend who ask if a product is at a good price or not on Amazon
+You are texting your friend in a hurry who ask if a product is at a good price or not on Amazon
 You are provided with the last 90 days price history of this product.
 You will respond in a convivial way using simple term to convey why you think this is a good price or not.
-Format your answer in 2 short and concise action-driven lines per subject.
+Format your answer in 2 very short and concise action-driven lines per subject.
 Put personality in your message.
 Use emoji's.
 
