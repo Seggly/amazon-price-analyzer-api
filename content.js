@@ -147,6 +147,57 @@ function getRandomGif(category) {
   }
 }
 
+// Add these functions outside init()
+function clearAnalysis() {
+  currentAnalysis = null;
+  // Reset views
+  initialView.style.display = 'block';
+  analysisContent.style.display = 'none';
+  results.style.display = 'none';
+  popup.classList.remove('showing-results');
+}
+
+function watchForVariationChanges() {
+  // Watch for URL changes
+  let lastUrl = location.href;
+  const urlObserver = new MutationObserver(() => {
+      if (location.href !== lastUrl) {
+          lastUrl = location.href;
+          clearAnalysis();
+      }
+  });
+
+  // Observe URL changes
+  urlObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+  });
+
+  // Watch for variation selection changes
+  const variationObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+          // Check if this is a variation change
+          if (mutation.target.matches('[data-defaultasin], [data-selected-asin]') ||
+              mutation.target.closest('[data-defaultasin], [data-selected-asin]')) {
+              clearAnalysis();
+              break;
+          }
+      }
+  });
+
+  // Observe variation changes
+  const variationElements = document.querySelectorAll('#variation_form, #twister');
+  variationElements.forEach(element => {
+      if (element) {
+          variationObserver.observe(element, {
+              attributes: true,
+              childList: true,
+              subtree: true
+          });
+      }
+  });
+}
+
 // Initialize the extension
 function init() {
   const { fab, popup } = createUI();
@@ -156,6 +207,7 @@ function init() {
   const analysisContent = popup.querySelector('.analysis-content');
   const loadingSpinner = popup.querySelector('.loading-spinner');
   const results = popup.querySelector('.results');
+  watchForVariationChanges();
 
 // Add state management
 let currentAnalysis = null;
