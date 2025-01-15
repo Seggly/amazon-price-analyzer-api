@@ -15,55 +15,51 @@ if (fabImg) {
     fabImg.style.pointerEvents = 'none';  // This prevents the image from capturing clicks
 }
   // Create the popup
+  const popup = document.createElement('div');
   popup.id = 'price-analyzer-popup';
-popup.style.display = 'none';
-popup.innerHTML = `
-  <div class="popup-content">
-    <button class="close-button">×</button>
-    
-    <div class="initial-view">
-      <div class="mascot">
-        <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+  popup.style.display = 'none';
+  popup.innerHTML = `
+    <div class="popup-content">
+      <button class="close-button">×</button>
+      
+      <div class="initial-view">
+        <div class="mascot">
+          <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+        </div>
+        <h2>Don't Buy Until Our AI Check The Price First!</h2>
+        <button class="analyze-button">Analyze The Price</button>
+        <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
       </div>
-      <h2>Don't Buy Until Our AI Check The Price First!</h2>
-      <button class="analyze-button">Analyze The Price</button>
-      <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
-    </div>
-
-    <div class="analysis-content" style="display: none;">
-      <div class="loading-spinner" style="display: none;">
-        <div class="spinner"></div>
-        <p>Analyzing price history...</p>
-      </div>
-      <div class="results" style="display: none;">
-        <div class="results-header">
+  
+      <div class="analysis-content" style="display: none;">
+        <div class="loading-spinner" style="display: none;">
+          <div class="spinner"></div>
+          <p>Analyzing price history...</p>
+        </div>
+        <div class="results" style="display: none;">
           <div class="tiny-mascot">
             <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
           </div>
           <h2 class="header-text"></h2>
-        </div>
-        
-        <div class="results-content">
-          <div class="section price-insight">
-            <h3>💡 Price Insight:</h3>
+          
+          <div class="content-section">
+            <div class="section-header">💡 <strong>Price Insight:</strong></div>
             <p class="subject1-text"></p>
           </div>
-
-          <div class="section buy-advice">
-            <h3>🤔 Should You Buy Now?</h3>
+  
+          <div class="content-section">
+            <div class="section-header">🤔 <strong>Should You Buy Now?</strong></div>
             <p class="subject2-text"></p>
           </div>
-        </div>
-
-        <div class="results-footer">
+  
           <div class="gif-container"></div>
+          
           <button class="track-button">Track Price</button>
           <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
         </div>
       </div>
     </div>
-  </div>
-`;
+  `;
   
   container.appendChild(fab);
   container.appendChild(popup);
