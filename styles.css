@@ -87,7 +87,7 @@
 
 .results-header {
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: 8px; /* Reduced from 20px */
 }
 
 .tiny-mascot {
@@ -114,12 +114,12 @@
 /* Content Box */
 .fixed-content-box {
   height: 180px;
-  margin: 12px 0;
+  margin: 8px 0; /* Reduced top margin */
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 200px; /* Space for gif and footer */
+  margin-bottom: 8px; /* Consistent spacing before gif */
 }
 
 .insight-section, .buy-section {
@@ -162,7 +162,7 @@
 /* Footer Section */
 .results-footer {
   position: absolute;
-  bottom: 12px; /* Reduced from 32px */
+  bottom: 12px;
   left: 12px;
   right: 12px;
 }
@@ -173,6 +173,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 8px; /* Match the spacing */
   margin-bottom: 16px;
 }
 
