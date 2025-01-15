@@ -167,30 +167,40 @@ function init() {
   function fitTextToContainer(element, container) {
     if (!element || !container) return;
     
-    let minSize = 8;
-    let maxSize = 16;
-    let currentSize = maxSize;
+    // Start with a larger max size and smaller min size
+    let minSize = 6;
+    let maxSize = 20;
     
     // Reset any previous styling
     element.style.fontSize = maxSize + 'px';
+    element.style.lineHeight = '1.4';
     
-    // Binary search for the right font size
+    // Binary search for the best font size
     while (minSize <= maxSize) {
-        currentSize = Math.floor((minSize + maxSize) / 2);
-        element.style.fontSize = currentSize + 'px';
+        const mid = Math.floor((minSize + maxSize) / 2);
+        element.style.fontSize = `${mid}px`;
         
-        if (element.scrollHeight <= container.clientHeight && 
-            element.scrollWidth <= container.clientWidth) {
-            minSize = currentSize + 1;
+        // Check if text fits
+        if (element.scrollHeight > container.clientHeight ||
+            element.scrollWidth > container.clientWidth) {
+            // Text is too big
+            maxSize = mid - 1;
         } else {
-            maxSize = currentSize - 1;
+            // Text might fit, try a larger size
+            minSize = mid + 1;
         }
     }
     
-    // Set final size (maxSize will be the largest working size)
-    element.style.fontSize = maxSize + 'px';
+    // Set to largest size that worked
+    element.style.fontSize = `${maxSize}px`;
     
-    console.log('Final font size:', maxSize); // Debug log
+    console.log('Container size:', {
+        containerWidth: container.clientWidth,
+        containerHeight: container.clientHeight,
+        textWidth: element.scrollWidth,
+        textHeight: element.scrollHeight,
+        finalFontSize: maxSize
+    });
 }
   
   // Update the click handler
@@ -221,19 +231,25 @@ function init() {
         // Clean text
         const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
         const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-  
+    
         // Set text content
         headerEl.textContent = response.text.header;
         subject1El.textContent = subject1Text;
         subject2El.textContent = subject2Text;
-  
-        // Fit text to containers
+    
+        // Get containers
         const subject1Container = subject1El.closest('.text-fit-container');
         const subject2Container = subject2El.closest('.text-fit-container');
-        
-        fitTextToContainer(subject1El, subject1Container);
-        fitTextToContainer(subject2El, subject2Container);
+    
+        // Force a reflow
+        void subject1Container.offsetHeight;
+        void subject2Container.offsetHeight;    
   
+          // Apply text fitting
+    requestAnimationFrame(() => {
+      fitTextToContainer(subject1El, subject1Container);
+      fitTextToContainer(subject2El, subject2Container);
+  });
         // Handle GIF
         const priceGrade = response.text.priceGrade || 'average';
         const gifCategory = determineGifCategory(priceGrade);
