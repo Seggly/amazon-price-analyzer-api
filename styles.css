@@ -61,12 +61,13 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  padding: 12px; /* Reduced from 32px */
 }
 
 .close-button {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
   background: none;
   border: none;
   font-size: 20px;
@@ -76,9 +77,135 @@
   z-index: 10;
 }
 
-/* Initial View Styles */
+/* Results View Styles */
+.results {
+  height: 100%;
+  padding: 12px; /* Reduced from 32px */
+  display: flex;
+  flex-direction: column;
+}
+
+.results-header {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.tiny-mascot {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.tiny-mascot img {
+  width: 48px;
+  height: 48px;
+}
+
+.header-text {
+  font-family: 'Baloo2';
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1.2;
+  text-align: center;
+  padding: 0 48px;
+  margin: 0;
+}
+
+/* Content Box */
+.fixed-content-box {
+  height: 180px;
+  margin: 12px 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 200px; /* Space for gif and footer */
+}
+
+.insight-section, .buy-section {
+  flex: 1;
+  position: relative;
+  padding: 0 16px;
+}
+
+.text-fit-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.subject1-text, .subject2-text {
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 4px 0;
+  line-height: 1.4;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Make the titles bold */
+.subject1-text strong, .subject2-text strong {
+  font-weight: 700;
+  font-family: 'Baloo2';
+}
+
+/* Footer Section */
+.results-footer {
+  position: absolute;
+  bottom: 12px; /* Reduced from 32px */
+  left: 12px;
+  right: 12px;
+}
+
+.gif-container {
+  height: 180px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.gif-container img {
+  max-height: 180px;
+  width: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.track-button {
+  width: 100%;
+  background: #FF4500;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 0;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 12px;
+  font-family: 'Baloo2';
+}
+
+.track-button:hover {
+  background: #E63E00;
+}
+
+.results .disclaimer {
+  font-size: 9px;
+  color: rgba(0, 0, 0, 0.6);
+  text-align: center;
+  width: 100%;
+  margin: 0 auto;
+  line-height: 1.2; /* Reduced line height */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Initial view styles */
 .initial-view {
-  padding: 32px;
+  padding: 12px; /* Reduced from 32px */
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -119,170 +246,6 @@
   font-family: 'Baloo2';
 }
 
-.analyze-button:hover {
-  background: #E63E00;
-}
-
-/* Results View Styles */
-.analysis-content {
-  height: 100%;
-}
-
-.loading-spinner {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  background: #FFD4C2;
-  z-index: 10;
-  width: 100%;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(255, 81, 0, 0.2);
-  border-top: 4px solid #FF5100;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.results {
-  height: 100%;
-  padding: 32px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-.results-header {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.tiny-mascot {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.tiny-mascot img {
-  width: 48px;
-  height: 48px;
-}
-
-.header-text {
-  font-family: 'Baloo2';
-  font-weight: 700;
-  font-size: 32px;
-  line-height: 1.2;
-  text-align: center;
-  padding: 0 48px;
-  margin: 0;
-}
-
-.fixed-content-box {
-  height: 160px;  /* Total height */
-  margin: 20px 0;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 16px;  /* Space between sections */
-}
-
-
-.insight-section, .buy-section {
-  flex: 1;     /* Equal height for both sections */
-  position: relative;
-  padding: 0 16px;
-}
-
-.insight-section h3, .buy-section h3 {
-  font-family: 'Baloo2';
-  font-weight: 700;
-  font-size: 16px;
-  margin: 0 0 8px 0;
-  color: #000000;
-}
-
-.text-fit-container {
-  position: relative;
-  height: 100%;
-  width: 100%;
-}
-
-.subject1-text, .subject2-text {
-  position: absolute;
-  width: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin: 0;
-  padding: 0;
-  line-height: 1.4;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-.results-footer {
-  position: absolute;
-  bottom: 32px;
-  left: 32px;
-  right: 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.gif-container {
-  height: 180px;
-  width: 100%;  /* Full width */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;  /* Space before button */
-}
-
-.gif-container img {
-  max-height: 180px;
-  width: auto;
-  border-radius: 8px;
-  object-fit: contain;
-}
-
-.track-button {
-  width: 100%;
-  background: #FF4500;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 14px 0;
-  font-size: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-bottom: 16px;  /* Same spacing as between gif and button */
-  font-family: 'Baloo2';
-}
-
-.results .disclaimer {
-  font-size: 9px;
-  color: rgba(0, 0, 0, 0.6);
-  text-align: center;
-  width: 100%;  /* Same width as button */
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-/* Initial view disclaimer */
 .initial-view .disclaimer {
   font-size: 11px;
   color: rgba(0, 0, 0, 0.7);
