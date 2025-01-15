@@ -165,29 +165,36 @@ function init() {
   function fitTextToContainer(element, container) {
     if (!element || !container) return;
     
-    // Start with a larger max size and smaller min size
-    let minSize = 6;
-    let maxSize = 20;
+    const maxSize = 16;
+    const minSize = 8;
+    let fontSize = maxSize;
     
-    // Reset any previous styling
-    element.style.fontSize = maxSize + 'px';
-    element.style.lineHeight = '1.4';
+    element.style.fontSize = `${fontSize}px`;
     
-    // Binary search for the best font size
-    while (minSize <= maxSize) {
-        const mid = Math.floor((minSize + maxSize) / 2);
-        element.style.fontSize = `${mid}px`;
-        
-        // Check if text fits
-        if (element.scrollHeight > container.clientHeight ||
-            element.scrollWidth > container.clientWidth) {
-            // Text is too big
-            maxSize = mid - 1;
-        } else {
-            // Text might fit, try a larger size
-            minSize = mid + 1;
-        }
+    // First pass: quick decrease
+    while (fontSize > minSize && (
+        element.scrollHeight > container.clientHeight ||
+        element.scrollWidth > container.clientWidth
+    )) {
+        fontSize--;
+        element.style.fontSize = `${fontSize}px`;
     }
+    
+    // If text still doesn't fit at minimum size
+    if (fontSize === minSize && (
+        element.scrollHeight > container.clientHeight ||
+        element.scrollWidth > container.clientWidth
+    )) {
+        element.style.fontSize = `${minSize}px`;
+    }
+    
+    console.log(`Fitted text at ${fontSize}px:`, {
+        text: element.textContent.slice(0, 20) + '...',
+        containerHeight: container.clientHeight,
+        textHeight: element.scrollHeight,
+        fontSize: fontSize
+    });
+
     
     // Set to largest size that worked
     element.style.fontSize = `${maxSize}px`;
@@ -224,12 +231,13 @@ function init() {
   
         const headerEl = results.querySelector('.header-text');
         const subject1El = results.querySelector('.subject1-text');
-        const subject2El = results.querySelector('.subject2-text');    
+        const subject2El = results.querySelector('.subject2-text');
+        
         
         // Clean text
         const subject1Text = "💡 Price Insight: " + response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
         const subject2Text = "🤔 Should You Buy Now? " + response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-    
+        
         // Set text content
         headerEl.textContent = response.text.header;
         subject1El.textContent = subject1Text;

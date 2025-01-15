@@ -191,16 +191,20 @@
 }
 
 .fixed-content-box {
-  height: 160px;
+  height: 160px;  /* Total height */
   margin: 20px 0;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;  /* Space between sections */
 }
 
 
 .insight-section, .buy-section {
-  height: 70px;
-  margin-bottom: 10px;
+  flex: 1;     /* Equal height for both sections */
+  position: relative;
   padding: 0 16px;
 }
 
@@ -213,16 +217,14 @@
 }
 
 .text-fit-container {
+  position: relative;
   height: 100%;
   width: 100%;
-  position: relative;
-  overflow: hidden;
 }
 
 .subject1-text, .subject2-text {
-  width: 100%;
   position: absolute;
-  left: 0;
+  width: 100%;
   top: 50%;
   transform: translateY(-50%);
   margin: 0;
