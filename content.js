@@ -157,15 +157,29 @@ function init() {
   const loadingSpinner = popup.querySelector('.loading-spinner');
   const results = popup.querySelector('.results');
 
+// Add state management
+let currentAnalysis = null;
 
 // Handle FAB click
 fab.addEventListener('click', () => {
   popup.style.display = 'block';
-  popup.classList.remove('showing-results'); // Ensure results class is removed
-  initialView.style.display = 'block';
-  analysisContent.style.display = 'none';
-  results.style.display = 'none';
+  
+  if (currentAnalysis) {
+      // Show previous analysis
+      popup.classList.add('showing-results');
+      initialView.style.display = 'none';
+      analysisContent.style.display = 'block';
+      results.style.display = 'block';
+      loadingSpinner.style.display = 'none';
+  } else {
+      // Show initial view
+      popup.classList.remove('showing-results');
+      initialView.style.display = 'block';
+      analysisContent.style.display = 'none';
+      results.style.display = 'none';
+  }
 });
+
 
 
   function fitTextToContainer(element, container) {
@@ -232,6 +246,7 @@ fab.addEventListener('click', () => {
       const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
       
       if (response && response.success && response.text) {
+        currentAnalysis = response; // Save the analysis
         loadingSpinner.style.display = 'none';
         results.style.display = 'block';
   
@@ -275,6 +290,7 @@ fab.addEventListener('click', () => {
       }
     } catch (error) {
       console.error('Error during price analysis:', error);
+      currentAnalysis = null; // Clear on error
       loadingSpinner.style.display = 'none';
       results.style.display = 'block';
       
@@ -363,22 +379,14 @@ async function getProductFamily(asin) {
 // Handle close button click
 closeButton.addEventListener('click', () => {
   popup.style.display = 'none';
-  popup.classList.remove('showing-results'); // Remove results class when closing
-  // Reset to initial state
-  initialView.style.display = 'block';
-  analysisContent.style.display = 'none';
-  results.style.display = 'none';
+  // Don't reset the view states or clear currentAnalysis
 });
 
-// Handle window click (clicking outside)
+// Handle clicking outside
 window.addEventListener('click', (event) => {
   if (!popup.contains(event.target) && event.target !== fab) {
       popup.style.display = 'none';
-      popup.classList.remove('showing-results'); // Remove results class when closing
-      // Reset to initial state
-      initialView.style.display = 'block';
-      analysisContent.style.display = 'none';
-      results.style.display = 'none';
+      // Don't reset the view states or clear currentAnalysis
   }
   });
 }
