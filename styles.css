@@ -119,6 +119,10 @@
   font-family: 'Baloo2';
 }
 
+.analyze-button:hover {
+  background: #E63E00;
+}
+
 /* Results View Styles */
 .analysis-content {
   height: 100%;
@@ -133,6 +137,9 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  background: #FFD4C2;
+  z-index: 10;
+  width: 100%;
 }
 
 .spinner {
@@ -154,17 +161,14 @@
   display: flex;
   flex-direction: column;
   padding: 32px;
-}
-
-.results-header {
   position: relative;
-  margin-bottom: 24px;
 }
 
+/* Header section */
 .tiny-mascot {
   position: absolute;
   top: 0;
-  left: 0;
+  left: 32px;
 }
 
 .tiny-mascot img {
@@ -178,14 +182,17 @@
   font-size: 32px;
   line-height: 1.2;
   text-align: center;
+  margin: 0 0 40px 0;
   padding: 0 48px;
-  margin: 0;
 }
 
+/* Content section with fixed height */
 .results-content {
-  flex: 1;
-  min-height: 0;
-  margin-bottom: 24px;
+  flex: none;
+  height: 180px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  padding-right: 16px;
 }
 
 .section {
@@ -200,16 +207,22 @@
   color: #000000;
 }
 
-.section p {
+.subject1-text, .subject2-text {
   margin: 0;
   font-size: 16px;
   line-height: 1.5;
   color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: normal;
 }
 
+/* Footer section with fixed position */
 .results-footer {
-  margin-top: auto;
+  position: absolute;
+  bottom: 32px;
+  left: 32px;
+  right: 32px;
+  background: #FFD4C2;
 }
 
 .gif-container {
@@ -241,11 +254,26 @@
   font-family: 'Baloo2';
 }
 
-.disclaimer {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.7);
+.track-button:hover {
+  background: #E63E00;
+}
+
+.results .disclaimer {
+  font-size: 9px;
+  color: rgba(0, 0, 0, 0.6);
   text-align: center;
-  margin: 0;
+  margin: 0 auto;
+  max-width: 300px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Initial view disclaimer */
+.initial-view .disclaimer {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.7);
+  text-align: center;
+  max-width: 360px;
+  line-height: 1.4;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
