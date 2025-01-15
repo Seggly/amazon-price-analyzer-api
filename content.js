@@ -30,32 +30,42 @@ if (fabImg) {
         <button class="analyze-button">Analyze The Price</button>
         <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
       </div>
-  
+
       <div class="analysis-content" style="display: none;">
         <div class="loading-spinner" style="display: none;">
           <div class="spinner"></div>
           <p>Analyzing price history...</p>
         </div>
+        
         <div class="results" style="display: none;">
-          <div class="tiny-mascot">
-            <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+          <div class="results-header">
+            <div class="tiny-mascot">
+              <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+            </div>
+            <h2 class="header-text"></h2>
           </div>
-          <h2 class="header-text"></h2>
-          
-          <div class="content-section">
-            <div class="section-header">💡 <strong>Price Insight:</strong></div>
-            <p class="subject1-text"></p>
+
+          <div class="fixed-content-box">
+            <div class="insight-section">
+              <h3>💡 Price Insight:</h3>
+              <div class="text-fit-container">
+                <p class="subject1-text"></p>
+              </div>
+            </div>
+
+            <div class="buy-section">
+              <h3>🤔 Should You Buy Now?</h3>
+              <div class="text-fit-container">
+                <p class="subject2-text"></p>
+              </div>
+            </div>
           </div>
-  
-          <div class="content-section">
-            <div class="section-header">🤔 <strong>Should You Buy Now?</strong></div>
-            <p class="subject2-text"></p>
+
+          <div class="results-footer">
+            <div class="gif-container"></div>
+            <button class="track-button">Track Price</button>
+            <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
           </div>
-  
-          <div class="gif-container"></div>
-          
-          <button class="track-button">Track Price</button>
-          <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
         </div>
       </div>
     </div>
@@ -154,76 +164,84 @@ function init() {
     analysisContent.style.display = 'none';
   });
 
-  // Handle analyze button click
-// Inside your init() function, replace the existing analyzeButton click handler
-analyzeButton.addEventListener('click', async () => {
-  const asin = getAsin();
-  if (!asin) {
+  function fitTextToContainer(element, container) {
+    if (!element || !container) return;
+  
+    let maxSize = 16;
+    let minSize = 8;
+    let size = maxSize;
+  
+    element.style.fontSize = size + 'px';
+  
+    while (size > minSize && 
+           (element.scrollHeight > container.clientHeight || 
+            element.scrollWidth > container.clientWidth)) {
+      size--;
+      element.style.fontSize = size + 'px';
+    }
+  }
+  
+  // Update the click handler
+  analyzeButton.addEventListener('click', async () => {
+    const asin = getAsin();
+    if (!asin) {
       alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
       return;
-  }
-
-  try {
-      // Show loading state
+    }
+  
+    try {
       popup.classList.add('showing-results');
       initialView.style.display = 'none';
       analysisContent.style.display = 'block';
       loadingSpinner.style.display = 'flex';
       results.style.display = 'none';
-
+  
       const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
-    
-      if (response && response.success && response.text) {
-          // Debug logging
-          console.log('OpenAI Response:', {
-              priceGrade: response.text.priceGrade,
-              header: response.text.header,
-              rawResponse: response.text // Log full response
-          });
-  
-          loadingSpinner.style.display = 'none';
-          results.style.display = 'block';
-  
-          const headerEl = results.querySelector('.header-text');
-          const subject1El = results.querySelector('.subject1-text');
-          const subject2El = results.querySelector('.subject2-text');
-          
-          // Clean text and handle overflow
-          const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-          const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-  
-          await typeText(headerEl, response.text.header);
-          await typeText(subject1El, subject1Text);
-          await typeText(subject2El, subject2Text);
-  
-          // Handle GIF with debug logging
-          const priceGrade = response.text.priceGrade || 'average';
-          console.log('Price Analysis:', {
-              detectedGrade: priceGrade,
-              headerText: response.text.header,
-              selectedCategory: determineGifCategory(priceGrade)
-          });
-  
-          const gifCategory = determineGifCategory(priceGrade);
-          const gifUrl = getRandomGif(gifCategory);
-          
-          const gifContainer = results.querySelector('.gif-container');
-          if (gifContainer) {
-              gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
-          }
-      }
-  } catch (error) {
-      console.error('Error during price analysis:', error);
       
+      if (response && response.success && response.text) {
+        loadingSpinner.style.display = 'none';
+        results.style.display = 'block';
+  
+        const headerEl = results.querySelector('.header-text');
+        const subject1El = results.querySelector('.subject1-text');
+        const subject2El = results.querySelector('.subject2-text');
+        
+        // Clean text
+        const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+        const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+  
+        // Set text content
+        headerEl.textContent = response.text.header;
+        subject1El.textContent = subject1Text;
+        subject2El.textContent = subject2Text;
+  
+        // Fit text to containers
+        const subject1Container = subject1El.closest('.text-fit-container');
+        const subject2Container = subject2El.closest('.text-fit-container');
+        
+        fitTextToContainer(subject1El, subject1Container);
+        fitTextToContainer(subject2El, subject2Container);
+  
+        // Handle GIF
+        const priceGrade = response.text.priceGrade || 'average';
+        const gifCategory = determineGifCategory(priceGrade);
+        const gifUrl = getRandomGif(gifCategory);
+        
+        const gifContainer = results.querySelector('.gif-container');
+        if (gifContainer) {
+          gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
+        }
+      }
+    } catch (error) {
+      console.error('Error during price analysis:', error);
       loadingSpinner.style.display = 'none';
       results.style.display = 'block';
       
       const headerEl = results.querySelector('.header-text');
       if (headerEl) {
-          headerEl.textContent = 'Oops! Something went wrong. Please try again.';
+        headerEl.textContent = 'Oops! Something went wrong. Please try again.';
       }
-
-      // Clear other elements
+  
       const subject1El = results.querySelector('.subject1-text');
       const subject2El = results.querySelector('.subject2-text');
       const gifContainer = results.querySelector('.gif-container');
@@ -231,8 +249,8 @@ analyzeButton.addEventListener('click', async () => {
       if (subject1El) subject1El.textContent = '';
       if (subject2El) subject2El.textContent = '';
       if (gifContainer) gifContainer.innerHTML = '';
-  }
-});
+    }
+  });
 
 // In your close button handler, remove the class
 closeButton.addEventListener('click', () => {

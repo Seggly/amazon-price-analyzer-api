@@ -158,17 +158,21 @@
 
 .results {
   height: 100%;
-  display: flex;
-  flex-direction: column;
   padding: 32px;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Header section */
+.results-header {
+  position: relative;
+  margin-bottom: 20px;
+}
+
 .tiny-mascot {
   position: absolute;
   top: 0;
-  left: 32px;
+  left: 0;
 }
 
 .tiny-mascot img {
@@ -182,55 +186,60 @@
   font-size: 32px;
   line-height: 1.2;
   text-align: center;
-  margin: 0 0 40px 0;
   padding: 0 48px;
+  margin: 0;
 }
 
-/* Content section with fixed height */
-.results-content {
-  flex: none;
-  height: 180px;
-  overflow-y: auto;
-  margin-bottom: 20px;
-  padding-right: 16px;
+/* Fixed content box */
+.fixed-content-box {
+  height: 160px;
+  margin: 20px 0;
+  position: relative;
+  overflow: hidden;
 }
 
-.section {
-  margin-bottom: 20px;
+.insight-section, .buy-section {
+  margin-bottom: 16px;
 }
 
-.section h3 {
+.insight-section h3, .buy-section h3 {
   font-family: 'Baloo2';
   font-weight: 700;
-  font-size: 18px;
+  font-size: 16px;
   margin: 0 0 8px 0;
   color: #000000;
 }
 
+.text-fit-container {
+  position: relative;
+  height: 60px;
+  overflow: hidden;
+}
+
 .subject1-text, .subject2-text {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.5;
   color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-weight: normal;
+  line-height: 1.4;
+  width: 100%;
+  height: 100%;
 }
 
-/* Footer section with fixed position */
+/* Footer section */
 .results-footer {
   position: absolute;
   bottom: 32px;
   left: 32px;
   right: 32px;
-  background: #FFD4C2;
 }
 
 .gif-container {
-  margin-bottom: 16px;
   height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 16px;
 }
 
 .gif-container img {
@@ -254,17 +263,12 @@
   font-family: 'Baloo2';
 }
 
-.track-button:hover {
-  background: #E63E00;
-}
-
 .results .disclaimer {
   font-size: 9px;
   color: rgba(0, 0, 0, 0.6);
   text-align: center;
   margin: 0 auto;
   max-width: 300px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Initial view disclaimer */
