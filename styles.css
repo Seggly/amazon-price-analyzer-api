@@ -32,6 +32,7 @@
   width: 100%;
   height: 100%;
   padding: 12px;
+  pointer-events: none;
 }
 
 #price-analyzer-fab:hover {
@@ -53,37 +54,44 @@
 
 #price-analyzer-popup.showing-results {
   height: 600px;
-  transition: height 0.3s ease-out;
 }
 
 .popup-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #999;
+  padding: 8px;
+  z-index: 10;
+}
+
+/* Initial View Styles */
+.initial-view {
   padding: 32px;
   height: 100%;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
 }
 
 .mascot {
-  display: flex;
-  justify-content: center;
   margin-bottom: 20px;
 }
 
 .mascot img {
   width: 96px;
   height: 96px;
-}
-
-.initial-view {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 20px;
-  box-sizing: border-box;
 }
 
 .initial-view h2 {
@@ -111,36 +119,9 @@
   font-family: 'Baloo2';
 }
 
-.disclaimer {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.7);
-  text-align: center;
-  max-width: 360px;
-  line-height: 1.4;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-.close-button {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #999;
-  padding: 8px;
-}
-
 /* Results View Styles */
 .analysis-content {
-  width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  box-sizing: border-box;
 }
 
 .loading-spinner {
@@ -152,9 +133,6 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  background: #FFD4C2;  /* Match popup background */
-  z-index: 10;
-  width: 100%;
 }
 
 .spinner {
@@ -166,65 +144,32 @@
   animation: spin 1s linear infinite;
 }
 
-.loading-spinner p {
-  margin: 0;
-  font-family: 'Baloo2';
-  color: #000000;
-}
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-.results-top {
-  position: relative;
-  margin-bottom: 24px;
-}
-
-.content-section {
-  margin-bottom: 20px;
-}
-
-.section-header {
-  font-family: 'Baloo2';
-  font-weight: 700;
-  font-size: 16px;
-  margin-bottom: 8px;
 }
 
 .results {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 24px;
-  box-sizing: border-box;
+  padding: 32px;
+}
+
+.results-header {
   position: relative;
+  margin-bottom: 24px;
 }
 
-.section-header strong {
-  font-family: 'Baloo2';
-}
-
-/* Header area */
 .tiny-mascot {
   position: absolute;
-  top: 24px;
-  left: 24px;
-  z-index: 1;
+  top: 0;
+  left: 0;
 }
 
 .tiny-mascot img {
   width: 48px;
   height: 48px;
-}
-
-.results-content {
-  flex: 1;
-  min-height: 0;  /* Important for flex container */
-  overflow-y: auto;
-  padding: 0 24px;
-  margin-bottom: 240px; /* Space for bottom content */
 }
 
 .header-text {
@@ -233,43 +178,38 @@
   font-size: 32px;
   line-height: 1.2;
   text-align: center;
-  margin: 0 0 32px 0;
   padding: 0 48px;
+  margin: 0;
 }
 
-.price-insight, .buy-advice {
-  margin-bottom: 16px;
+.results-content {
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 24px;
 }
 
-.results-bottom {
-  position: absolute;
-  bottom: 24px;
-  left: 24px;
-  right: 24px;
-  background: #FFD4C2; /* Match popup background */
+.section {
+  margin-bottom: 20px;
 }
 
-.price-insight h3, .buy-advice h3 {
+.section h3 {
   font-family: 'Baloo2';
   font-weight: 700;
-  font-size: 16px;
+  font-size: 18px;
   margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
   color: #000000;
 }
 
-.emoji {
-  font-size: 18px;
-  margin-right: 8px;
-}
-
-.subject1-text, .subject2-text {
+.section p {
   margin: 0;
+  font-size: 16px;
   line-height: 1.5;
-  font-size: 14px;
   color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.results-footer {
+  margin-top: auto;
 }
 
 .gif-container {
@@ -292,7 +232,7 @@
   background: #FF4500;
   color: white;
   border: none;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 14px 0;
   font-size: 18px;
   font-weight: 700;
@@ -301,15 +241,10 @@
   font-family: 'Baloo2';
 }
 
-.track-button:hover {
-  background: #E63E00;
-}
-
-
-.results .disclaimer {
-  text-align: center;
+.disclaimer {
   font-size: 11px;
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(0, 0, 0, 0.7);
+  text-align: center;
   margin: 0;
-  padding: 0 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
