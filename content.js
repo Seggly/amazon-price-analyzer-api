@@ -157,12 +157,16 @@ function init() {
   const loadingSpinner = popup.querySelector('.loading-spinner');
   const results = popup.querySelector('.results');
 
-  // Handle FAB click
-  fab.addEventListener('click', () => {
-    popup.style.display = 'block';
-    initialView.style.display = 'block';
-    analysisContent.style.display = 'none';
-  });
+
+// Handle FAB click
+fab.addEventListener('click', () => {
+  popup.style.display = 'block';
+  popup.classList.remove('showing-results'); // Ensure results class is removed
+  initialView.style.display = 'block';
+  analysisContent.style.display = 'none';
+  results.style.display = 'none';
+});
+
 
   function fitTextToContainer(element, container) {
     if (!element || !container) return;
@@ -288,18 +292,94 @@ function init() {
       if (gifContainer) gifContainer.innerHTML = '';
     }
   });
+// Add these storage functions
+async function saveAnalysis(asin, analysis) {
+  const timestamp = Date.now();
+  const productFamily = await getProductFamily(asin);
+  
+  const storageData = {
+      analysis,
+      timestamp,
+      productFamily,
+      asin
+  };
 
-// In your close button handler, remove the class
+  chrome.storage.local.set({ [asin]: storageData });
+}
+
+async function getStoredAnalysis(asin) {
+  const currentProductFamily = await getProductFamily(asin);
+  
+  return new Promise((resolve) => {
+      chrome.storage.local.get(asin, (result) => {
+          if (!result[asin]) {
+              resolve(null);
+              return;
+          }
+
+          const { analysis, timestamp, productFamily } = result[asin];
+          const timeDiff = Date.now() - timestamp;
+          
+          // If same product, check 10-minute threshold
+          if (asin === result[asin].asin) {
+              if (timeDiff < 10 * 60 * 1000) { // 10 minutes
+                  resolve(analysis);
+                  return;
+              }
+          }
+          // If same product family, check 24-hour threshold
+          else if (productFamily === currentProductFamily) {
+              if (timeDiff < 24 * 60 * 60 * 1000) { // 24 hours
+                  resolve(analysis);
+                  return;
+              }
+          }
+          
+          // Clear expired analysis
+          chrome.storage.local.remove(asin);
+          resolve(null);
+      });
+  });
+}
+
+// Function to get product family (based on parent ASIN or similar products)
+async function getProductFamily(asin) {
+  // Look for parent ASIN in the page
+  const parentAsinElement = document.querySelector('[data-parent-asin]');
+  if (parentAsinElement) {
+      return parentAsinElement.getAttribute('data-parent-asin');
+  }
+  
+  // If no parent ASIN, look for product group/family
+  const productGroupElement = document.querySelector('[data-product-group]');
+  if (productGroupElement) {
+      return productGroupElement.getAttribute('data-product-group');
+  }
+  
+  // If no product group, use first 6 characters of ASIN as family
+  return asin.substring(0, 6);
+}
+
+// Handle close button click
 closeButton.addEventListener('click', () => {
-  popup.classList.remove('showing-results');
   popup.style.display = 'none';
+  popup.classList.remove('showing-results'); // Remove results class when closing
+  // Reset to initial state
+  initialView.style.display = 'block';
+  analysisContent.style.display = 'none';
+  results.style.display = 'none';
 });
 
-  // Close popup when clicking outside
-  window.addEventListener('click', (event) => {
-    if (!popup.contains(event.target) && event.target !== fab) {
+// Handle window click (clicking outside)
+window.addEventListener('click', (event) => {
+  if (!popup.contains(event.target) && event.target !== fab) {
       popup.style.display = 'none';
-    }
+      popup.classList.remove('showing-results'); // Remove results class when closing
+      // Reset to initial state
+      initialView.style.display = 'block';
+      analysisContent.style.display = 'none';
+      results.style.display = 'none';
+  }
   });
 }
 
