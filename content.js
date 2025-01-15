@@ -234,9 +234,8 @@ function init() {
         const subject2El = results.querySelector('.subject2-text');
         
         
-        // Clean text
-        const subject1Text = "💡 Price Insight: " + response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-        const subject2Text = "🤔 Should You Buy Now? " + response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+        const subject1Text = "💡 <strong>Price Insight:</strong> " + response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+        const subject2Text = "🤔 <strong>Should You Buy Now?</strong> " + response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
         
         // Set text content
         headerEl.textContent = response.text.header;
