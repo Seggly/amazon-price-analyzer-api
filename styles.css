@@ -182,10 +182,25 @@
   margin-bottom: 24px;
 }
 
+.content-section {
+  margin-bottom: 20px;
+}
+
+.section-header {
+  font-family: 'Baloo2';
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.section-header strong {
+  font-family: 'Baloo2';
+}
+
 .tiny-mascot {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 24px;
+  left: 24px;
 }
 
 .tiny-mascot img {

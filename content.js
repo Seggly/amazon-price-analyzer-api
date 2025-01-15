@@ -19,50 +19,46 @@ if (fabImg) {
   popup.id = 'price-analyzer-popup';
   popup.style.display = 'none';
   popup.innerHTML = `
-  <div class="popup-content">
-    <button class="close-button">×</button>
-
-
-    <div class="initial-view">
-      <div class="mascot">
-        <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+    <div class="popup-content">
+      <button class="close-button">×</button>
+      
+      <div class="initial-view">
+        <div class="mascot">
+          <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+        </div>
+        <h2>Don't Buy Until Our AI Check The Price First!</h2>
+        <button class="analyze-button">Analyze The Price</button>
+        <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
       </div>
-      <h2>Don't Buy Until Our AI Check The Price First!</h2>
-      <button class="analyze-button">Analyze The Price</button>
-      <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
-    </div>
-
-<!-- Analysis View -->
-<div class="analysis-content" style="display: none;">
+  
+      <div class="analysis-content" style="display: none;">
         <div class="loading-spinner" style="display: none;">
           <div class="spinner"></div>
           <p>Analyzing price history...</p>
         </div>
         <div class="results" style="display: none;">
-          <div class="results-top">
-            <div class="tiny-mascot">
-              <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
-            </div>
-            <h2 class="header-text"></h2>
+          <div class="tiny-mascot">
+            <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
           </div>
+          <h2 class="header-text"></h2>
           
-          <div class="results-content">
-            <div class="price-insight">
-              <p class="subject1-text"></p>
-            </div>
-
-            <div class="buy-advice">
-              <p class="subject2-text"></p>
-            </div>
+          <div class="content-section">
+            <div class="section-header">💡 <strong>Price Insight:</strong></div>
+            <p class="subject1-text"></p>
           </div>
-
-          <div class="results-bottom">
-            <div class="gif-container"></div>
-            <button class="track-button">Track Price</button>
-            <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
+  
+          <div class="content-section">
+            <div class="section-header">🤔 <strong>Should You Buy Now?</strong></div>
+            <p class="subject2-text"></p>
           </div>
+  
+          <div class="gif-container"></div>
+          
+          <button class="track-button">Track Price</button>
+          <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
         </div>
       </div>
+    </div>
   `;
   
   container.appendChild(fab);
@@ -174,36 +170,39 @@ analyzeButton.addEventListener('click', async () => {
 
       const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
       
-      if (response && response.success && response.text) {
-          loadingSpinner.style.display = 'none';
-          results.style.display = 'block';
+// Inside your analyze button click handler
+if (response && response.success && response.text) {
+  loadingSpinner.style.display = 'none';
+  results.style.display = 'block';
 
-          const headerEl = results.querySelector('.header-text');
-          const subject1El = results.querySelector('.subject1-text');
-          const subject2El = results.querySelector('.subject2-text');
-          
-          // Only remove the emoji from the text, keep the headers in HTML
-          const subject1Text = response.text.subject1.split(':')[1]?.trim() || response.text.subject1;
-          const subject2Text = response.text.subject2.split('?')[1]?.trim() || response.text.subject2;
+  const headerEl = results.querySelector('.header-text');
+  const subject1El = results.querySelector('.subject1-text');
+  const subject2El = results.querySelector('.subject2-text');
+  
+  // Remove headers if they exist in the text
+  const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+  const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
 
-          await typeText(headerEl, response.text.header);
-          await typeText(subject1El, subject1Text);
-          await typeText(subject2El, subject2Text);
+  await typeText(headerEl, response.text.header);
+  await typeText(subject1El, subject1Text);
+  await typeText(subject2El, subject2Text);
 
-          // Handle GIF
-          const priceGrade = response.text.priceGrade || 'average';
-          console.log('Price Grade:', priceGrade); // Debug log
-          const gifCategory = determineGifCategory(priceGrade);
-          const gifUrl = getRandomGif(gifCategory);
-          
-          const gifContainer = results.querySelector('.gif-container');
-          if (gifContainer) {
-              console.log('Updating GIF container with URL:', gifUrl); // Debug log
-              gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
-          }
-      } else {
-          throw new Error('Invalid response format');
-      }
+  // Handle GIF display
+  const priceGrade = response.text.priceGrade || 'average';
+  const gifCategory = determineGifCategory(priceGrade);
+  const gifUrl = chrome.runtime.getURL(`gifs/${gifCategory}/${Math.floor(Math.random() * 30) + 1}.gif`);
+  
+  const gifContainer = results.querySelector('.gif-container');
+  if (gifContainer) {
+      gifContainer.innerHTML = `
+          <img 
+              src="${gifUrl}" 
+              alt="Price reaction" 
+              onerror="console.error('Failed to load GIF:', this.src)"
+              onload="console.log('Successfully loaded GIF:', this.src)"
+          />`;
+  }
+}
   } catch (error) {
       console.error('Error during price analysis:', error);
       
