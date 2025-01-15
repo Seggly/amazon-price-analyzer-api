@@ -190,12 +190,12 @@
   margin: 0;
 }
 
-/* Fixed content box */
 .fixed-content-box {
   height: 160px;
   margin: 20px 0;
   position: relative;
   overflow: hidden;
+  padding: 0 16px;
 }
 
 .insight-section, .buy-section {
@@ -214,32 +214,34 @@
   position: relative;
   height: 60px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
 }
 
 .subject1-text, .subject2-text {
-  margin: 0;
-  color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-weight: normal;
-  line-height: 1.4;
   width: 100%;
-  height: 100%;
+  text-align: left;
+  margin: 0;
+  padding: 0;
 }
 
-/* Footer section */
 .results-footer {
   position: absolute;
   bottom: 32px;
   left: 32px;
   right: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .gif-container {
   height: 180px;
+  width: 100%;  /* Full width */
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 16px;  /* Space before button */
 }
 
 .gif-container img {
@@ -259,7 +261,7 @@
   font-size: 18px;
   font-weight: 700;
   cursor: pointer;
-  margin-bottom: 12px;
+  margin-bottom: 16px;  /* Same spacing as between gif and button */
   font-family: 'Baloo2';
 }
 
@@ -267,8 +269,9 @@
   font-size: 9px;
   color: rgba(0, 0, 0, 0.6);
   text-align: center;
-  margin: 0 auto;
-  max-width: 300px;
+  width: 100%;  /* Same width as button */
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Initial view disclaimer */

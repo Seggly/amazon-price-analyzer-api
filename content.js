@@ -166,20 +166,32 @@ function init() {
 
   function fitTextToContainer(element, container) {
     if (!element || !container) return;
-  
-    let maxSize = 16;
+    
     let minSize = 8;
-    let size = maxSize;
-  
-    element.style.fontSize = size + 'px';
-  
-    while (size > minSize && 
-           (element.scrollHeight > container.clientHeight || 
-            element.scrollWidth > container.clientWidth)) {
-      size--;
-      element.style.fontSize = size + 'px';
+    let maxSize = 16;
+    let currentSize = maxSize;
+    
+    // Reset any previous styling
+    element.style.fontSize = maxSize + 'px';
+    
+    // Binary search for the right font size
+    while (minSize <= maxSize) {
+        currentSize = Math.floor((minSize + maxSize) / 2);
+        element.style.fontSize = currentSize + 'px';
+        
+        if (element.scrollHeight <= container.clientHeight && 
+            element.scrollWidth <= container.clientWidth) {
+            minSize = currentSize + 1;
+        } else {
+            maxSize = currentSize - 1;
+        }
     }
-  }
+    
+    // Set final size (maxSize will be the largest working size)
+    element.style.fontSize = maxSize + 'px';
+    
+    console.log('Final font size:', maxSize); // Debug log
+}
   
   // Update the click handler
   analyzeButton.addEventListener('click', async () => {
