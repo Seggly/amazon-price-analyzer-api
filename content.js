@@ -135,44 +135,67 @@ function init() {
         alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
         return;
     }
-    // Add the showing-results class to change dimensions
-    popup.classList.add('showing-results');
-    
-    initialView.style.display = 'none';
-    analysisContent.style.display = 'block';
-    loadingSpinner.style.display = 'block';
-    results.style.display = 'none';
 
     try {
+        // Show loading state
+        popup.classList.add('showing-results');
+        initialView.style.display = 'none';
+        analysisContent.style.display = 'block';
+        loadingSpinner.style.display = 'flex';  // Changed to flex
+        results.style.display = 'none';
+
         const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
         
-        if (response.success) {
-          loadingSpinner.style.display = 'none';
-          results.style.display = 'block';
-      
-          const headerEl = results.querySelector('.header-text');
-          const subject1El = results.querySelector('.subject1-text');
-          const subject2El = results.querySelector('.subject2-text');
-          
-          // Remove the prefixes from OpenAI's response
-          const subject1Text = response.text.subject1.replace('💡 Price Insight:', '').trim();
-          const subject2Text = response.text.subject2.replace('🤔 Should You Buy Now?', '').trim();
-      
-          await typeText(headerEl, response.text.header);
-          await typeText(subject1El, subject1Text);  // Use cleaned text
-          await typeText(subject2El, subject2Text);  // Use cleaned text
-      
-          // Handle GIF display
-          const gifCategory = determineGifCategory(response.text.priceGrade || 'average');
-          const gifUrl = getRandomGif(gifCategory);
-          const gifContainer = results.querySelector('.gif-container');
-          gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
+        if (response && response.success && response.text) {
+            // Hide loading, show results
+            loadingSpinner.style.display = 'none';
+            results.style.display = 'block';
+
+            const headerEl = results.querySelector('.header-text');
+            const subject1El = results.querySelector('.subject1-text');
+            const subject2El = results.querySelector('.subject2-text');
+            
+            // Clean the text responses
+            const subject1Text = response.text.subject1.replace('💡 Price Insight:', '').trim();
+            const subject2Text = response.text.subject2.replace('🤔 Should You Buy Now?', '').trim();
+
+            // Type the text
+            await typeText(headerEl, response.text.header);
+            await typeText(subject1El, subject1Text);
+            await typeText(subject2El, subject2Text);
+
+            // Handle GIF
+            if (response.text.priceGrade) {
+                const gifCategory = determineGifCategory(response.text.priceGrade);
+                const gifUrl = getRandomGif(gifCategory);
+                const gifContainer = results.querySelector('.gif-container');
+                if (gifContainer) {
+                    gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
+                }
+            }
+        } else {
+            throw new Error('Invalid response format');
         }
-      } catch (error) {
+    } catch (error) {
         console.error('Error during price analysis:', error);
+        
+        // Hide loading, show error state
         loadingSpinner.style.display = 'none';
         results.style.display = 'block';
-        results.querySelector('.header-text').textContent = 'Oops! Something went wrong. Please try again.';
+        
+        const headerEl = results.querySelector('.header-text');
+        if (headerEl) {
+            headerEl.textContent = 'Oops! Something went wrong. Please try again.';
+        }
+
+        // Clear other elements
+        const subject1El = results.querySelector('.subject1-text');
+        const subject2El = results.querySelector('.subject2-text');
+        const gifContainer = results.querySelector('.gif-container');
+        
+        if (subject1El) subject1El.textContent = '';
+        if (subject2El) subject2El.textContent = '';
+        if (gifContainer) gifContainer.innerHTML = '';
     }
 });
 

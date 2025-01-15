@@ -151,7 +151,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 16px;
+  background: #FFD4C2;  /* Match popup background */
+  z-index: 10;
   width: 100%;
 }
 
@@ -162,7 +164,12 @@
   border-top: 4px solid #FF5100;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+}
+
+.loading-spinner p {
+  margin: 0;
+  font-family: 'Baloo2';
+  color: #000000;
 }
 
 @keyframes spin {
