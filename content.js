@@ -99,12 +99,8 @@ function getAsin() {
 }
 
 // Type text effect
-async function typeText(element, text, speed = 30) {
-  element.textContent = '';
-  for (let i = 0; i < text.length; i++) {
-    element.textContent += text[i];
-    await new Promise(resolve => setTimeout(resolve, speed));
-  }
+async function typeText(element, text) {
+  element.textContent = text;  // Show text immediately
 }
 
 function determineGifCategory(priceGrade) {
