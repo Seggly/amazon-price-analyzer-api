@@ -45,21 +45,19 @@ if (fabImg) {
             <h2 class="header-text"></h2>
           </div>
 
-          <div class="fixed-content-box">
-            <div class="insight-section">
-              <h3>💡 Price Insight:</h3>
-              <div class="text-fit-container">
-                <p class="subject1-text"></p>
-              </div>
-            </div>
+  <div class="fixed-content-box">
+    <div class="insight-section">
+      <div class="text-fit-container">
+        <p class="subject1-text"></p>
+      </div>
+    </div>
 
-            <div class="buy-section">
-              <h3>🤔 Should You Buy Now?</h3>
-              <div class="text-fit-container">
-                <p class="subject2-text"></p>
-              </div>
-            </div>
-          </div>
+    <div class="buy-section">
+      <div class="text-fit-container">
+        <p class="subject2-text"></p>
+      </div>
+    </div>
+  </div>
 
           <div class="results-footer">
             <div class="gif-container"></div>
@@ -226,16 +224,16 @@ function init() {
   
         const headerEl = results.querySelector('.header-text');
         const subject1El = results.querySelector('.subject1-text');
-        const subject2El = results.querySelector('.subject2-text');
+        const subject2El = results.querySelector('.subject2-text');    
         
         // Clean text
-        const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-        const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+        const subject1Text = "💡 Price Insight: " + response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+        const subject2Text = "🤔 Should You Buy Now? " + response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
     
         // Set text content
         headerEl.textContent = response.text.header;
         subject1El.textContent = subject1Text;
-        subject2El.textContent = subject2Text;
+        subject2El.textContent = subject2Text;    
     
         // Get containers
         const subject1Container = subject1El.closest('.text-fit-container');

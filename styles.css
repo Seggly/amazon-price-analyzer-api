@@ -195,11 +195,11 @@
   margin: 20px 0;
   position: relative;
   overflow: hidden;
-  padding: 0;
 }
 
+
 .insight-section, .buy-section {
-  height: 70px;  /* Fixed height for each section */
+  height: 70px;
   margin-bottom: 10px;
   padding: 0 16px;
 }
