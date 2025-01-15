@@ -1,5 +1,16 @@
 let currentAnalysis = null;
 let currentAsin = null;
+let elements = null; // Add this global variable
+
+function clearAnalysis() {
+    currentAnalysis = null;
+    if (elements) {
+        elements.initialView.style.display = 'block';
+        elements.analysisContent.style.display = 'none';
+        elements.results.style.display = 'none';
+        elements.popup.classList.remove('showing-results');
+    }
+}
 
 // Create and inject the UI container
 function createUI() {
@@ -150,16 +161,6 @@ function getRandomGif(category) {
   }
 }
 
-// Update the clearAnalysis function to accept necessary elements
-function clearAnalysis(elements) {
-  currentAnalysis = null;
-  // Reset views
-  elements.initialView.style.display = 'block';
-  elements.analysisContent.style.display = 'none';
-  elements.results.style.display = 'none';
-  elements.popup.classList.remove('showing-results');
-}
-
 // Update watchForVariationChanges to pass the elements
 function watchForVariationChanges(elements) {
   let lastUrl = location.href;
@@ -204,8 +205,10 @@ function watchForVariationChanges(elements) {
 // Initialize the extension
 function init() {
   const { fab, popup } = createUI();
-  const elements = {
-      popup,
+  
+  // Store all elements in our global elements object
+  elements = {
+      popup: popup,
       closeButton: popup.querySelector('.close-button'),
       analyzeButton: popup.querySelector('.analyze-button'),
       initialView: popup.querySelector('.initial-view'),
@@ -213,157 +216,114 @@ function init() {
       loadingSpinner: popup.querySelector('.loading-spinner'),
       results: popup.querySelector('.results')
   };
-    // Pass elements to watchForVariationChanges
-    watchForVariationChanges(elements);
 
-// Handle FAB click
-fab.addEventListener('click', () => {
-  popup.style.display = 'block';
-  
-  if (currentAnalysis) {
-      // Show previous analysis
-      popup.classList.add('showing-results');
-      initialView.style.display = 'none';
-      analysisContent.style.display = 'block';
-      results.style.display = 'block';
-      loadingSpinner.style.display = 'none';
-  } else {
-      // Show initial view
-      popup.classList.remove('showing-results');
-      initialView.style.display = 'block';
-      analysisContent.style.display = 'none';
-      results.style.display = 'none';
-  }
-});
+  watchForVariationChanges();
 
+  // Handle FAB click
+  fab.addEventListener('click', () => {
+      elements.popup.style.display = 'block';
+      
+      if (currentAnalysis) {
+          // Show previous analysis
+          elements.popup.classList.add('showing-results');
+          elements.initialView.style.display = 'none';
+          elements.analysisContent.style.display = 'block';
+          elements.results.style.display = 'block';
+          elements.loadingSpinner.style.display = 'none';
+      } else {
+          // Show initial view
+          elements.popup.classList.remove('showing-results');
+          elements.initialView.style.display = 'block';
+          elements.analysisContent.style.display = 'none';
+          elements.results.style.display = 'none';
+      }
+  });
 
+  // Handle analyze button click
+  elements.analyzeButton.addEventListener('click', async () => {
+      const asin = getAsin();
+      currentAsin = asin;
 
-  function fitTextToContainer(element, container) {
-    if (!element || !container) return;
-    
-    const maxSize = 16;
-    const minSize = 8;
-    let fontSize = maxSize;
-    
-    element.style.fontSize = `${fontSize}px`;
-    
-    // First pass: quick decrease
-    while (fontSize > minSize && (
-        element.scrollHeight > container.clientHeight ||
-        element.scrollWidth > container.clientWidth
-    )) {
-        fontSize--;
-        element.style.fontSize = `${fontSize}px`;
-    }
-    
-    // If text still doesn't fit at minimum size
-    if (fontSize === minSize && (
-        element.scrollHeight > container.clientHeight ||
-        element.scrollWidth > container.clientWidth
-    )) {
-        element.style.fontSize = `${minSize}px`;
-    }
-    
-    console.log(`Fitted text at ${fontSize}px:`, {
-        text: element.textContent.slice(0, 20) + '...',
-        containerHeight: container.clientHeight,
-        textHeight: element.scrollHeight,
-        fontSize: fontSize
-    });
+      if (!asin) {
+          alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
+          return;
+      }
 
-    
-    // Set to largest size that worked
-    element.style.fontSize = `${maxSize}px`;
-    
-    console.log('Container size:', {
-        containerWidth: container.clientWidth,
-        containerHeight: container.clientHeight,
-        textWidth: element.scrollWidth,
-        textHeight: element.scrollHeight,
-        finalFontSize: maxSize
-    });
+      try {
+          elements.popup.classList.add('showing-results');
+          elements.initialView.style.display = 'none';
+          elements.analysisContent.style.display = 'block';
+          elements.loadingSpinner.style.display = 'flex';
+          elements.results.style.display = 'none';
+
+          const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
+          
+          if (response && response.success && response.text) {
+              currentAnalysis = response;
+              elements.loadingSpinner.style.display = 'none';
+              elements.results.style.display = 'block';
+
+              const headerEl = elements.results.querySelector('.header-text');
+              const subject1El = elements.results.querySelector('.subject1-text');
+              const subject2El = elements.results.querySelector('.subject2-text');
+              
+              const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+              const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+
+              headerEl.textContent = response.text.header;
+              subject1El.textContent = subject1Text;
+              subject2El.textContent = subject2Text;
+
+              const subject1Container = subject1El.closest('.text-fit-container');
+              const subject2Container = subject2El.closest('.text-fit-container');
+              
+              requestAnimationFrame(() => {
+                  fitTextToContainer(subject1El, subject1Container);
+                  fitTextToContainer(subject2El, subject2Container);
+              });
+
+              const priceGrade = response.text.priceGrade || 'average';
+              const gifCategory = determineGifCategory(priceGrade);
+              const gifUrl = getRandomGif(gifCategory);
+              
+              const gifContainer = elements.results.querySelector('.gif-container');
+              if (gifContainer) {
+                  gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
+              }
+          }
+      } catch (error) {
+          console.error('Error during price analysis:', error);
+          currentAnalysis = null;
+          elements.loadingSpinner.style.display = 'none';
+          elements.results.style.display = 'block';
+          
+          const headerEl = elements.results.querySelector('.header-text');
+          if (headerEl) {
+              headerEl.textContent = 'Oops! Something went wrong. Please try again.';
+          }
+
+          const subject1El = elements.results.querySelector('.subject1-text');
+          const subject2El = elements.results.querySelector('.subject2-text');
+          const gifContainer = elements.results.querySelector('.gif-container');
+          
+          if (subject1El) subject1El.textContent = '';
+          if (subject2El) subject2El.textContent = '';
+          if (gifContainer) gifContainer.innerHTML = '';
+      }
+  });
+
+  // Handle close button click
+  elements.closeButton.addEventListener('click', () => {
+      elements.popup.style.display = 'none';
+  });
+
+  // Handle clicking outside
+  window.addEventListener('click', (event) => {
+      if (!elements.popup.contains(event.target) && event.target !== fab) {
+          elements.popup.style.display = 'none';
+      }
+  });
 }
-  
-  // Update the click handler
-  analyzeButton.addEventListener('click', async () => {
-    const asin = getAsin();
-    if (!asin) {
-      alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
-      return;
-    }
-  
-    try {
-      popup.classList.add('showing-results');
-      initialView.style.display = 'none';
-      analysisContent.style.display = 'block';
-      loadingSpinner.style.display = 'flex';
-      results.style.display = 'none';
-  
-      const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
-      
-      if (response && response.success && response.text) {
-        currentAnalysis = response; // Save the analysis
-        loadingSpinner.style.display = 'none';
-        results.style.display = 'block';
-  
-        const headerEl = results.querySelector('.header-text');
-        const subject1El = results.querySelector('.subject1-text');
-        const subject2El = results.querySelector('.subject2-text');
-        
-        
-    const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-    const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-
-        subject1El.innerHTML = subject1Text;
-        subject2El.innerHTML = subject2Text;
-        // Set text content
-        headerEl.textContent = response.text.header;
-        subject1El.textContent = subject1Text;
-        subject2El.textContent = subject2Text;    
-    
-        // Get containers
-        const subject1Container = subject1El.closest('.text-fit-container');
-        const subject2Container = subject2El.closest('.text-fit-container');
-    
-        // Force a reflow
-        void subject1Container.offsetHeight;
-        void subject2Container.offsetHeight;    
-  
-          // Apply text fitting
-    requestAnimationFrame(() => {
-      fitTextToContainer(subject1El, subject1Container);
-      fitTextToContainer(subject2El, subject2Container);
-  });
-        // Handle GIF
-        const priceGrade = response.text.priceGrade || 'average';
-        const gifCategory = determineGifCategory(priceGrade);
-        const gifUrl = getRandomGif(gifCategory);
-        
-        const gifContainer = results.querySelector('.gif-container');
-        if (gifContainer) {
-          gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
-        }
-      }
-    } catch (error) {
-      console.error('Error during price analysis:', error);
-      currentAnalysis = null; // Clear on error
-      loadingSpinner.style.display = 'none';
-      results.style.display = 'block';
-      
-      const headerEl = results.querySelector('.header-text');
-      if (headerEl) {
-        headerEl.textContent = 'Oops! Something went wrong. Please try again.';
-      }
-  
-      const subject1El = results.querySelector('.subject1-text');
-      const subject2El = results.querySelector('.subject2-text');
-      const gifContainer = results.querySelector('.gif-container');
-      
-      if (subject1El) subject1El.textContent = '';
-      if (subject2El) subject2El.textContent = '';
-      if (gifContainer) gifContainer.innerHTML = '';
-    }
-  });
 // Add these storage functions
 async function saveAnalysis(asin, analysis) {
   const timestamp = Date.now();
@@ -432,20 +392,6 @@ async function getProductFamily(asin) {
   return asin.substring(0, 6);
 }
 
-// Handle close button click
-closeButton.addEventListener('click', () => {
-  popup.style.display = 'none';
-  // Don't reset the view states or clear currentAnalysis
-});
-
-// Handle clicking outside
-window.addEventListener('click', (event) => {
-  if (!popup.contains(event.target) && event.target !== fab) {
-      popup.style.display = 'none';
-      // Don't reset the view states or clear currentAnalysis
-  }
-  });
-}
 
 // Start the extension
 init();
