@@ -34,28 +34,35 @@ if (fabImg) {
 
 <!-- Analysis View -->
 <div class="analysis-content" style="display: none;">
-  <div class="loading-spinner" style="display: none;">
-    <div class="spinner"></div>
-    <p>Analyzing price history...</p>
-  </div>
-  <div class="results" style="display: none;">
-    <h2 class="header-text"></h2>
-    
-    <div class="price-insight">
-      <h3><span class="emoji">💡</span>Price Insight:</h3>
-      <p class="subject1-text"></p>
-    </div>
+        <div class="loading-spinner" style="display: none;">
+          <div class="spinner"></div>
+          <p>Analyzing price history...</p>
+        </div>
+        <div class="results" style="display: none;">
+          <div class="results-top">
+            <div class="tiny-mascot">
+              <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+            </div>
+            <h2 class="header-text"></h2>
+          </div>
+          
+          <div class="results-content">
+            <div class="price-insight">
+              <p class="subject1-text"></p>
+            </div>
 
-    <div class="buy-advice">
-      <h3><span class="emoji">🤔</span>Should You Buy Now?</h3>
-      <p class="subject2-text"></p>
-    </div>
+            <div class="buy-advice">
+              <p class="subject2-text"></p>
+            </div>
+          </div>
 
-    <div class="gif-container"></div>
-    <button class="track-button">Track Price</button>
-    <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
-  </div>
-</div>
+          <div class="results-bottom">
+            <div class="gif-container"></div>
+            <button class="track-button">Track Price</button>
+            <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
+          </div>
+        </div>
+      </div>
   `;
   
   container.appendChild(fab);
@@ -140,18 +147,28 @@ function init() {
         const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
         
         if (response.success) {
-            loadingSpinner.style.display = 'none';
-            results.style.display = 'block';
-
-            const headerEl = results.querySelector('.header-text');
-            const subject1El = results.querySelector('.subject1-text');
-            const subject2El = results.querySelector('.subject2-text');
-
-            await typeText(headerEl, response.text.header);
-            await typeText(subject1El, response.text.subject1);
-            await typeText(subject2El, response.text.subject2);
+          loadingSpinner.style.display = 'none';
+          results.style.display = 'block';
+      
+          const headerEl = results.querySelector('.header-text');
+          const subject1El = results.querySelector('.subject1-text');
+          const subject2El = results.querySelector('.subject2-text');
+          
+          // Remove the prefixes from OpenAI's response
+          const subject1Text = response.text.subject1.replace('💡 Price Insight:', '').trim();
+          const subject2Text = response.text.subject2.replace('🤔 Should You Buy Now?', '').trim();
+      
+          await typeText(headerEl, response.text.header);
+          await typeText(subject1El, subject1Text);  // Use cleaned text
+          await typeText(subject2El, subject2Text);  // Use cleaned text
+      
+          // Handle GIF display
+          const gifCategory = determineGifCategory(response.text.priceGrade || 'average');
+          const gifUrl = getRandomGif(gifCategory);
+          const gifContainer = results.querySelector('.gif-container');
+          gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Error during price analysis:', error);
         loadingSpinner.style.display = 'none';
         results.style.display = 'block';
