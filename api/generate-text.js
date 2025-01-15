@@ -107,7 +107,7 @@ Header: [Your conclusion text]
                 messages: [
                     {
                         role: "system",
-                        content: "You are a friendly and helpful price analysis assistant that gives clear, concise advice in a conversational tone. You MUST follow the format provided in the prompt EXACTLY, including the priceGrade line."
+                        content: "You are a friendly and helpful price analysis assistant that gives clear, concise advice in a conversational tone."
                     },
                     {
                         role: "user",
