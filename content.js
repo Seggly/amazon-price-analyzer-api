@@ -47,12 +47,14 @@ if (fabImg) {
 
   <div class="fixed-content-box">
     <div class="insight-section">
+      <div class="title">💡 Price Insight:</div>
       <div class="text-fit-container">
         <p class="subject1-text"></p>
       </div>
     </div>
 
     <div class="buy-section">
+      <div class="title">🤔 Should You Buy Now?</div>
       <div class="text-fit-container">
         <p class="subject2-text"></p>
       </div>
@@ -234,8 +236,9 @@ function init() {
         const subject2El = results.querySelector('.subject2-text');
         
         
-        const subject1Text = `<span style="font-family: 'Baloo2'; font-weight: 700;">💡 Price Insight:</span> ${response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim()}`;
-        const subject2Text = `<span style="font-family: 'Baloo2'; font-weight: 700;">🤔 Should You Buy Now?</span> ${response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim()}`;
+    const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+    const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+
         subject1El.innerHTML = subject1Text;
         subject2El.innerHTML = subject2Text;
         // Set text content

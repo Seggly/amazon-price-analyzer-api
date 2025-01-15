@@ -125,13 +125,21 @@
 .insight-section, .buy-section {
   flex: 1;
   position: relative;
-  padding: 0 16px;
+}
+
+.insight-section .title, 
+.buy-section .title {
+  font-family: 'Baloo2';
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #000000;
 }
 
 .text-fit-container {
-  position: relative;
-  height: 100%;
+  height: calc(100% - 24px); /* Account for title height */
   width: 100%;
+  position: relative;
 }
 
 .subject1-text, .subject2-text {
