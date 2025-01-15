@@ -114,7 +114,7 @@ Header: [Your conclusion text]
                         content: prompt
                     }
                 ],
-                temperature: 2
+                temperature: 0
             })
         });
 
