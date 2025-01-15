@@ -234,9 +234,10 @@ function init() {
         const subject2El = results.querySelector('.subject2-text');
         
         
-        const subject1Text = "💡 <strong>Price Insight:</strong> " + response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-        const subject2Text = "🤔 <strong>Should You Buy Now?</strong> " + response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-        
+        const subject1Text = `<span style="font-family: 'Baloo2'; font-weight: 700;">💡 Price Insight:</span> ${response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim()}`;
+        const subject2Text = `<span style="font-family: 'Baloo2'; font-weight: 700;">🤔 Should You Buy Now?</span> ${response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim()}`;
+        subject1El.innerHTML = subject1Text;
+        subject2El.innerHTML = subject2Text;
         // Set text content
         headerEl.textContent = response.text.header;
         subject1El.textContent = subject1Text;
