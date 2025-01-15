@@ -132,31 +132,38 @@ Header: [Your conclusion text]
         const content = data.choices[0].message.content;
         console.log('Raw OpenAI response:', content);
 
-        // Split content into sections
-        const sections = content.split('\n\n');
-        let text = {
-            header: '',
-            subject1: '',
-            subject2: ''
-        };
+// Split content into sections
+const sections = content.split('\n\n');
+let text = {
+    priceGrade: '',  // Add this
+    header: '',
+    subject1: '',
+    subject2: ''
+};
 
-        // Parse header (first section that starts with "Header:")
-        const headerSection = sections.find(s => s.toLowerCase().startsWith('header:'));
-        if (headerSection) {
-            text.header = headerSection.replace(/^header:/i, '').trim();
-        }
+// Parse price grade (first section)
+const priceGradeSection = sections.find(s => s.toLowerCase().startsWith('pricegrade:'));
+if (priceGradeSection) {
+    text.priceGrade = priceGradeSection.split(':')[1].trim().toLowerCase();
+}
 
-        // Find the price insight section
-        const insightSection = sections.find(s => s.includes('💡 Price Insight'));
-        if (insightSection) {
-            text.subject1 = insightSection.trim();
-        }
+// Parse header (section that starts with "Header:")
+const headerSection = sections.find(s => s.toLowerCase().startsWith('header:'));
+if (headerSection) {
+    text.header = headerSection.replace(/^header:/i, '').trim();
+}
 
-        // Find the buying advice section
-        const adviceSection = sections.find(s => s.includes('🤔 Should You Buy Now?'));
-        if (adviceSection) {
-            text.subject2 = adviceSection.trim();
-        }
+// Find the price insight section
+const insightSection = sections.find(s => s.includes('💡 Price Insight'));
+if (insightSection) {
+    text.subject1 = insightSection.trim();
+}
+
+// Find the buying advice section
+const adviceSection = sections.find(s => s.includes('🤔 Should You Buy Now?'));
+if (adviceSection) {
+    text.subject2 = adviceSection.trim();
+}
 
         // If we're missing any sections, try alternate format
         if (!text.header || !text.subject1 || !text.subject2) {
