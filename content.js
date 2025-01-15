@@ -150,23 +150,23 @@ function getRandomGif(category) {
   }
 }
 
-// Add these functions outside init()
-function clearAnalysis() {
+// Update the clearAnalysis function to accept necessary elements
+function clearAnalysis(elements) {
   currentAnalysis = null;
   // Reset views
-  initialView.style.display = 'block';
-  analysisContent.style.display = 'none';
-  results.style.display = 'none';
-  popup.classList.remove('showing-results');
+  elements.initialView.style.display = 'block';
+  elements.analysisContent.style.display = 'none';
+  elements.results.style.display = 'none';
+  elements.popup.classList.remove('showing-results');
 }
 
-function watchForVariationChanges() {
-  // Watch for URL changes
+// Update watchForVariationChanges to pass the elements
+function watchForVariationChanges(elements) {
   let lastUrl = location.href;
   const urlObserver = new MutationObserver(() => {
       if (location.href !== lastUrl) {
           lastUrl = location.href;
-          clearAnalysis();
+          clearAnalysis(elements);
       }
   });
 
@@ -204,13 +204,17 @@ function watchForVariationChanges() {
 // Initialize the extension
 function init() {
   const { fab, popup } = createUI();
-  const closeButton = popup.querySelector('.close-button');
-  const analyzeButton = popup.querySelector('.analyze-button');
-  const initialView = popup.querySelector('.initial-view');
-  const analysisContent = popup.querySelector('.analysis-content');
-  const loadingSpinner = popup.querySelector('.loading-spinner');
-  const results = popup.querySelector('.results');
-  watchForVariationChanges();
+  const elements = {
+      popup,
+      closeButton: popup.querySelector('.close-button'),
+      analyzeButton: popup.querySelector('.analyze-button'),
+      initialView: popup.querySelector('.initial-view'),
+      analysisContent: popup.querySelector('.analysis-content'),
+      loadingSpinner: popup.querySelector('.loading-spinner'),
+      results: popup.querySelector('.results')
+  };
+    // Pass elements to watchForVariationChanges
+    watchForVariationChanges(elements);
 
 // Handle FAB click
 fab.addEventListener('click', () => {
