@@ -217,37 +217,32 @@ function watchForVariationChanges() {
   urlObserver.observe(document, { subtree: true, childList: true });
 }
 
-// Add this outside of init(), near your other utility functions
 function fitTextToContainer(element, container) {
   if (!element || !container) return;
-  
-  let minSize = 12;  // Increased minimum size
-  let maxSize = 32;  // Increased maximum potential size
-  let currentSize = minSize;
-  
-  // Reset any existing styles
-  element.style.cssText = `
-      font-size: ${minSize}px;
-      line-height: 1.3;
-      margin: 0;
-      padding: 0;
-  `;
-  
-  // Keep increasing size until it doesn't fit
-  while (currentSize <= maxSize) {
-      element.style.fontSize = `${currentSize}px`;
-      
-      if (element.scrollHeight > container.clientHeight || 
-          element.scrollWidth > container.clientWidth) {
-          // Text too big, go back one size
-          element.style.fontSize = `${currentSize - 1}px`;
-          break;
-      }
-      
-      currentSize++;
+
+  // Start with a very small font size
+  let fontSize = 10;
+  element.style.fontSize = `${fontSize}px`;
+
+  // Keep increasing the font size until text overflows
+  while (fontSize < 100 && // Set a reasonable maximum
+         element.scrollHeight <= container.clientHeight &&
+         element.scrollWidth <= container.clientWidth) {
+      fontSize++;
+      element.style.fontSize = `${fontSize}px`;
   }
-  
-  console.log('Final font size:', parseInt(element.style.fontSize));
+
+  // Step back one size to ensure fit
+  fontSize--;
+  element.style.fontSize = `${fontSize}px`;
+
+  // Debug log
+  console.log('Final font size:', fontSize, 'Container:', {
+      height: container.clientHeight,
+      width: container.clientWidth,
+      textHeight: element.scrollHeight,
+      textWidth: element.scrollWidth
+  });
 }
 
 // Initialize the extension
