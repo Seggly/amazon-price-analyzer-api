@@ -12,6 +12,30 @@ function clearAnalysis() {
     }
 }
 
+let analysisCache = new Map();
+
+// Add this function with your other utility functions
+function cacheAnalysis(asin, analysis) {
+    const timestamp = Date.now();
+    analysisCache.set(asin, {
+        analysis,
+        timestamp
+    });
+}
+
+function getAnalysisFromCache(asin) {
+    const cached = analysisCache.get(asin);
+    if (!cached) return null;
+
+    const timeDiff = Date.now() - cached.timestamp;
+    if (timeDiff > 20 * 60 * 1000) { // 20 minutes
+        analysisCache.delete(asin);
+        return null;
+    }
+
+    return cached.analysis;
+}
+
 // Create and inject the UI container
 function createUI() {
   const container = document.createElement('div');
@@ -245,25 +269,51 @@ function init() {
 
   watchForVariationChanges();
 
-  // Handle FAB click
   fab.addEventListener('click', () => {
-      elements.popup.style.display = 'block';
-      
-      if (currentAnalysis) {
-          // Show previous analysis
-          elements.popup.classList.add('showing-results');
-          elements.initialView.style.display = 'none';
-          elements.analysisContent.style.display = 'block';
-          elements.results.style.display = 'block';
-          elements.loadingSpinner.style.display = 'none';
-      } else {
-          // Show initial view
-          elements.popup.classList.remove('showing-results');
-          elements.initialView.style.display = 'block';
-          elements.analysisContent.style.display = 'none';
-          elements.results.style.display = 'none';
-      }
-  });
+    const currentAsin = getAsin();
+    elements.popup.style.display = 'block';
+    
+    const cachedAnalysis = getAnalysisFromCache(currentAsin);
+    if (cachedAnalysis) {
+        currentAnalysis = cachedAnalysis;
+        elements.popup.classList.add('showing-results');
+        elements.initialView.style.display = 'none';
+        elements.analysisContent.style.display = 'block';
+        elements.results.style.display = 'block';
+        elements.loadingSpinner.style.display = 'none';
+        
+        // Display cached analysis
+        const headerEl = elements.results.querySelector('.header-text');
+        const subject1El = elements.results.querySelector('.subject1-text');
+        const subject2El = elements.results.querySelector('.subject2-text');
+        
+        headerEl.textContent = cachedAnalysis.text.header;
+        subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+        subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+        
+        // Reapply text fitting
+        const subject1Container = subject1El.closest('.text-fit-container');
+        const subject2Container = subject2El.closest('.text-fit-container');
+        requestAnimationFrame(() => {
+            fitTextToContainer(subject1El, subject1Container);
+            fitTextToContainer(subject2El, subject2Container);
+        });
+        
+        // Show cached GIF
+        const priceGrade = cachedAnalysis.text.priceGrade || 'average';
+        const gifCategory = determineGifCategory(priceGrade);
+        const gifUrl = getRandomGif(gifCategory);
+        const gifContainer = elements.results.querySelector('.gif-container');
+        if (gifContainer) {
+            gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
+        }
+    } else {
+        elements.popup.classList.remove('showing-results');
+        elements.initialView.style.display = 'block';
+        elements.analysisContent.style.display = 'none';
+        elements.results.style.display = 'none';
+    }
+});
 
   // Handle analyze button click
   elements.analyzeButton.addEventListener('click', async () => {
@@ -286,6 +336,7 @@ function init() {
           
           if (response && response.success && response.text) {
               currentAnalysis = response;
+              cacheAnalysis(asin, response);  // Add this line
               elements.loadingSpinner.style.display = 'none';
               elements.results.style.display = 'block';
 
@@ -345,74 +396,6 @@ function init() {
       }
   });
 }
-// Add these storage functions
-async function saveAnalysis(asin, analysis) {
-  const timestamp = Date.now();
-  const productFamily = await getProductFamily(asin);
-  
-  const storageData = {
-      analysis,
-      timestamp,
-      productFamily,
-      asin
-  };
-
-  chrome.storage.local.set({ [asin]: storageData });
-}
-
-async function getStoredAnalysis(asin) {
-  const currentProductFamily = await getProductFamily(asin);
-  
-  return new Promise((resolve) => {
-      chrome.storage.local.get(asin, (result) => {
-          if (!result[asin]) {
-              resolve(null);
-              return;
-          }
-
-          const { analysis, timestamp, productFamily } = result[asin];
-          const timeDiff = Date.now() - timestamp;
-          
-          // If same product, check 10-minute threshold
-          if (asin === result[asin].asin) {
-              if (timeDiff < 10 * 60 * 1000) { // 10 minutes
-                  resolve(analysis);
-                  return;
-              }
-          }
-          // If same product family, check 24-hour threshold
-          else if (productFamily === currentProductFamily) {
-              if (timeDiff < 24 * 60 * 60 * 1000) { // 24 hours
-                  resolve(analysis);
-                  return;
-              }
-          }
-          
-          // Clear expired analysis
-          chrome.storage.local.remove(asin);
-          resolve(null);
-      });
-  });
-}
-
-// Function to get product family (based on parent ASIN or similar products)
-async function getProductFamily(asin) {
-  // Look for parent ASIN in the page
-  const parentAsinElement = document.querySelector('[data-parent-asin]');
-  if (parentAsinElement) {
-      return parentAsinElement.getAttribute('data-parent-asin');
-  }
-  
-  // If no parent ASIN, look for product group/family
-  const productGroupElement = document.querySelector('[data-product-group]');
-  if (productGroupElement) {
-      return productGroupElement.getAttribute('data-product-group');
-  }
-  
-  // If no product group, use first 6 characters of ASIN as family
-  return asin.substring(0, 6);
-}
-
 
 // Start the extension
 init();
