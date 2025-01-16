@@ -203,6 +203,7 @@
 
 .track-button {
   width: 60%;
+  margin: 0 auto;  /* Center horizontally */
   background: #FF4500;
   color: white;
   border: none;
@@ -211,8 +212,6 @@
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  align-items: center;
-  justify-content: center;
   margin-bottom: 4px;
   font-family: 'Baloo2';
 }
