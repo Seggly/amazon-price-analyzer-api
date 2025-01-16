@@ -87,7 +87,7 @@
 
 .results-header {
   position: relative;
-  margin-bottom: 4px; /* Reduced from 20px */
+  margin-bottom: 8px; /* Reduced from 20px */
 }
 
 .tiny-mascot {
@@ -112,8 +112,8 @@
 }
 
 .fixed-content-box {
-  height: 160px;
-  margin: 4px 0;
+  height: 220px; /* Increased from 160px */
+  margin: 0;  /* Remove margin since we're controlling gaps from outside */
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -162,6 +162,7 @@
   bottom: 12px;
   left: 12px;
   right: 12px;
+  margin-top: 8px; /* Add gap between content and footer */
 }
 
 .gif-container {
@@ -170,8 +171,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 4px; /* Match the spacing */
-  margin-bottom: 4px;
+  margin: 0 0 4px 0; /* Only keep bottom margin for spacing with button */
 }
 
 .gif-container img {
