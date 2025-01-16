@@ -188,7 +188,7 @@
 }
 
 .gif-container {
-  height: 110px;
+  height: 140px;
   width: 100%;
   display: flex;
   align-items: center;
@@ -197,7 +197,7 @@
 }
 
 .gif-container img {
-  max-height: 110px;
+  max-height: 140px;
   width: auto;
   border-radius: 8px;
   object-fit: contain;
