@@ -83,21 +83,21 @@ if (fabImg) {
             <h2 class="header-text"></h2>
           </div>
 
-  <div class="fixed-content-box">
-    <div class="insight-section">
-      <div class="title">💡 Price Insight:</div>
-      <div class="text-fit-container">
-        <p class="subject1-text"></p>
-      </div>
-    </div>
-
-    <div class="buy-section">
-      <div class="title">🤔 Should You Buy Now?</div>
-      <div class="text-fit-container">
-        <p class="subject2-text"></p>
-      </div>
+<div class="fixed-content-box">
+  <div class="insight-section">
+    <div class="title"><strong>💡 Price Insight:</strong></div>
+    <div class="text-fit-container">
+      <p class="subject1-text"></p>
     </div>
   </div>
+
+  <div class="buy-section">
+    <div class="title"><strong>🤔 Should You Buy Now?</strong></div>
+    <div class="text-fit-container">
+      <p class="subject2-text"></p>
+    </div>
+  </div>
+</div>
 
           <div class="results-footer">
             <div class="gif-container"></div>
@@ -221,26 +221,30 @@ function watchForVariationChanges() {
 function fitTextToContainer(element, container) {
   if (!element || !container) return;
   
-  const maxSize = 16;
-  const minSize = 8;
-  let fontSize = maxSize;
+  let minSize = 8;
+  let maxSize = 24;  // Increased from 16
+  let bestSize = minSize;
   
-  element.style.fontSize = `${fontSize}px`;
+  // Reset styles
+  element.style.fontSize = `${minSize}px`;
+  element.style.lineHeight = '1.3';
   
-  while (fontSize > minSize && (
-      element.scrollHeight > container.clientHeight ||
-      element.scrollWidth > container.clientWidth
-  )) {
-      fontSize--;
-      element.style.fontSize = `${fontSize}px`;
+  // Binary search for the best size
+  while (minSize <= maxSize) {
+      const mid = Math.floor((minSize + maxSize) / 2);
+      element.style.fontSize = `${mid}px`;
+      
+      if (element.scrollHeight <= container.clientHeight && 
+          element.scrollWidth <= container.clientWidth) {
+          bestSize = mid;
+          minSize = mid + 1;
+      } else {
+          maxSize = mid - 1;
+      }
   }
   
-  if (fontSize === minSize && (
-      element.scrollHeight > container.clientHeight ||
-      element.scrollWidth > container.clientWidth
-  )) {
-      element.style.fontSize = `${minSize}px`;
-  }
+  // Set the best size found
+  element.style.fontSize = `${bestSize}px`;
 }
 
 // Initialize the extension
@@ -283,12 +287,10 @@ function init() {
         subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
         
         // Reapply text fitting
-        const subject1Container = subject1El.closest('.text-fit-container');
-        const subject2Container = subject2El.closest('.text-fit-container');
         requestAnimationFrame(() => {
-            fitTextToContainer(subject1El, subject1Container);
-            fitTextToContainer(subject2El, subject2Container);
-        });
+          fitTextToContainer(subject1El, subject1Container);
+          fitTextToContainer(subject2El, subject2Container);
+      });
         
         // Show cached GIF
         const priceGrade = cachedAnalysis.text.priceGrade || 'average';
@@ -338,12 +340,18 @@ function init() {
               const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
               const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
 
-              headerEl.textContent = response.text.header;
+              headerEl.textContent = response.text.header;  // You're missing this line
               subject1El.textContent = subject1Text;
               subject2El.textContent = subject2Text;
 
               const subject1Container = subject1El.closest('.text-fit-container');
               const subject2Container = subject2El.closest('.text-fit-container');
+                  // Move these lines here after containers are defined
+    void subject1Container.offsetHeight;
+    void subject2Container.offsetHeight;
+
+          
+
 
               const priceGrade = response.text.priceGrade || 'average';
               const gifCategory = determineGifCategory(priceGrade);

@@ -113,13 +113,12 @@
 
 /* Content Box */
 .fixed-content-box {
-  height: 180px;
-  margin: 8px 0; /* Reduced top margin */
+  height: 160px;
+  margin: 8px 0;
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 8px; /* Consistent spacing before gif */
+  gap: 8px;  /* Reduced gap between sections */
 }
 
 .insight-section, .buy-section {
@@ -132,24 +131,22 @@
   font-family: 'Baloo2';
   font-weight: 700;
   font-size: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   color: #000000;
 }
 
 .text-fit-container {
-  height: calc(100% - 24px); /* Account for title height */
+  height: calc(100% - 24px);  /* Subtract title height + margin */
   width: 100%;
   position: relative;
 }
 
 .subject1-text, .subject2-text {
-  position: absolute;
   width: 100%;
-  top: 50%;
-  transform: translateY(-50%);
+  height: 100%;
   margin: 0;
-  padding: 4px 0;
-  line-height: 1.4;
+  padding: 0;
+  position: absolute;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
