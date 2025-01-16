@@ -188,7 +188,7 @@
 }
 
 .gif-container {
-  height: 180px;
+  height: 100px;
   width: 100%;
   display: flex;
   align-items: center;
@@ -231,14 +231,14 @@
   font-family: 'Baloo2';
 }
 
-/* Initial view styles */
 .initial-view {
-  padding: 12px;
+  padding: 0;  /* Remove padding */
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* Added this */
+  justify-content: center;
+  gap: 24px;  /* Use consistent spacing */
 }
 
 .mascot {
@@ -246,7 +246,7 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  margin: 0 0 20px 0; /* Only bottom margin */
+  margin: 0;  /* Remove margin */
 }
 
 .mascot img {
@@ -260,7 +260,7 @@
   font-weight: 700;
   font-size: 36px;
   line-height: 1.2;
-  margin: 0 0 24px 0; /* Only bottom margin */
+  margin: 0;  /* Remove margin */
   color: #000000;
   text-align: center;
   max-width: 360px; /* Added to ensure proper width */
@@ -278,7 +278,7 @@
   cursor: pointer;
   width: 100%;
   max-width: 400px;
-  margin: 0 0 16px 0; /* Only bottom margin */
+  margin: 0;  /* Remove margin */
   font-family: 'Baloo2';
 }
 

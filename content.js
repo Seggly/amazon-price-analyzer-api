@@ -217,34 +217,38 @@ function watchForVariationChanges() {
   urlObserver.observe(document, { subtree: true, childList: true });
 }
 
-function fitTextToContainer(element, container) {
-  if (!element || !container) return;
+function fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container) {
+  if (!subject1El || !subject1Container || !subject2El || !subject2Container) return;
 
-  // Start with a very small font size
-  let fontSize = 10;
-  element.style.fontSize = `${fontSize}px`;
-  element.style.lineHeight = '1.3'; // Initial line height
-
-  // Keep increasing the font size until text overflows
-  while (fontSize < 100 && // Set a reasonable maximum
-         element.scrollHeight <= container.clientHeight &&
-         element.scrollWidth <= container.clientWidth) {
-      fontSize++;
+  // Function to find max possible font size for one container
+  const findMaxFontSize = (element, container) => {
+      let fontSize = 10;
       element.style.fontSize = `${fontSize}px`;
-      element.style.lineHeight = '1.3'; // Keep line height proportional
-  }
+      element.style.lineHeight = '1.3';
 
-  // Step back one size to ensure fit
-  fontSize--;
-  element.style.fontSize = `${fontSize}px`;
+      while (fontSize < 100 &&
+             element.scrollHeight <= container.clientHeight &&
+             element.scrollWidth <= container.clientWidth) {
+          fontSize++;
+          element.style.fontSize = `${fontSize}px`;
+      }
+      return fontSize - 1; // Step back one size
+  };
 
-  // Debug log
-  console.log('Final font size:', fontSize, 'Container:', {
-      height: container.clientHeight,
-      width: container.clientWidth,
-      textHeight: element.scrollHeight,
-      textWidth: element.scrollWidth
-  });
+  // Find max font size for each container
+  const size1 = findMaxFontSize(subject1El, subject1Container);
+  const size2 = findMaxFontSize(subject2El, subject2Container);
+
+  // Use the smaller of the two sizes
+  const finalSize = Math.min(size1, size2);
+
+  // Apply the same font size to both elements
+  subject1El.style.fontSize = `${finalSize}px`;
+  subject2El.style.fontSize = `${finalSize}px`;
+  subject1El.style.lineHeight = '1.3';
+  subject2El.style.lineHeight = '1.3';
+
+  console.log('Final font size for both sections:', finalSize);
 }
 
 // Initialize the extension
@@ -291,8 +295,7 @@ function init() {
         const subject2Container = subject2El.closest('.text-fit-container');
         
         requestAnimationFrame(() => {
-            fitTextToContainer(subject1El, subject1Container);
-            fitTextToContainer(subject2El, subject2Container);
+          fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
         });
         
         // Show cached GIF
