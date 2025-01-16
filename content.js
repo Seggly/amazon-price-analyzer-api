@@ -307,7 +307,7 @@ function init() {
     // Create particles with explosion effect
     for (let i = 0; i < particleCount; i++) {
       const angle = (Math.random() * Math.PI * 2);
-      const velocity = 3 + Math.random() * 3; // Increased velocity
+      const velocity = 8 + Math.random() * 6; // Increased initial velocity
       particles.push({
         x: canvas.width * 0.5, // Start from middle
         y: canvas.height * 0.3, // Start from upper third
@@ -315,8 +315,8 @@ function init() {
         color: colors[Math.floor(Math.random() * colors.length)],
         velocity: velocity,
         angle: angle,
-        gravity: 0.1,
-        drag: 0.98,
+        gravity: 0.2, // Increased gravity
+        drag: 0.96, // Reduced drag for faster movement
         opacity: 1
       });
     }
