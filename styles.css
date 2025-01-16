@@ -242,6 +242,8 @@
 
 .mascot {
   margin-bottom: 20px;
+  align-items: center;
+  justify-content: center;
 }
 
 .mascot img {
