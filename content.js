@@ -284,11 +284,14 @@ function init() {
         subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
         subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
         
-        // Reapply text fitting
-        requestAnimationFrame(() => {
-          fitTextToContainer(subject1El, subject1Container);
-          fitTextToContainer(subject2El, subject2Container);
-      });
+// Get containers first
+const subject1Container = subject1El.closest('.text-fit-container');
+const subject2Container = subject2El.closest('.text-fit-container');
+
+requestAnimationFrame(() => {
+    fitTextToContainer(subject1El, subject1Container);
+    fitTextToContainer(subject2El, subject2Container);
+});
         
         // Show cached GIF
         const priceGrade = cachedAnalysis.text.priceGrade || 'average';
