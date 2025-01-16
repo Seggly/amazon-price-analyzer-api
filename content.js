@@ -300,20 +300,23 @@ function init() {
     canvas.width = popup.clientWidth;
     canvas.height = popup.clientHeight;
     
-    // Create confetti animation directly
     const ctx = canvas.getContext('2d');
     const particles = [];
-    const particleCount = 100;
+    const particleCount = 150; // Increased particle count
     
-    // Create particles
+    // Create particles with explosion effect
     for (let i = 0; i < particleCount; i++) {
+      const angle = (Math.random() * Math.PI * 2);
+      const velocity = 3 + Math.random() * 3; // Increased velocity
       particles.push({
-        x: Math.random() * canvas.width,
-        y: canvas.height,
-        radius: Math.random() * 4 + 1,
-        density: Math.random() * 30 + 1,
+        x: canvas.width * 0.5, // Start from middle
+        y: canvas.height * 0.3, // Start from upper third
+        radius: Math.random() * 3 + 2, // Slightly larger particles
         color: colors[Math.floor(Math.random() * colors.length)],
-        speed: Math.random() * 2 + 1,
+        velocity: velocity,
+        angle: angle,
+        gravity: 0.1,
+        drag: 0.98,
         opacity: 1
       });
     }
@@ -324,21 +327,30 @@ function init() {
   
       for (let i = 0; i < particles.length; i++) {
         let p = particles[i];
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
-        ctx.fillStyle = `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${p.opacity})`;
-        ctx.fill();
+        
+        // Update particle position
+        p.x += Math.cos(p.angle) * p.velocity;
+        p.y += Math.sin(p.angle) * p.velocity + p.gravity;
+        
+        // Apply drag and gravity
+        p.velocity *= p.drag;
+        p.opacity -= 0.005;
   
-        // Move particle
-        p.y -= p.speed;
-        p.opacity -= 0.01;
-  
-        // Remove particle if it's gone
-        if (p.opacity <= 0) {
-          particles.splice(i, 1);
-          i--;
+        // Draw particle
+        if (p.opacity > 0) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+          ctx.fillStyle = `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${p.opacity})`;
+          ctx.fill();
         }
       }
+  
+      // Remove faded particles
+      particles.forEach((particle, index) => {
+        if (particle.opacity <= 0) {
+          particles.splice(index, 1);
+        }
+      });
   
       if (particles.length > 0) {
         requestAnimationFrame(animate);
