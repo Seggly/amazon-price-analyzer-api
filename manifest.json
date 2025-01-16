@@ -26,8 +26,8 @@
     "resources": [
       "icons/*",
       "gifs/*",
-      "gifs/**/*",
-      "fonts/Baloo2/*"
+      "fonts/Baloo2/*",
+      "https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"  
     ],
     "matches": ["https://*.amazon.com/*"]
   }],

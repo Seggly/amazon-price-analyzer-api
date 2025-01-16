@@ -255,6 +255,22 @@ function fitTextToContainer(subject1El, subject1Container, subject2El, subject2C
 function init() {
   const { fab, popup } = createUI();
   
+  // Add confetti script to the page
+const confettiScript = document.createElement('script');
+confettiScript.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+document.head.appendChild(confettiScript);
+
+// Add confetti function to utilities
+function triggerConfetti() {
+    if (window.confetti) {
+        window.confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+    }
+}
+
   // Store all elements in our global elements object
   elements = {
       popup: popup,
@@ -300,6 +316,7 @@ function init() {
         
         // Show cached GIF
         const priceGrade = cachedAnalysis.text.priceGrade || 'average';
+        
         const gifCategory = determineGifCategory(priceGrade);
         const gifUrl = getRandomGif(gifCategory);
         const gifContainer = elements.results.querySelector('.gif-container');
@@ -352,6 +369,56 @@ function init() {
     }
 });
 
+// Confetti configuration and utility functions
+function getConfettiColors(priceGrade) {
+  switch(priceGrade.toLowerCase()) {
+      case 'excellent':
+          return ['#FFD700', '#90EE90', '#98FB98'];  // Gold and green shades
+      case 'good':
+          return ['#87CEEB', '#90EE90', '#FFFFFF'];  // Blue and light green
+      case 'average':
+          return ['#FFB6C1', '#87CEEB', '#FFFFFF'];  // Light colors
+      default:
+          return null; // No confetti for not-good or bad prices
+  }
+}
+
+function createConfettiAnimation(priceGrade) {
+  const colors = getConfettiColors(priceGrade);
+  if (!colors || !window.confetti) return;
+
+  // Initial burst
+  window.confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: colors,
+      startVelocity: 30
+  });
+
+  // Follow-up bursts
+  setTimeout(() => {
+      window.confetti({
+          particleCount: 50,
+          spread: 45,
+          origin: { y: 0.6 },
+          colors: colors,
+          startVelocity: 25
+      });
+  }, 250);
+
+  setTimeout(() => {
+      window.confetti({
+          particleCount: 30,
+          spread: 35,
+          origin: { y: 0.6 },
+          colors: colors,
+          startVelocity: 20
+      });
+  }, 400);
+}
+
+// Modify the price analysis response handler
 elements.analyzeButton.addEventListener('click', async () => {
   const asin = getAsin();
   currentAsin = asin;
@@ -377,29 +444,33 @@ elements.analyzeButton.addEventListener('click', async () => {
           elements.loadingSpinner.style.display = 'none';
           elements.results.style.display = 'block';
 
+          // Previous code for displaying results...
           const headerEl = elements.results.querySelector('.header-text');
           const subject1El = elements.results.querySelector('.subject1-text');
           const subject2El = elements.results.querySelector('.subject2-text');
           
-          const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-          const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-
+          // Update text content...
           headerEl.textContent = response.text.header;
-          subject1El.textContent = subject1Text;
-          subject2El.textContent = subject2Text;
+          subject1El.textContent = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+          subject2El.textContent = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
 
+          // Handle text fitting...
           const subject1Container = subject1El.closest('.text-fit-container');
           const subject2Container = subject2El.closest('.text-fit-container');
-
-          // Force reflow
-          void subject1Container.offsetHeight;
-          void subject2Container.offsetHeight;
-
+          
           requestAnimationFrame(() => {
-            fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);  // Pass all 4 arguments
-        });
+              fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
+          });
 
+          // Get price grade and handle GIF display
           const priceGrade = response.text.priceGrade || 'average';
+          
+          // Trigger confetti for positive price grades
+          if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
+              createConfettiAnimation(priceGrade);
+          }
+
+          // Previous GIF handling code...
           const gifCategory = determineGifCategory(priceGrade);
           const gifUrl = getRandomGif(gifCategory);
           
