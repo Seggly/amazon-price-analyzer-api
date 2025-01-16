@@ -307,20 +307,38 @@ function init() {
           const img = new Image();
           img.src = gifUrl;
           img.alt = "Price reaction";
+          img.style.maxHeight = "140px"; // Match the container height
+          img.style.width = "auto";
+          img.style.borderRadius = "8px";
+          img.style.objectFit = "contain";
           
           // Create GIF pause functionality
           setTimeout(() => {
               // Create a canvas to capture the current frame
               const canvas = document.createElement('canvas');
               const ctx = canvas.getContext('2d');
-              canvas.width = img.width;
-              canvas.height = img.height;
               
-              // Draw the current frame
-              ctx.drawImage(img, 0, 0);
+              // Calculate scaled dimensions to maintain aspect ratio
+              const ratio = img.naturalWidth / img.naturalHeight;
+              const targetHeight = 140; // Match container height
+              const targetWidth = targetHeight * ratio;
               
-              // Replace GIF with static image
-              img.src = canvas.toDataURL('image/png');
+              canvas.width = targetWidth;
+              canvas.height = targetHeight;
+              
+              // Draw the image maintaining aspect ratio
+              ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+              
+              // Replace GIF with static image, maintaining styles
+              const staticImg = new Image();
+              staticImg.src = canvas.toDataURL('image/png');
+              staticImg.style.maxHeight = "140px";
+              staticImg.style.width = "auto";
+              staticImg.style.borderRadius = "8px";
+              staticImg.style.objectFit = "contain";
+              
+              gifContainer.innerHTML = '';
+              gifContainer.appendChild(staticImg);
           }, 4000); // 4 seconds
           
           gifContainer.innerHTML = '';
@@ -390,20 +408,38 @@ elements.analyzeButton.addEventListener('click', async () => {
             const img = new Image();
             img.src = gifUrl;
             img.alt = "Price reaction";
+            img.style.maxHeight = "140px"; // Match the container height
+            img.style.width = "auto";
+            img.style.borderRadius = "8px";
+            img.style.objectFit = "contain";
             
             // Create GIF pause functionality
             setTimeout(() => {
                 // Create a canvas to capture the current frame
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
                 
-                // Draw the current frame
-                ctx.drawImage(img, 0, 0);
+                // Calculate scaled dimensions to maintain aspect ratio
+                const ratio = img.naturalWidth / img.naturalHeight;
+                const targetHeight = 140; // Match container height
+                const targetWidth = targetHeight * ratio;
                 
-                // Replace GIF with static image
-                img.src = canvas.toDataURL('image/png');
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                
+                // Draw the image maintaining aspect ratio
+                ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                
+                // Replace GIF with static image, maintaining styles
+                const staticImg = new Image();
+                staticImg.src = canvas.toDataURL('image/png');
+                staticImg.style.maxHeight = "140px";
+                staticImg.style.width = "auto";
+                staticImg.style.borderRadius = "8px";
+                staticImg.style.objectFit = "contain";
+                
+                gifContainer.innerHTML = '';
+                gifContainer.appendChild(staticImg);
             }, 4000); // 4 seconds
             
             gifContainer.innerHTML = '';
