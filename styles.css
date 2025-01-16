@@ -4,6 +4,24 @@
   font-weight: 700;
 }
 
+@font-face {
+  font-family: 'Baloo2';
+  src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-Medium.ttf) format('truetype');
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: 'Baloo2';
+  src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-Regular.ttf) format('truetype');
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'Baloo2';
+  src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-SemiBold.ttf) format('truetype');
+  font-weight: 600;
+}
+
 #amazon-price-analyzer-container {
   position: relative;
   z-index: 2147483647;
@@ -150,7 +168,8 @@
   display: flex;
   align-items: center;  /* Center text vertically */
   background: rgba(0,255,0,0.1); /* Debug - remove after testing */
-  font-weight: normal;  /* Add this line if it's missing - it makes sure text isn't bold */
+  font-family: 'Baloo2';
+  font-weight: normal;  /* This will use the Regular variant */
 }
 
 /* Make the titles bold */
@@ -209,7 +228,7 @@
   width: 100%;
   margin: 0 auto;
   line-height: 1.2; /* Reduced line height */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Baloo2';
 }
 
 /* Initial view styles */
@@ -267,7 +286,7 @@
   max-width: 360px;
   line-height: 1.4;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Baloo2';
 }
 
 .loading-spinner {
