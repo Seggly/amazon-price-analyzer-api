@@ -202,6 +202,32 @@ function watchForVariationChanges(elements) {
   });
 }
 
+// Add this outside of init(), near your other utility functions
+function fitTextToContainer(element, container) {
+  if (!element || !container) return;
+  
+  const maxSize = 16;
+  const minSize = 8;
+  let fontSize = maxSize;
+  
+  element.style.fontSize = `${fontSize}px`;
+  
+  while (fontSize > minSize && (
+      element.scrollHeight > container.clientHeight ||
+      element.scrollWidth > container.clientWidth
+  )) {
+      fontSize--;
+      element.style.fontSize = `${fontSize}px`;
+  }
+  
+  if (fontSize === minSize && (
+      element.scrollHeight > container.clientHeight ||
+      element.scrollWidth > container.clientWidth
+  )) {
+      element.style.fontSize = `${minSize}px`;
+  }
+}
+
 // Initialize the extension
 function init() {
   const { fab, popup } = createUI();
@@ -276,11 +302,6 @@ function init() {
 
               const subject1Container = subject1El.closest('.text-fit-container');
               const subject2Container = subject2El.closest('.text-fit-container');
-              
-              requestAnimationFrame(() => {
-                  fitTextToContainer(subject1El, subject1Container);
-                  fitTextToContainer(subject2El, subject2Container);
-              });
 
               const priceGrade = response.text.priceGrade || 'average';
               const gifCategory = determineGifCategory(priceGrade);
