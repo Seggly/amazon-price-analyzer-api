@@ -221,30 +221,33 @@ function watchForVariationChanges() {
 function fitTextToContainer(element, container) {
   if (!element || !container) return;
   
-  let minSize = 8;
-  let maxSize = 24;  // Increased from 16
-  let bestSize = minSize;
+  let minSize = 12;  // Increased minimum size
+  let maxSize = 32;  // Increased maximum potential size
+  let currentSize = minSize;
   
-  // Reset styles
-  element.style.fontSize = `${minSize}px`;
-  element.style.lineHeight = '1.3';
+  // Reset any existing styles
+  element.style.cssText = `
+      font-size: ${minSize}px;
+      line-height: 1.3;
+      margin: 0;
+      padding: 0;
+  `;
   
-  // Binary search for the best size
-  while (minSize <= maxSize) {
-      const mid = Math.floor((minSize + maxSize) / 2);
-      element.style.fontSize = `${mid}px`;
+  // Keep increasing size until it doesn't fit
+  while (currentSize <= maxSize) {
+      element.style.fontSize = `${currentSize}px`;
       
-      if (element.scrollHeight <= container.clientHeight && 
-          element.scrollWidth <= container.clientWidth) {
-          bestSize = mid;
-          minSize = mid + 1;
-      } else {
-          maxSize = mid - 1;
+      if (element.scrollHeight > container.clientHeight || 
+          element.scrollWidth > container.clientWidth) {
+          // Text too big, go back one size
+          element.style.fontSize = `${currentSize - 1}px`;
+          break;
       }
+      
+      currentSize++;
   }
   
-  // Set the best size found
-  element.style.fontSize = `${bestSize}px`;
+  console.log('Final font size:', parseInt(element.style.fontSize));
 }
 
 // Initialize the extension
