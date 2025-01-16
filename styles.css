@@ -98,15 +98,14 @@
 /* Results View Styles */
 .results {
   height: 100%;
-  padding: 12px;
-  display: grid;
-  grid-template-rows: auto 220px auto;
-  gap: 8px;
+  padding: 12px; /* Reduced from 32px */
+  display: flex;
+  flex-direction: column;
 }
 
 .results-header {
-  grid-row: 1;
-
+  position: relative;
+  margin-bottom: 8px; /* Reduced from 20px */
 }
 
 .tiny-mascot {
@@ -131,7 +130,8 @@
 }
 
 .fixed-content-box {
-  grid-row: 2;
+  height: 220px; /* Increased from 160px */
+  margin: 0;  /* Remove margin since we're controlling gaps from outside */
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -178,38 +178,38 @@
   font-family: 'Baloo2';
 }
 
+/* Footer Section */
 .results-footer {
-  grid-row: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  margin-top: 8px; /* Add gap between content and footer */
 }
 
 .gif-container {
-  height: 100px;
+  height: 180px;
   width: 100%;
   display: flex;
-  align-items: flex-start; /* Align to top */
+  align-items: center;
   justify-content: center;
-  margin: 0 0 4px 0;
-  position: relative;
-  top: 0; /* Ensure it starts at the top of the footer */
+  margin: 0 0 4px 0; /* Only keep bottom margin for spacing with button */
 }
 
 .gif-container img {
-  max-height: 100;
+  max-height: 180px;
   width: auto;
   border-radius: 8px;
   object-fit: contain;
 }
 
 .track-button {
-  width: 50%;
+  width: 100%;
   background: #FF4500;
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 10px 0;
+  padding: 14px 0;
   font-size: 18px;
   font-weight: 700;
   cursor: pointer;
@@ -242,6 +242,8 @@
 
 .mascot {
   margin-bottom: 20px;
+  align-items: center;
+  justify-content: center;
 }
 
 .mascot img {
