@@ -203,6 +203,7 @@
 
 .track-button {
   width: 100%;
+  max-width: 200px;
   background: #FF4500;
   color: white;
   border: none;
