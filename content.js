@@ -255,180 +255,85 @@ function fitTextToContainer(subject1El, subject1Container, subject2El, subject2C
 function init() {
   const { fab, popup } = createUI();
   
-  // Add confetti script to the page
-const confettiScript = document.createElement('script');
-confettiScript.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
-document.head.appendChild(confettiScript);
-
-// Add confetti function to utilities
-function triggerConfetti() {
-    if (window.confetti) {
-        window.confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-        });
-    }
-}
-
-  // Store all elements in our global elements object
-  elements = {
-      popup: popup,
-      closeButton: popup.querySelector('.close-button'),
-      analyzeButton: popup.querySelector('.analyze-button'),
-      initialView: popup.querySelector('.initial-view'),
-      analysisContent: popup.querySelector('.analysis-content'),
-      loadingSpinner: popup.querySelector('.loading-spinner'),
-      results: popup.querySelector('.results')
+  // Load confetti script securely
+  const confettiScript = document.createElement('script');
+  confettiScript.src = chrome.runtime.getURL('lib/confetti.js');
+  confettiScript.onload = () => {
+    console.log('Confetti script loaded successfully');
   };
+  document.head.appendChild(confettiScript);
 
-  watchForVariationChanges();
-
-  fab.addEventListener('click', () => {
-    const currentAsin = getAsin();
-    elements.popup.style.display = 'block';
-    
-    const cachedAnalysis = getAnalysisFromCache(currentAsin);
-    if (cachedAnalysis) {
-        currentAnalysis = cachedAnalysis;
-        elements.popup.classList.add('showing-results');
-        elements.initialView.style.display = 'none';
-        elements.analysisContent.style.display = 'block';
-        elements.results.style.display = 'block';
-        elements.loadingSpinner.style.display = 'none';
-        
-        // Display cached analysis
-        const headerEl = elements.results.querySelector('.header-text');
-        const subject1El = elements.results.querySelector('.subject1-text');
-        const subject2El = elements.results.querySelector('.subject2-text');
-        
-        headerEl.textContent = cachedAnalysis.text.header;
-        subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-        subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-        
-        // Get containers first
-        const subject1Container = subject1El.closest('.text-fit-container');
-        const subject2Container = subject2El.closest('.text-fit-container');
-        
-        requestAnimationFrame(() => {
-          fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
-      });
-        
-        // Show cached GIF
-        const priceGrade = cachedAnalysis.text.priceGrade || 'average';
-        
-        const gifCategory = determineGifCategory(priceGrade);
-        const gifUrl = getRandomGif(gifCategory);
-        const gifContainer = elements.results.querySelector('.gif-container');
-        if (gifContainer) {
-          const img = new Image();
-          img.src = gifUrl;
-          img.alt = "Price reaction";
-          img.style.maxHeight = "140px"; // Match the container height
-          img.style.width = "auto";
-          img.style.borderRadius = "8px";
-          img.style.objectFit = "contain";
-          
-          // Create GIF pause functionality
-          setTimeout(() => {
-              // Create a canvas to capture the current frame
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              
-              // Calculate scaled dimensions to maintain aspect ratio
-              const ratio = img.naturalWidth / img.naturalHeight;
-              const targetHeight = 140; // Match container height
-              const targetWidth = targetHeight * ratio;
-              
-              canvas.width = targetWidth;
-              canvas.height = targetHeight;
-              
-              // Draw the image maintaining aspect ratio
-              ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-              
-              // Replace GIF with static image, maintaining styles
-              const staticImg = new Image();
-              staticImg.src = canvas.toDataURL('image/png');
-              staticImg.style.maxHeight = "140px";
-              staticImg.style.width = "auto";
-              staticImg.style.borderRadius = "8px";
-              staticImg.style.objectFit = "contain";
-              
-              gifContainer.innerHTML = '';
-              gifContainer.appendChild(staticImg);
-          }, 4000); // 4 seconds
-          
-          gifContainer.innerHTML = '';
-          gifContainer.appendChild(img);
-      }
-    } else {
-        elements.popup.classList.remove('showing-results');
-        elements.initialView.style.display = 'block';
-        elements.analysisContent.style.display = 'none';
-        elements.results.style.display = 'none';
-    }
-});
-
-// Confetti configuration and utility functions
-function getConfettiColors(priceGrade) {
-  switch(priceGrade.toLowerCase()) {
+  // Confetti configuration
+  function getConfettiColors(priceGrade) {
+    switch(priceGrade.toLowerCase()) {
       case 'excellent':
-          return ['#FFD700', '#90EE90', '#98FB98'];  // Gold and green shades
+        return ['#FFD700', '#90EE90', '#98FB98'];
       case 'good':
-          return ['#87CEEB', '#90EE90', '#FFFFFF'];  // Blue and light green
+        return ['#87CEEB', '#90EE90', '#FFFFFF'];
       case 'average':
-          return ['#FFB6C1', '#87CEEB', '#FFFFFF'];  // Light colors
+        return ['#FFB6C1', '#87CEEB', '#FFFFFF'];
       default:
-          return null; // No confetti for not-good or bad prices
+        return null;
+    }
   }
-}
 
-function createConfettiAnimation(priceGrade) {
-  const colors = getConfettiColors(priceGrade);
-  if (!colors || !window.confetti) return;
+  function createConfettiAnimation(priceGrade) {
+    const colors = getConfettiColors(priceGrade);
+    if (!colors || typeof confetti === 'undefined') return;
 
-  // Initial burst
-  window.confetti({
+    // Initial burst
+    confetti({
       particleCount: 100,
       spread: 70,
       origin: { y: 0.6 },
       colors: colors,
       startVelocity: 30
-  });
+    });
 
-  // Follow-up bursts
-  setTimeout(() => {
-      window.confetti({
-          particleCount: 50,
-          spread: 45,
-          origin: { y: 0.6 },
-          colors: colors,
-          startVelocity: 25
+    // Follow-up bursts
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        spread: 45,
+        origin: { y: 0.6 },
+        colors: colors,
+        startVelocity: 25
       });
-  }, 250);
+    }, 250);
 
-  setTimeout(() => {
-      window.confetti({
-          particleCount: 30,
-          spread: 35,
-          origin: { y: 0.6 },
-          colors: colors,
-          startVelocity: 20
+    setTimeout(() => {
+      confetti({
+        particleCount: 30,
+        spread: 35,
+        origin: { y: 0.6 },
+        colors: colors,
+        startVelocity: 20
       });
-  }, 400);
-}
-
-// Modify the price analysis response handler
-elements.analyzeButton.addEventListener('click', async () => {
-  const asin = getAsin();
-  currentAsin = asin;
-
-  if (!asin) {
-      alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
-      return;
+    }, 400);
   }
 
-  try {
+  // Store all elements in our global elements object
+  elements = {
+    popup: popup,
+    closeButton: popup.querySelector('.close-button'),
+    analyzeButton: popup.querySelector('.analyze-button'),
+    initialView: popup.querySelector('.initial-view'),
+    analysisContent: popup.querySelector('.analysis-content'),
+    loadingSpinner: popup.querySelector('.loading-spinner'),
+    results: popup.querySelector('.results')
+  };
+
+  // Modified analyze button event listener
+  elements.analyzeButton.addEventListener('click', async () => {
+    const asin = getAsin();
+    currentAsin = asin;
+
+    if (!asin) {
+      alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
+      return;
+    }
+
+    try {
       elements.popup.classList.add('showing-results');
       elements.initialView.style.display = 'none';
       elements.analysisContent.style.display = 'block';
@@ -438,41 +343,38 @@ elements.analyzeButton.addEventListener('click', async () => {
       const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
       
       if (response && response.success && response.text) {
-          currentAnalysis = response;
-          cacheAnalysis(asin, response);
+        currentAnalysis = response;
+        cacheAnalysis(asin, response);
 
-          elements.loadingSpinner.style.display = 'none';
-          elements.results.style.display = 'block';
+        elements.loadingSpinner.style.display = 'none';
+        elements.results.style.display = 'block';
 
-          // Previous code for displaying results...
-          const headerEl = elements.results.querySelector('.header-text');
-          const subject1El = elements.results.querySelector('.subject1-text');
-          const subject2El = elements.results.querySelector('.subject2-text');
-          
-          // Update text content...
-          headerEl.textContent = response.text.header;
-          subject1El.textContent = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-          subject2El.textContent = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+        // Update UI elements...
+        const headerEl = elements.results.querySelector('.header-text');
+        const subject1El = elements.results.querySelector('.subject1-text');
+        const subject2El = elements.results.querySelector('.subject2-text');
+        
+        headerEl.textContent = response.text.header;
+        subject1El.textContent = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+        subject2El.textContent = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
 
-          // Handle text fitting...
-          const subject1Container = subject1El.closest('.text-fit-container');
-          const subject2Container = subject2El.closest('.text-fit-container');
-          
-          requestAnimationFrame(() => {
-              fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
-          });
+        const subject1Container = subject1El.closest('.text-fit-container');
+        const subject2Container = subject2El.closest('.text-fit-container');
 
-          // Get price grade and handle GIF display
-          const priceGrade = response.text.priceGrade || 'average';
-          
-          // Trigger confetti for positive price grades
-          if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
-              createConfettiAnimation(priceGrade);
-          }
+        requestAnimationFrame(() => {
+          fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
+        });
 
-          // Previous GIF handling code...
-          const gifCategory = determineGifCategory(priceGrade);
-          const gifUrl = getRandomGif(gifCategory);
+        const priceGrade = response.text.priceGrade || 'average';
+        
+        // Trigger confetti for positive price grades
+        if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
+          createConfettiAnimation(priceGrade);
+        }
+
+        // Handle GIF display...
+        const gifCategory = determineGifCategory(priceGrade);
+        const gifUrl = getRandomGif(gifCategory);
           
           const gifContainer = elements.results.querySelector('.gif-container');
           if (gifContainer) {
