@@ -27,7 +27,7 @@
       "icons/*",
       "gifs/*",
       "fonts/Baloo2/*",
-      "lib/confetti.js"  
+      "lib/confetti.js"
     ],
     "matches": ["https://*.amazon.com/*"]
   }],

@@ -265,22 +265,23 @@ function init() {
   function getConfettiColors(priceGrade) {
     switch(priceGrade.toLowerCase()) {
       case 'excellent':
-        return ['#FFD700', '#90EE90', '#98FB98'];
+        return [[255, 215, 0], [144, 238, 144], [152, 251, 152]]; // Gold and greens
       case 'good':
-        return ['#87CEEB', '#90EE90', '#FFFFFF'];
+        return [[135, 206, 235], [144, 238, 144], [255, 255, 255]]; // Blue and light green
       case 'average':
-        return ['#FFB6C1', '#87CEEB', '#FFFFFF'];
+        return [[255, 182, 193], [135, 206, 235], [255, 255, 255]]; // Light colors
       default:
         return null;
     }
   }
-
+  
   function createConfettiAnimation(priceGrade) {
     const colors = getConfettiColors(priceGrade);
-    if (!colors || typeof confetti === 'undefined') return;
-
-    // Create a canvas element for the confetti
+    if (!colors) return;
+  
+    // Create and configure canvas
     const canvas = document.createElement('canvas');
+    canvas.id = 'confetti-canvas';
     canvas.style.position = 'absolute';
     canvas.style.top = '0';
     canvas.style.left = '0';
@@ -288,52 +289,35 @@ function init() {
     canvas.style.height = '100%';
     canvas.style.pointerEvents = 'none';
     canvas.style.zIndex = '1000';
-
-    // Add canvas to the popup
+  
+    // Add canvas to popup
     const popup = document.querySelector('#price-analyzer-popup');
     popup.appendChild(canvas);
 
-    // Create a new confetti instance for this canvas
-    const myConfetti = confetti.create(canvas, {
-        resize: true,
-        useWorker: true
-    });
+  // Initialize confetti
+  const confetti = new ConfettiGenerator({
+    target: 'confetti-canvas',
+    max: 80,
+    size: 1.5,
+    animate: true,
+    props: ['circle', 'square', 'triangle', 'line'],
+    colors: colors,
+    clock: 25,
+    rotate: true,
+    width: popup.clientWidth,
+    height: popup.clientHeight,
+    start_from_edge: true
+  });
 
-    // Initial burst
-    myConfetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: colors,
-        startVelocity: 30
-    });
+  // Start animation
+  confetti.render();
 
-    // Follow-up bursts
-    setTimeout(() => {
-        myConfetti({
-            particleCount: 50,
-            spread: 45,
-            origin: { y: 0.6 },
-            colors: colors,
-            startVelocity: 25
-        });
-    }, 250);
-
-    setTimeout(() => {
-        myConfetti({
-            particleCount: 30,
-            spread: 35,
-            origin: { y: 0.6 },
-            colors: colors,
-            startVelocity: 20
-        });
-    }, 400);
-
-    // Remove canvas after animation
-    setTimeout(() => {
-        canvas.remove();
-    }, 2000);
-  }
+  // Stop and clean up after animation
+  setTimeout(() => {
+    confetti.clear();
+    canvas.remove();
+  }, 2500);
+}
 
   // Store all elements in our global elements object
   elements = {
