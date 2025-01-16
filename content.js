@@ -280,36 +280,77 @@ function init() {
     const colors = getConfettiColors(priceGrade);
     if (!colors || typeof confetti === 'undefined') return;
 
+    // Create a canvas element for the confetti
+    const canvas = document.createElement('canvas');
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '1000';
+
+    // Add canvas to the popup
+    const popup = document.querySelector('#price-analyzer-popup');
+    popup.appendChild(canvas);
+
+    // Create a new confetti instance for this canvas
+    const myConfetti = confetti.create(canvas, {
+        resize: true,
+        useWorker: true
+    });
+
     // Initial burst
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: colors,
-      startVelocity: 30
+    myConfetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: colors,
+        startVelocity: 30,
+        disableForReducedMotion: true
     });
 
     // Follow-up bursts
     setTimeout(() => {
-      confetti({
-        particleCount: 50,
-        spread: 45,
-        origin: { y: 0.6 },
-        colors: colors,
-        startVelocity: 25
-      });
+        myConfetti({
+            particleCount: 50,
+            spread: 45,
+            origin: { y: 0.6 },
+            colors: colors,
+            startVelocity: 25,
+            disableForReducedMotion: true
+        });
     }, 250);
 
     setTimeout(() => {
-      confetti({
-        particleCount: 30,
-        spread: 35,
-        origin: { y: 0.6 },
-        colors: colors,
-        startVelocity: 20
-      });
+        myConfetti({
+            particleCount: 30,
+            spread: 35,
+            origin: { y: 0.6 },
+            colors: colors,
+            startVelocity: 20,
+            disableForReducedMotion: true
+        });
     }, 400);
-  }
+
+    // Remove canvas after animation
+    setTimeout(() => {
+        canvas.remove();
+    }, 2000);
+}
+
+// Update your styles
+const confettiStyles = `
+#price-analyzer-popup {
+    position: relative;
+    overflow: hidden;
+}
+`;
+
+// Add styles to document
+const styleSheet = document.createElement("style");
+styleSheet.textContent = confettiStyles;
+document.head.appendChild(styleSheet);
 
   // Store all elements in our global elements object
   elements = {
