@@ -254,13 +254,6 @@ function fitTextToContainer(subject1El, subject1Container, subject2El, subject2C
 function init() {
   const { fab, popup } = createUI();
   
-  // Load confetti script securely
-  const confettiScript = document.createElement('script');
-  confettiScript.src = chrome.runtime.getURL('lib/confetti.js');
-  confettiScript.onload = () => {
-    console.log('Confetti script loaded successfully');
-    console.log('createConfetti function exists:', typeof window.createConfetti !== 'undefined');
-  };
   confettiScript.onerror = (error) => {
     console.error('Error loading confetti script:', error);
   };
@@ -288,11 +281,6 @@ function init() {
       console.log('No colors returned for grade:', priceGrade);
       return;
     }
-    
-    if (typeof window.createConfetti === 'undefined') {
-      console.error('createConfetti function not found on window object');
-      return;
-    }
   
     // Create and configure canvas
     const canvas = document.createElement('canvas');
@@ -310,22 +298,62 @@ function init() {
       console.error('Popup element not found');
       return;
     }
-    console.log('Popup dimensions:', popup.clientWidth, popup.clientHeight);
     
     popup.appendChild(canvas);
   
     // Set canvas size to match popup dimensions
     canvas.width = popup.clientWidth;
     canvas.height = popup.clientHeight;
-    console.log('Canvas size set to:', canvas.width, canvas.height);
-  
-    try {
-      // Create confetti
-      window.createConfetti(canvas, colors);
-      console.log('Confetti animation started');
-    } catch (error) {
-      console.error('Error creating confetti:', error);
+    
+    // Create confetti animation directly
+    const ctx = canvas.getContext('2d');
+    const particles = [];
+    const particleCount = 100;
+    
+    // Create particles
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height,
+        radius: Math.random() * 4 + 1,
+        density: Math.random() * 30 + 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        speed: Math.random() * 2 + 1,
+        opacity: 1
+      });
     }
+  
+    // Animation
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+      for (let i = 0; i < particles.length; i++) {
+        let p = particles[i];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+        ctx.fillStyle = `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${p.opacity})`;
+        ctx.fill();
+  
+        // Move particle
+        p.y -= p.speed;
+        p.opacity -= 0.01;
+  
+        // Remove particle if it's gone
+        if (p.opacity <= 0) {
+          particles.splice(i, 1);
+          i--;
+        }
+      }
+  
+      if (particles.length > 0) {
+        requestAnimationFrame(animate);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.remove();
+      }
+    }
+  
+    animate();
   }
 
   // Store all elements in our global elements object
