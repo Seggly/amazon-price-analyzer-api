@@ -262,7 +262,6 @@ function init() {
   };
   document.head.appendChild(confettiScript);
 
-  // Confetti configuration
   function getConfettiColors(priceGrade) {
     switch(priceGrade.toLowerCase()) {
       case 'excellent':
@@ -306,8 +305,7 @@ function init() {
         spread: 70,
         origin: { y: 0.6 },
         colors: colors,
-        startVelocity: 30,
-        disableForReducedMotion: true
+        startVelocity: 30
     });
 
     // Follow-up bursts
@@ -317,8 +315,7 @@ function init() {
             spread: 45,
             origin: { y: 0.6 },
             colors: colors,
-            startVelocity: 25,
-            disableForReducedMotion: true
+            startVelocity: 25
         });
     }, 250);
 
@@ -328,8 +325,7 @@ function init() {
             spread: 35,
             origin: { y: 0.6 },
             colors: colors,
-            startVelocity: 20,
-            disableForReducedMotion: true
+            startVelocity: 20
         });
     }, 400);
 
@@ -337,23 +333,11 @@ function init() {
     setTimeout(() => {
         canvas.remove();
     }, 2000);
-}
-
-// Update your styles
-const confettiStyles = `
-#price-analyzer-popup {
-    position: relative;
-    overflow: hidden;
-}
-`;
-
-// Add styles to document
-const styleSheet = document.createElement("style");
-styleSheet.textContent = confettiStyles;
-document.head.appendChild(styleSheet);
+  }
 
   // Store all elements in our global elements object
   elements = {
+    fab: fab,
     popup: popup,
     closeButton: popup.querySelector('.close-button'),
     analyzeButton: popup.querySelector('.analyze-button'),
@@ -363,8 +347,8 @@ document.head.appendChild(styleSheet);
     results: popup.querySelector('.results')
   };
 
-  // Handle FAB click
-  fab.addEventListener('click', () => {
+  // FAB click handler
+  elements.fab.addEventListener('click', () => {
     const currentAsin = getAsin();
     elements.popup.style.display = 'block';
     
@@ -377,7 +361,6 @@ document.head.appendChild(styleSheet);
         elements.results.style.display = 'block';
         elements.loadingSpinner.style.display = 'none';
         
-        // Display cached analysis
         const headerEl = elements.results.querySelector('.header-text');
         const subject1El = elements.results.querySelector('.subject1-text');
         const subject2El = elements.results.querySelector('.subject2-text');
@@ -392,9 +375,12 @@ document.head.appendChild(styleSheet);
         requestAnimationFrame(() => {
             fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
         });
-        
-        // Show cached GIF
+
+        // Show confetti for cached results if appropriate
         const priceGrade = cachedAnalysis.text.priceGrade || 'average';
+        if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
+            createConfettiAnimation(priceGrade);
+        }
         
         const gifCategory = determineGifCategory(priceGrade);
         const gifUrl = getRandomGif(gifCategory);
@@ -443,7 +429,7 @@ document.head.appendChild(styleSheet);
     }
   });
 
-  // Modified analyze button event listener
+  // Analyze button click handler
   elements.analyzeButton.addEventListener('click', async () => {
     const asin = getAsin();
     currentAsin = asin;
@@ -552,17 +538,20 @@ document.head.appendChild(styleSheet);
     }
   });
 
-  // Handle close button click
+  // Close button click handler
   elements.closeButton.addEventListener('click', () => {
-      elements.popup.style.display = 'none';
+    elements.popup.style.display = 'none';
   });
 
-  // Handle clicking outside
+  // Outside click handler
   window.addEventListener('click', (event) => {
-      if (!elements.popup.contains(event.target) && event.target !== fab) {
-          elements.popup.style.display = 'none';
-      }
+    if (!elements.popup.contains(event.target) && event.target !== elements.fab) {
+      elements.popup.style.display = 'none';
+    }
   });
+
+  // Initialize variation change watcher
+  watchForVariationChanges();
 }
 
 // Start the extension
