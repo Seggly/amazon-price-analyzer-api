@@ -138,6 +138,7 @@
   flex: 1;  /* Take remaining space */
   position: relative;
   min-height: 0;  /* Important for flex containers */
+  border: 1px solid red; /* Debug - remove after testing */
 }
 
 .subject1-text, .subject2-text {
@@ -148,6 +149,7 @@
   padding: 0;
   display: flex;
   align-items: center;  /* Center text vertically */
+  background: rgba(0,255,0,0.1); /* Debug - remove after testing */
 }
 
 /* Make the titles bold */
