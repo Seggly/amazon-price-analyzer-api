@@ -150,6 +150,7 @@
   display: flex;
   align-items: center;  /* Center text vertically */
   background: rgba(0,255,0,0.1); /* Debug - remove after testing */
+  font-weight: normal;  /* Add this line if it's missing - it makes sure text isn't bold */
 }
 
 /* Make the titles bold */
