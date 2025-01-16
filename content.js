@@ -253,11 +253,6 @@ function fitTextToContainer(subject1El, subject1Container, subject2El, subject2C
 
 function init() {
   const { fab, popup } = createUI();
-  
-  confettiScript.onerror = (error) => {
-    console.error('Error loading confetti script:', error);
-  };
-  document.head.appendChild(confettiScript);
 
   function getConfettiColors(priceGrade) {
     switch(priceGrade.toLowerCase()) {
