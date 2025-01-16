@@ -184,20 +184,22 @@
   bottom: 12px;
   left: 12px;
   right: 12px;
-  margin-top: 8px; /* Add gap between content and footer */
+  margin-top: 0; /* Remove this space */
 }
 
 .gif-container {
-  height: 80px;
+  height: 100px;
   width: 100%;
   display: flex;
   align-items: flex-start; /* Align to top */
   justify-content: center;
-  margin: 0 0 4px 0; /* Only keep bottom margin for spacing with button */
+  margin: 0 0 4px 0;
+  position: relative;
+  top: 0; /* Ensure it starts at the top of the footer */
 }
 
 .gif-container img {
-  max-height: 80px;
+  max-height: 100;
   width: auto;
   border-radius: 8px;
   object-fit: contain;
@@ -242,8 +244,6 @@
 
 .mascot {
   margin-bottom: 20px;
-  align-items: center;
-  justify-content: center;
 }
 
 .mascot img {
