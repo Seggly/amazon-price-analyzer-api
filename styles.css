@@ -183,6 +183,9 @@
   left: 12px;
   right: 12px;
   margin-top: 8px; /* Add gap between content and footer */
+  display: flex;  /* Add this */
+  flex-direction: column;  /* Add this */
+  align-items: center;  /* Add this */
 }
 
 .gif-container {
@@ -202,6 +205,7 @@
 }
 
 .track-button {
+  width: 200px;  /* Fixed width instead of max-width */
   max-width: 200px;
   background: #FF4500;
   color: white;
