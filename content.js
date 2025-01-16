@@ -223,6 +223,7 @@ function fitTextToContainer(element, container) {
   // Start with a very small font size
   let fontSize = 10;
   element.style.fontSize = `${fontSize}px`;
+  element.style.lineHeight = '1.3'; // Initial line height
 
   // Keep increasing the font size until text overflows
   while (fontSize < 100 && // Set a reasonable maximum
@@ -230,6 +231,7 @@ function fitTextToContainer(element, container) {
          element.scrollWidth <= container.clientWidth) {
       fontSize++;
       element.style.fontSize = `${fontSize}px`;
+      element.style.lineHeight = '1.3'; // Keep line height proportional
   }
 
   // Step back one size to ensure fit

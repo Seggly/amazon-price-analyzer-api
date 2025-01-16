@@ -242,10 +242,11 @@
 }
 
 .mascot {
+  flex-shrink: 0; /* Prevent mascot from shrinking */
   display: flex;
   justify-content: center;
   width: 100%;
-  margin: 20px 0;
+  margin: 0 0 20px 0; /* Only bottom margin */
 }
 
 .mascot img {
@@ -254,17 +255,19 @@
 }
 
 .initial-view h2 {
+  flex-shrink: 0;
   font-family: 'Baloo2';
   font-weight: 700;
   font-size: 36px;
   line-height: 1.2;
-  margin: 20px 0;
+  margin: 0 0 24px 0; /* Only bottom margin */
   color: #000000;
   text-align: center;
   max-width: 360px; /* Added to ensure proper width */
 }
 
 .analyze-button {
+  flex-shrink: 0;
   background: #FF4500;
   color: white;
   border: none;
@@ -275,11 +278,12 @@
   cursor: pointer;
   width: 100%;
   max-width: 400px;
-  margin: 0 0 16px 0;
+  margin: 0 0 16px 0; /* Only bottom margin */
   font-family: 'Baloo2';
 }
 
 .initial-view .disclaimer {
+  flex-shrink: 0;
   font-size: 11px;
   color: rgba(0, 0, 0, 0.7);
   text-align: center;
