@@ -204,13 +204,13 @@
 }
 
 .track-button {
-  width: 100%;
+  width: 60%;
   background: #FF4500;
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 14px 0;
-  font-size: 18px;
+  padding: 10px 0;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   margin-bottom: 4px;

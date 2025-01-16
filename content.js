@@ -101,7 +101,7 @@ if (fabImg) {
 
           <div class="results-footer">
             <div class="gif-container"></div>
-            <button class="track-button">Track Price</button>
+            <button class="track-button">Price Tracking Comming Soon</button>
             <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
           </div>
         </div>
