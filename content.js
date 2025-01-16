@@ -259,6 +259,10 @@ function init() {
   confettiScript.src = chrome.runtime.getURL('lib/confetti.js');
   confettiScript.onload = () => {
     console.log('Confetti script loaded successfully');
+    console.log('createConfetti function exists:', typeof window.createConfetti !== 'undefined');
+  };
+  confettiScript.onerror = (error) => {
+    console.error('Error loading confetti script:', error);
   };
   document.head.appendChild(confettiScript);
 
@@ -276,8 +280,19 @@ function init() {
   }
   
   function createConfettiAnimation(priceGrade) {
+    console.log('Creating confetti animation for grade:', priceGrade);
     const colors = getConfettiColors(priceGrade);
-    if (!colors || typeof window.createConfetti === 'undefined') return;
+    console.log('Confetti colors:', colors);
+    
+    if (!colors) {
+      console.log('No colors returned for grade:', priceGrade);
+      return;
+    }
+    
+    if (typeof window.createConfetti === 'undefined') {
+      console.error('createConfetti function not found on window object');
+      return;
+    }
   
     // Create and configure canvas
     const canvas = document.createElement('canvas');
@@ -291,14 +306,26 @@ function init() {
   
     // Add canvas to popup
     const popup = document.querySelector('#price-analyzer-popup');
+    if (!popup) {
+      console.error('Popup element not found');
+      return;
+    }
+    console.log('Popup dimensions:', popup.clientWidth, popup.clientHeight);
+    
     popup.appendChild(canvas);
   
     // Set canvas size to match popup dimensions
     canvas.width = popup.clientWidth;
     canvas.height = popup.clientHeight;
+    console.log('Canvas size set to:', canvas.width, canvas.height);
   
-    // Create confetti
-    window.createConfetti(canvas, colors);
+    try {
+      // Create confetti
+      window.createConfetti(canvas, colors);
+      console.log('Confetti animation started');
+    } catch (error) {
+      console.error('Error creating confetti:', error);
+    }
   }
 
   // Store all elements in our global elements object
@@ -437,7 +464,13 @@ function init() {
         });
 
         const priceGrade = response.text.priceGrade || 'average';
-        
+        console.log('Price grade received:', priceGrade);
+        if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
+          console.log('Triggering confetti for grade:', priceGrade);
+          createConfettiAnimation(priceGrade);
+        } else {
+          console.log('Price grade not eligible for confetti:', priceGrade);
+        }        
         // Trigger confetti for positive price grades
         if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
           createConfettiAnimation(priceGrade);
