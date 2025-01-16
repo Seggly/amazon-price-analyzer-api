@@ -98,14 +98,15 @@
 /* Results View Styles */
 .results {
   height: 100%;
-  padding: 12px; /* Reduced from 32px */
-  display: flex;
-  flex-direction: column;
+  padding: 12px;
+  display: grid;
+  grid-template-rows: auto 220px auto;
+  gap: 8px;
 }
 
 .results-header {
-  position: relative;
-  margin-bottom: 8px; /* Reduced from 20px */
+  grid-row: 1;
+
 }
 
 .tiny-mascot {
@@ -130,8 +131,7 @@
 }
 
 .fixed-content-box {
-  height: 220px; /* Increased from 160px */
-  margin: 0;  /* Remove margin since we're controlling gaps from outside */
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -178,13 +178,11 @@
   font-family: 'Baloo2';
 }
 
-/* Footer Section */
 .results-footer {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  right: 12px;
-  margin-top: 0; /* Remove this space */
+  grid-row: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .gif-container {
