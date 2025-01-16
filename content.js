@@ -296,7 +296,7 @@ function init() {
         
         requestAnimationFrame(() => {
           fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
-        });
+      });
         
         // Show cached GIF
         const priceGrade = cachedAnalysis.text.priceGrade || 'average';
@@ -358,9 +358,8 @@ elements.analyzeButton.addEventListener('click', async () => {
           void subject2Container.offsetHeight;
 
           requestAnimationFrame(() => {
-              fitTextToContainer(subject1El, subject1Container);
-              fitTextToContainer(subject2El, subject2Container);
-          });
+            fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);  // Pass all 4 arguments
+        });
 
           const priceGrade = response.text.priceGrade || 'average';
           const gifCategory = determineGifCategory(priceGrade);

@@ -188,7 +188,7 @@
 }
 
 .gif-container {
-  height: 100px;
+  height: 180px;
   width: 100%;
   display: flex;
   align-items: center;
@@ -232,21 +232,16 @@
 }
 
 .initial-view {
-  padding: 0;  /* Remove padding */
+  padding: 32px;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;  /* Use consistent spacing */
 }
 
 .mascot {
-  flex-shrink: 0; /* Prevent mascot from shrinking */
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  margin: 0;  /* Remove margin */
+  margin-bottom: 20px;
 }
 
 .mascot img {
@@ -254,20 +249,19 @@
   height: 96px;
 }
 
+
 .initial-view h2 {
-  flex-shrink: 0;
   font-family: 'Baloo2';
   font-weight: 700;
   font-size: 36px;
   line-height: 1.2;
-  margin: 0;  /* Remove margin */
+  margin-bottom: 24px;
   color: #000000;
   text-align: center;
-  max-width: 360px; /* Added to ensure proper width */
+  max-width: 360px;
 }
 
 .analyze-button {
-  flex-shrink: 0;
   background: #FF4500;
   color: white;
   border: none;
@@ -278,18 +272,16 @@
   cursor: pointer;
   width: 100%;
   max-width: 400px;
-  margin: 0;  /* Remove margin */
+  margin-bottom: 16px;
   font-family: 'Baloo2';
 }
 
 .initial-view .disclaimer {
-  flex-shrink: 0;
   font-size: 11px;
   color: rgba(0, 0, 0, 0.7);
   text-align: center;
   max-width: 360px;
   line-height: 1.4;
-  margin: 0;
   font-family: 'Baloo2';
 }
 
