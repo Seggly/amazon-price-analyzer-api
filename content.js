@@ -284,14 +284,14 @@ function init() {
         subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
         subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
         
-// Get containers first
-const subject1Container = subject1El.closest('.text-fit-container');
-const subject2Container = subject2El.closest('.text-fit-container');
-
-requestAnimationFrame(() => {
-    fitTextToContainer(subject1El, subject1Container);
-    fitTextToContainer(subject2El, subject2Container);
-});
+        // Get containers first
+        const subject1Container = subject1El.closest('.text-fit-container');
+        const subject2Container = subject2El.closest('.text-fit-container');
+        
+        requestAnimationFrame(() => {
+            fitTextToContainer(subject1El, subject1Container);
+            fitTextToContainer(subject2El, subject2Container);
+        });
         
         // Show cached GIF
         const priceGrade = cachedAnalysis.text.priceGrade || 'average';
@@ -309,80 +309,83 @@ requestAnimationFrame(() => {
     }
 });
 
-  // Handle analyze button click
-  elements.analyzeButton.addEventListener('click', async () => {
-      const asin = getAsin();
-      currentAsin = asin;
+elements.analyzeButton.addEventListener('click', async () => {
+  const asin = getAsin();
+  currentAsin = asin;
 
-      if (!asin) {
-          alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
-          return;
-      }
+  if (!asin) {
+      alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
+      return;
+  }
 
-      try {
-          elements.popup.classList.add('showing-results');
-          elements.initialView.style.display = 'none';
-          elements.analysisContent.style.display = 'block';
-          elements.loadingSpinner.style.display = 'flex';
-          elements.results.style.display = 'none';
+  try {
+      elements.popup.classList.add('showing-results');
+      elements.initialView.style.display = 'none';
+      elements.analysisContent.style.display = 'block';
+      elements.loadingSpinner.style.display = 'flex';
+      elements.results.style.display = 'none';
 
-          const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
-          
-          if (response && response.success && response.text) {
-              currentAnalysis = response;
-              cacheAnalysis(asin, response);  // Add this line
-              elements.loadingSpinner.style.display = 'none';
-              elements.results.style.display = 'block';
+      const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
+      
+      if (response && response.success && response.text) {
+          currentAnalysis = response;
+          cacheAnalysis(asin, response);
 
-              const headerEl = elements.results.querySelector('.header-text');
-              const subject1El = elements.results.querySelector('.subject1-text');
-              const subject2El = elements.results.querySelector('.subject2-text');
-              
-              const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-              const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-
-              headerEl.textContent = response.text.header;  // You're missing this line
-              subject1El.textContent = subject1Text;
-              subject2El.textContent = subject2Text;
-
-              const subject1Container = subject1El.closest('.text-fit-container');
-              const subject2Container = subject2El.closest('.text-fit-container');
-                  // Move these lines here after containers are defined
-    void subject1Container.offsetHeight;
-    void subject2Container.offsetHeight;
-
-          
-
-
-              const priceGrade = response.text.priceGrade || 'average';
-              const gifCategory = determineGifCategory(priceGrade);
-              const gifUrl = getRandomGif(gifCategory);
-              
-              const gifContainer = elements.results.querySelector('.gif-container');
-              if (gifContainer) {
-                  gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
-              }
-          }
-      } catch (error) {
-          console.error('Error during price analysis:', error);
-          currentAnalysis = null;
           elements.loadingSpinner.style.display = 'none';
           elements.results.style.display = 'block';
-          
-          const headerEl = elements.results.querySelector('.header-text');
-          if (headerEl) {
-              headerEl.textContent = 'Oops! Something went wrong. Please try again.';
-          }
 
+          const headerEl = elements.results.querySelector('.header-text');
           const subject1El = elements.results.querySelector('.subject1-text');
           const subject2El = elements.results.querySelector('.subject2-text');
-          const gifContainer = elements.results.querySelector('.gif-container');
           
-          if (subject1El) subject1El.textContent = '';
-          if (subject2El) subject2El.textContent = '';
-          if (gifContainer) gifContainer.innerHTML = '';
+          const subject1Text = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+          const subject2Text = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+
+          headerEl.textContent = response.text.header;
+          subject1El.textContent = subject1Text;
+          subject2El.textContent = subject2Text;
+
+          const subject1Container = subject1El.closest('.text-fit-container');
+          const subject2Container = subject2El.closest('.text-fit-container');
+
+          // Force reflow
+          void subject1Container.offsetHeight;
+          void subject2Container.offsetHeight;
+
+          requestAnimationFrame(() => {
+              fitTextToContainer(subject1El, subject1Container);
+              fitTextToContainer(subject2El, subject2Container);
+          });
+
+          const priceGrade = response.text.priceGrade || 'average';
+          const gifCategory = determineGifCategory(priceGrade);
+          const gifUrl = getRandomGif(gifCategory);
+          
+          const gifContainer = elements.results.querySelector('.gif-container');
+          if (gifContainer) {
+              gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
+          }
       }
-  });
+  } catch (error) {
+      console.error('Error during price analysis:', error);
+      currentAnalysis = null;
+      elements.loadingSpinner.style.display = 'none';
+      elements.results.style.display = 'block';
+      
+      const headerEl = elements.results.querySelector('.header-text');
+      if (headerEl) {
+          headerEl.textContent = 'Oops! Something went wrong. Please try again.';
+      }
+
+      const subject1El = elements.results.querySelector('.subject1-text');
+      const subject2El = elements.results.querySelector('.subject2-text');
+      const gifContainer = elements.results.querySelector('.gif-container');
+      
+      if (subject1El) subject1El.textContent = '';
+      if (subject2El) subject2El.textContent = '';
+      if (gifContainer) gifContainer.innerHTML = '';
+  }
+});
 
   // Handle close button click
   elements.closeButton.addEventListener('click', () => {
