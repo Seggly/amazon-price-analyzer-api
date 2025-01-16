@@ -277,11 +277,10 @@ function init() {
   
   function createConfettiAnimation(priceGrade) {
     const colors = getConfettiColors(priceGrade);
-    if (!colors) return;
+    if (!colors || typeof window.createConfetti === 'undefined') return;
   
     // Create and configure canvas
     const canvas = document.createElement('canvas');
-    canvas.id = 'confetti-canvas';
     canvas.style.position = 'absolute';
     canvas.style.top = '0';
     canvas.style.left = '0';
@@ -293,31 +292,14 @@ function init() {
     // Add canvas to popup
     const popup = document.querySelector('#price-analyzer-popup');
     popup.appendChild(canvas);
-
-  // Initialize confetti
-  const confetti = new ConfettiGenerator({
-    target: 'confetti-canvas',
-    max: 80,
-    size: 1.5,
-    animate: true,
-    props: ['circle', 'square', 'triangle', 'line'],
-    colors: colors,
-    clock: 25,
-    rotate: true,
-    width: popup.clientWidth,
-    height: popup.clientHeight,
-    start_from_edge: true
-  });
-
-  // Start animation
-  confetti.render();
-
-  // Stop and clean up after animation
-  setTimeout(() => {
-    confetti.clear();
-    canvas.remove();
-  }, 2500);
-}
+  
+    // Set canvas size to match popup dimensions
+    canvas.width = popup.clientWidth;
+    canvas.height = popup.clientHeight;
+  
+    // Create confetti
+    window.createConfetti(canvas, colors);
+  }
 
   // Store all elements in our global elements object
   elements = {
