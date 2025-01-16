@@ -304,8 +304,28 @@ function init() {
         const gifUrl = getRandomGif(gifCategory);
         const gifContainer = elements.results.querySelector('.gif-container');
         if (gifContainer) {
-            gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
-        }
+          const img = new Image();
+          img.src = gifUrl;
+          img.alt = "Price reaction";
+          
+          // Create GIF pause functionality
+          setTimeout(() => {
+              // Create a canvas to capture the current frame
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              
+              // Draw the current frame
+              ctx.drawImage(img, 0, 0);
+              
+              // Replace GIF with static image
+              img.src = canvas.toDataURL('image/png');
+          }, 4000); // 4 seconds
+          
+          gifContainer.innerHTML = '';
+          gifContainer.appendChild(img);
+      }
     } else {
         elements.popup.classList.remove('showing-results');
         elements.initialView.style.display = 'block';
@@ -367,8 +387,28 @@ elements.analyzeButton.addEventListener('click', async () => {
           
           const gifContainer = elements.results.querySelector('.gif-container');
           if (gifContainer) {
-              gifContainer.innerHTML = `<img src="${gifUrl}" alt="Price reaction" />`;
-          }
+            const img = new Image();
+            img.src = gifUrl;
+            img.alt = "Price reaction";
+            
+            // Create GIF pause functionality
+            setTimeout(() => {
+                // Create a canvas to capture the current frame
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Draw the current frame
+                ctx.drawImage(img, 0, 0);
+                
+                // Replace GIF with static image
+                img.src = canvas.toDataURL('image/png');
+            }, 4000); // 4 seconds
+            
+            gifContainer.innerHTML = '';
+            gifContainer.appendChild(img);
+        }
       }
   } catch (error) {
       console.error('Error during price analysis:', error);
