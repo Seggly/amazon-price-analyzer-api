@@ -251,7 +251,6 @@ function fitTextToContainer(subject1El, subject1Container, subject2El, subject2C
   console.log('Final font size for both sections:', finalSize);
 }
 
-// Initialize the extension
 function init() {
   const { fab, popup } = createUI();
   
@@ -323,6 +322,86 @@ function init() {
     results: popup.querySelector('.results')
   };
 
+  // Handle FAB click
+  fab.addEventListener('click', () => {
+    const currentAsin = getAsin();
+    elements.popup.style.display = 'block';
+    
+    const cachedAnalysis = getAnalysisFromCache(currentAsin);
+    if (cachedAnalysis) {
+        currentAnalysis = cachedAnalysis;
+        elements.popup.classList.add('showing-results');
+        elements.initialView.style.display = 'none';
+        elements.analysisContent.style.display = 'block';
+        elements.results.style.display = 'block';
+        elements.loadingSpinner.style.display = 'none';
+        
+        // Display cached analysis
+        const headerEl = elements.results.querySelector('.header-text');
+        const subject1El = elements.results.querySelector('.subject1-text');
+        const subject2El = elements.results.querySelector('.subject2-text');
+        
+        headerEl.textContent = cachedAnalysis.text.header;
+        subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+        subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+        
+        const subject1Container = subject1El.closest('.text-fit-container');
+        const subject2Container = subject2El.closest('.text-fit-container');
+        
+        requestAnimationFrame(() => {
+            fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
+        });
+        
+        // Show cached GIF
+        const priceGrade = cachedAnalysis.text.priceGrade || 'average';
+        
+        const gifCategory = determineGifCategory(priceGrade);
+        const gifUrl = getRandomGif(gifCategory);
+        const gifContainer = elements.results.querySelector('.gif-container');
+        if (gifContainer) {
+            const img = new Image();
+            img.src = gifUrl;
+            img.alt = "Price reaction";
+            img.style.maxHeight = "140px";
+            img.style.width = "auto";
+            img.style.borderRadius = "8px";
+            img.style.objectFit = "contain";
+            
+            setTimeout(() => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                const ratio = img.naturalWidth / img.naturalHeight;
+                const targetHeight = 140;
+                const targetWidth = targetHeight * ratio;
+                
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                
+                ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                
+                const staticImg = new Image();
+                staticImg.src = canvas.toDataURL('image/png');
+                staticImg.style.maxHeight = "140px";
+                staticImg.style.width = "auto";
+                staticImg.style.borderRadius = "8px";
+                staticImg.style.objectFit = "contain";
+                
+                gifContainer.innerHTML = '';
+                gifContainer.appendChild(staticImg);
+            }, 4000);
+            
+            gifContainer.innerHTML = '';
+            gifContainer.appendChild(img);
+        }
+    } else {
+        elements.popup.classList.remove('showing-results');
+        elements.initialView.style.display = 'block';
+        elements.analysisContent.style.display = 'none';
+        elements.results.style.display = 'none';
+    }
+  });
+
   // Modified analyze button event listener
   elements.analyzeButton.addEventListener('click', async () => {
     const asin = getAsin();
@@ -349,7 +428,6 @@ function init() {
         elements.loadingSpinner.style.display = 'none';
         elements.results.style.display = 'block';
 
-        // Update UI elements...
         const headerEl = elements.results.querySelector('.header-text');
         const subject1El = elements.results.querySelector('.subject1-text');
         const subject2El = elements.results.querySelector('.subject2-text');
@@ -372,54 +450,47 @@ function init() {
           createConfettiAnimation(priceGrade);
         }
 
-        // Handle GIF display...
         const gifCategory = determineGifCategory(priceGrade);
         const gifUrl = getRandomGif(gifCategory);
+        const gifContainer = elements.results.querySelector('.gif-container');
+        if (gifContainer) {
+          const img = new Image();
+          img.src = gifUrl;
+          img.alt = "Price reaction";
+          img.style.maxHeight = "140px";
+          img.style.width = "auto";
+          img.style.borderRadius = "8px";
+          img.style.objectFit = "contain";
           
-          const gifContainer = elements.results.querySelector('.gif-container');
-          if (gifContainer) {
-            const img = new Image();
-            img.src = gifUrl;
-            img.alt = "Price reaction";
-            img.style.maxHeight = "140px"; // Match the container height
-            img.style.width = "auto";
-            img.style.borderRadius = "8px";
-            img.style.objectFit = "contain";
-            
-            // Create GIF pause functionality
-            setTimeout(() => {
-                // Create a canvas to capture the current frame
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Calculate scaled dimensions to maintain aspect ratio
-                const ratio = img.naturalWidth / img.naturalHeight;
-                const targetHeight = 140; // Match container height
-                const targetWidth = targetHeight * ratio;
-                
-                canvas.width = targetWidth;
-                canvas.height = targetHeight;
-                
-                // Draw the image maintaining aspect ratio
-                ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-                
-                // Replace GIF with static image, maintaining styles
-                const staticImg = new Image();
-                staticImg.src = canvas.toDataURL('image/png');
-                staticImg.style.maxHeight = "140px";
-                staticImg.style.width = "auto";
-                staticImg.style.borderRadius = "8px";
-                staticImg.style.objectFit = "contain";
-                
-                gifContainer.innerHTML = '';
-                gifContainer.appendChild(staticImg);
-            }, 4000); // 4 seconds
-            
-            gifContainer.innerHTML = '';
-            gifContainer.appendChild(img);
+          setTimeout(() => {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              
+              const ratio = img.naturalWidth / img.naturalHeight;
+              const targetHeight = 140;
+              const targetWidth = targetHeight * ratio;
+              
+              canvas.width = targetWidth;
+              canvas.height = targetHeight;
+              
+              ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+              
+              const staticImg = new Image();
+              staticImg.src = canvas.toDataURL('image/png');
+              staticImg.style.maxHeight = "140px";
+              staticImg.style.width = "auto";
+              staticImg.style.borderRadius = "8px";
+              staticImg.style.objectFit = "contain";
+              
+              gifContainer.innerHTML = '';
+              gifContainer.appendChild(staticImg);
+          }, 4000);
+          
+          gifContainer.innerHTML = '';
+          gifContainer.appendChild(img);
         }
       }
-  } catch (error) {
+    } catch (error) {
       console.error('Error during price analysis:', error);
       currentAnalysis = null;
       elements.loadingSpinner.style.display = 'none';
@@ -437,8 +508,8 @@ function init() {
       if (subject1El) subject1El.textContent = '';
       if (subject2El) subject2El.textContent = '';
       if (gifContainer) gifContainer.innerHTML = '';
-  }
-});
+    }
+  });
 
   // Handle close button click
   elements.closeButton.addEventListener('click', () => {
