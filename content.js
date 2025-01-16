@@ -185,45 +185,36 @@ function getRandomGif(category) {
   }
 }
 
-// Update watchForVariationChanges to pass the elements
-function watchForVariationChanges(elements) {
+function watchForVariationChanges() {
   let lastUrl = location.href;
   const urlObserver = new MutationObserver(() => {
-      if (location.href !== lastUrl) {
+      const newAsin = getAsin();
+      if (location.href !== lastUrl && newAsin !== currentAsin) {
           lastUrl = location.href;
-          clearAnalysis(elements);
+          currentAsin = newAsin;
+          currentAnalysis = null;
+          clearAnalysis();
       }
   });
 
-  // Observe URL changes
-  urlObserver.observe(document.body, {
-      childList: true,
-      subtree: true
-  });
-
-  // Watch for variation selection changes
-  const variationObserver = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-          // Check if this is a variation change
-          if (mutation.target.matches('[data-defaultasin], [data-selected-asin]') ||
-              mutation.target.closest('[data-defaultasin], [data-selected-asin]')) {
-              clearAnalysis();
-              break;
-          }
+  // Watch specifically for clicks on variation buttons, not hovers
+  document.addEventListener('click', (event) => {
+      // Check if clicked element is a variation button/swatch
+      const variationElement = event.target.closest('[data-defaultasin], [data-dp-url], .swatchSelect');
+      if (variationElement) {
+          setTimeout(() => {  // Give Amazon time to update the ASIN
+              const newAsin = getAsin();
+              if (newAsin !== currentAsin) {
+                  currentAsin = newAsin;
+                  currentAnalysis = null;
+                  clearAnalysis();
+              }
+          }, 100);
       }
   });
 
-  // Observe variation changes
-  const variationElements = document.querySelectorAll('#variation_form, #twister');
-  variationElements.forEach(element => {
-      if (element) {
-          variationObserver.observe(element, {
-              attributes: true,
-              childList: true,
-              subtree: true
-          });
-      }
-  });
+  // Set up observers
+  urlObserver.observe(document, { subtree: true, childList: true });
 }
 
 // Add this outside of init(), near your other utility functions
