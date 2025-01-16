@@ -334,7 +334,7 @@ function init() {
         
         // Apply drag and gravity
         p.velocity *= p.drag;
-        p.opacity -= 0.005;
+        p.opacity -= 0.02; // Faster fade
   
         // Draw particle
         if (p.opacity > 0) {
