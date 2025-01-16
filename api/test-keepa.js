@@ -330,38 +330,45 @@ function analyzeTimeAtPrice(data, targetPrice) {
     return result;
 }
 // Main API handler
+// In your test-keepa.js API endpoint
 export default async function handler(req, res) {
-    await corsMiddleware(req, res);
-  
-    // Handle OPTIONS request
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+  await corsMiddleware(req, res);
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
-    if (req.method === 'POST') {
-      try {
-        const { asin } = req.body;
-        const keepaApiKey = process.env.KEEPA_API_KEY;
-        const response = await fetch(`https://api.keepa.com/product?key=${keepaApiKey}&domain=1&asin=${asin}&maxLength=90`);        const keepaData = await response.json();
-        
-        const result = processKeepaData(keepaData);
-        
-        res.status(200).json({
-          success: true,
-          asin: asin,
-          analysis: result.analysis,
-          priceHistory: result.priceHistory
-        });
-      } catch (error) {
-        res.status(500).json({
-          success: false,
-          error: error.message
-        });
-      }
-    } else {
-      res.status(405).json({ error: 'Method not allowed' });
-    }
+  if (req.method === 'OPTIONS') {
+      return res.status(200).end();
   }
+
+  if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  if (req.method === 'POST') {
+    try {
+      const { asin, domain = 1 } = req.body; // Get domain from request, default to US (1)
+      const keepaApiKey = process.env.KEEPA_API_KEY;
+      
+      // Include domain in Keepa API request
+      const response = await fetch(
+        `https://api.keepa.com/product?key=${keepaApiKey}&domain=${domain}&asin=${asin}&maxLength=90`
+      );
+      
+      const keepaData = await response.json();
+      const result = processKeepaData(keepaData);
+      
+      res.status(200).json({
+        success: true,
+        asin: asin,
+        domain: domain,
+        analysis: result.analysis,
+        priceHistory: result.priceHistory
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  } else {
+    res.status(405).json({ error: 'Method not allowed' });
+  }
+}

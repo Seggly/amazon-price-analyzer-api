@@ -32,15 +32,16 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { analysis } = req.body;
+        const { analysis, marketplace } = req.body;
         if (!analysis || !analysis.new) {
             throw new Error('Invalid analysis data received');
         }
 
         const priceData = analysis.new;
-
+        
+        // Include marketplace context in the prompt
         const prompt = `### Task:
-You are texting your friend in a hurry who ask if a product is at a good price or not on Amazon
+You are texting your friend in a hurry who ask if a product is at a good price or not on Amazon ${marketplace?.domain || 'amazon.com'}
 You are provided with the last 90 days price history of this product.
 You will respond in a convivial way using simple term to convey why you think this is a good price or not.
 Format your answer in 2 very short and concise action-driven lines per subject.
@@ -182,6 +183,7 @@ Header: [Your conclusion text]
         res.status(200).json({
             success: true,
             text,
+            marketplace,
             debug: {
                 prompt,
                 rawResponse: content,

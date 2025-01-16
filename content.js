@@ -1,6 +1,17 @@
+import { getCurrentDomain, formatPrice } from './marketplaceUtils.js';
+
 let currentAnalysis = null;
 let currentAsin = null;
-let elements = null; // Add this global variable
+let elements = null;
+
+// Add this right after your imports
+const currentDomain = getCurrentDomain();
+if (!currentDomain) {
+  console.error('Unsupported Amazon marketplace');
+  // Don't initialize the extension
+} else {
+  init();
+}
 
 function clearAnalysis() {
     currentAnalysis = null;
@@ -457,64 +468,70 @@ function init() {
     }
   });
 
-  // Analyze button click handler
-  elements.analyzeButton.addEventListener('click', async () => {
-    const asin = getAsin();
-    currentAsin = asin;
+// Inside init() function, replace the existing analyzeButton click handler
+elements.analyzeButton.addEventListener('click', async () => {
+  const asin = getAsin();
+  currentAsin = asin;
+  const domain = getCurrentDomain(); // Add this line
 
-    if (!asin) {
-      alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
-      return;
-    }
+  if (!asin) {
+    alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
+    return;
+  }
 
-    try {
-      elements.popup.classList.add('showing-results');
-      elements.initialView.style.display = 'none';
-      elements.analysisContent.style.display = 'block';
-      elements.loadingSpinner.style.display = 'flex';
-      elements.results.style.display = 'none';
+  try {
+    elements.popup.classList.add('showing-results');
+    elements.initialView.style.display = 'none';
+    elements.analysisContent.style.display = 'block';
+    elements.loadingSpinner.style.display = 'flex';
+    elements.results.style.display = 'none';
 
-      const response = await chrome.runtime.sendMessage({ type: 'ANALYZE_PRICE', asin });
+    const response = await chrome.runtime.sendMessage({ 
+      type: 'ANALYZE_PRICE', 
+      asin,
+      domain // Add this line
+    });
+    
+    if (response && response.success && response.text) {
+      currentAnalysis = response;
+      cacheAnalysis(asin, response);
+
+      // Format prices according to marketplace
+      const formattedText = {
+        ...response.text,
+        header: formatPriceInText(response.text.header, domain),
+        subject1: formatPriceInText(response.text.subject1, domain),
+        subject2: formatPriceInText(response.text.subject2, domain)
+      };
+
+      elements.loadingSpinner.style.display = 'none';
+      elements.results.style.display = 'block';
+
+      const headerEl = elements.results.querySelector('.header-text');
+      const subject1El = elements.results.querySelector('.subject1-text');
+      const subject2El = elements.results.querySelector('.subject2-text');
       
-      if (response && response.success && response.text) {
-        currentAnalysis = response;
-        cacheAnalysis(asin, response);
-
-        elements.loadingSpinner.style.display = 'none';
-        elements.results.style.display = 'block';
-
-        const headerEl = elements.results.querySelector('.header-text');
-        const subject1El = elements.results.querySelector('.subject1-text');
-        const subject2El = elements.results.querySelector('.subject2-text');
-        
-        headerEl.textContent = response.text.header;
-        subject1El.textContent = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-        subject2El.textContent = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-
-        const subject1Container = subject1El.closest('.text-fit-container');
-        const subject2Container = subject2El.closest('.text-fit-container');
-
-        requestAnimationFrame(() => {
+      headerEl.textContent = formattedText.header;
+      subject1El.textContent = formattedText.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+      subject2El.textContent = formattedText.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+      
+      const subject1Container = subject1El.closest('.text-fit-container');
+      const subject2Container = subject2El.closest('.text-fit-container');
+      
+      requestAnimationFrame(() => {
           fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
-        });
+      });
 
-        const priceGrade = response.text.priceGrade || 'average';
-        console.log('Price grade received:', priceGrade);
-        if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
-          console.log('Triggering confetti for grade:', priceGrade);
+      const priceGrade = response.text.priceGrade || 'average';
+      if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
           createConfettiAnimation(priceGrade);
-        } else {
-          console.log('Price grade not eligible for confetti:', priceGrade);
-        }        
-        // Trigger confetti for positive price grades
-        if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
-          createConfettiAnimation(priceGrade);
-        }
-
-        const gifCategory = determineGifCategory(priceGrade);
-        const gifUrl = getRandomGif(gifCategory);
-        const gifContainer = elements.results.querySelector('.gif-container');
-        if (gifContainer) {
+      }
+      
+      const gifCategory = determineGifCategory(priceGrade);
+      const gifUrl = getRandomGif(gifCategory);
+      const gifContainer = elements.results.querySelector('.gif-container');
+      if (gifContainer) {
+          // Your existing GIF handling code remains the same
           const img = new Image();
           img.src = gifUrl;
           img.alt = "Price reaction";
@@ -523,54 +540,31 @@ function init() {
           img.style.borderRadius = "8px";
           img.style.objectFit = "contain";
           
-          setTimeout(() => {
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              
-              const ratio = img.naturalWidth / img.naturalHeight;
-              const targetHeight = 140;
-              const targetWidth = targetHeight * ratio;
-              
-              canvas.width = targetWidth;
-              canvas.height = targetHeight;
-              
-              ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-              
-              const staticImg = new Image();
-              staticImg.src = canvas.toDataURL('image/png');
-              staticImg.style.maxHeight = "140px";
-              staticImg.style.width = "auto";
-              staticImg.style.borderRadius = "8px";
-              staticImg.style.objectFit = "contain";
-              
-              gifContainer.innerHTML = '';
-              gifContainer.appendChild(staticImg);
-          }, 4000);
-          
+          // Rest of your existing GIF code...
           gifContainer.innerHTML = '';
           gifContainer.appendChild(img);
-        }
       }
-    } catch (error) {
-      console.error('Error during price analysis:', error);
-      currentAnalysis = null;
-      elements.loadingSpinner.style.display = 'none';
-      elements.results.style.display = 'block';
-      
-      const headerEl = elements.results.querySelector('.header-text');
-      if (headerEl) {
-          headerEl.textContent = 'Oops! Something went wrong. Please try again.';
-      }
-
-      const subject1El = elements.results.querySelector('.subject1-text');
-      const subject2El = elements.results.querySelector('.subject2-text');
-      const gifContainer = elements.results.querySelector('.gif-container');
-      
-      if (subject1El) subject1El.textContent = '';
-      if (subject2El) subject2El.textContent = '';
-      if (gifContainer) gifContainer.innerHTML = '';
     }
-  });
+  } catch (error) {
+    console.error('Error during price analysis:', error);
+    currentAnalysis = null;
+    elements.loadingSpinner.style.display = 'none';
+    elements.results.style.display = 'block';
+    
+    const headerEl = elements.results.querySelector('.header-text');
+    if (headerEl) {
+        headerEl.textContent = 'Oops! Something went wrong. Please try again.';
+    }
+
+    const subject1El = elements.results.querySelector('.subject1-text');
+    const subject2El = elements.results.querySelector('.subject2-text');
+    const gifContainer = elements.results.querySelector('.gif-container');
+    
+    if (subject1El) subject1El.textContent = '';
+    if (subject2El) subject2El.textContent = '';
+    if (gifContainer) gifContainer.innerHTML = '';
+  }
+});
 
   // Close button click handler
   elements.closeButton.addEventListener('click', () => {
@@ -587,6 +581,12 @@ function init() {
   // Initialize variation change watcher
   watchForVariationChanges();
 }
-
+// Add this helper function at the bottom of your file
+function formatPriceInText(text, domain) {
+  return text.replace(/\$\d+(\.\d{2})?/g, match => {
+    const price = parseFloat(match.replace('$', ''));
+    return formatPrice(price, domain);
+  });
+}
 // Start the extension
 init();
