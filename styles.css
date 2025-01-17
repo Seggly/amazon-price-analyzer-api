@@ -313,14 +313,6 @@
   z-index: 10;
 }
 
-.loading-spinner p {
-  margin: 16px 0 0 0;
-  font-family: 'Baloo2';
-  font-size: 20px;
-  color: #000000;
-  text-align: center;
-}
-
 .spinner {
   width: 40px;
   height: 40px;
