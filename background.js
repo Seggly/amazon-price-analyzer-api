@@ -43,39 +43,39 @@ async function analyzePrice(asin, domain) {
     }
     
     const analysisData = await keepaResponse.json();
-    console.log('Keepa analysis data:', analysisData); // Added this log
+    console.log('Keepa analysis data:', analysisData);
 
     if (!analysisData.success) {
       throw new Error(analysisData.error || 'Failed to analyze price');
     }
     
     // Log the data we're sending to text generation
-    console.log('Sending to text generation:', { 
+    const textGenerationData = { 
       analysis: analysisData.analysis,
       marketplace: { domain }
-    });
+    };
+    console.log('Sending to text generation:', textGenerationData);
 
     const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        analysis: analysisData.analysis,
-        marketplace: {
-          domain: domain
-        }
-      })
+      body: JSON.stringify(textGenerationData)
     });
     
+    console.log('Text generation response status:', textResponse.status);
+
     if (!textResponse.ok) {
-      const errorText = await textResponse.text();
-      console.error('Text generation error details:', {
+      const errorData = await textResponse.text();
+      console.error('Text generation error:', {
         status: textResponse.status,
-        errorText: await textResponse.text()
+        error: errorData
       });
-      throw new Error(`Text generation API error: ${textResponse.status}`);
+      throw new Error(`Text generation API error: ${textResponse.status} - ${errorData}`);
     }
     
     const textData = await textResponse.json();
+    console.log('Text generation response data:', textData);
+
     if (!textData.success) {
       throw new Error(textData.error || 'Failed to generate text');
     }
