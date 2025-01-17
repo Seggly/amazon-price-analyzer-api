@@ -403,7 +403,7 @@ function init() {
           subject1: formatPriceInText(cachedAnalysis.text.subject1, domain),
           subject2: formatPriceInText(cachedAnalysis.text.subject2, domain)
         };
-
+        
         headerEl.textContent = cachedAnalysis.text.header;
         subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
         subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
@@ -580,10 +580,9 @@ elements.analyzeButton.addEventListener('click', async () => {
   watchForVariationChanges();
 }
 function formatPriceInText(text, domain) {
-  return text.replace(/\$(\d+(\.\d{2})?)/g, (match, price) => {
-    const numericPrice = parseFloat(price);
-    return window.MarketplaceUtils.formatPrice(numericPrice, domain);
+  return text.replace(/\$\d+(\.\d{2})?/g, match => {
+    const price = parseFloat(match.replace('$', ''));
+    return window.MarketplaceUtils.formatPrice(price, domain);
   });
 }
 // Start the extension
-init();

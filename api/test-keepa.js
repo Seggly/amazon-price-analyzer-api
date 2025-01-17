@@ -57,11 +57,11 @@ function processKeepaData(rawData) {
     const buyBoxPrices = processTimeSeries(csvData[18]); // Buy Box
     const amazonPrices = processTimeSeries(csvData[0]);  // Amazon
     const newPrices = processTimeSeries(csvData[1]);     // New
-    const currentPrice = Math.round(data[data.length - 1].price * 100) / 100;
-    const lowestPrice = Math.round(Math.min(...data.map(p => p.price)) * 100) / 100;
-    const highestPrice = Math.round(Math.max(...data.map(p => p.price)) * 100) / 100;
-    
-    
+
+
+
+
+
     // Use first available price data
     const processedData = {
         new: buyBoxPrices.length > 0 ? buyBoxPrices : 
