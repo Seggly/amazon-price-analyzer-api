@@ -579,21 +579,5 @@ elements.analyzeButton.addEventListener('click', async () => {
   // Initialize variation change watcher
   watchForVariationChanges();
 }
-function formatPriceInText(text, domain) {
-  console.log('Original text:', text);
-  
-  // First, let's fix any malformed prices in the text (like $39.00.2)
-  text = text.replace(/\$(\d+\.\d{2})\.(\d+)/g, '$$$1');
-  console.log('After fixing malformed prices:', text);
 
-  // Then do our normal price formatting
-  return text.replace(/\$(\d+\.\d{2}|\d+)/g, (match) => {
-    console.log('Found price match:', match);
-    const price = parseFloat(match.substring(1));
-    console.log('Parsed price:', price);
-    const formattedPrice = window.MarketplaceUtils.formatPrice(price, domain);
-    console.log('Formatted price:', formattedPrice);
-    return formattedPrice;
-  });
-}
 // Start the extension
