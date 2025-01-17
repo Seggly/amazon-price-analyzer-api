@@ -51,7 +51,7 @@ Use emoji's.
 ### Outputs:
 Assign a grade to the price between: excellent, good, average, not-good and bad-price
 Follow this conversational framework:
-Header: give your conclusion (eg: Lowest price in a year—BUY NOW! 🎯)
+Header: give your conclusion
 Subject 1: give a price insight explanation with key insights 
 Subject 2: should you buy now? Guidance on whether to buy or wait and if the price likely to go up, down
 
