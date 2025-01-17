@@ -22,26 +22,25 @@ function clearAnalysis() {
 
 let analysisCache = new Map();
 
-// Add this function with your other utility functions
 function cacheAnalysis(asin, analysis) {
-  const timestamp = Date.now();
-  try {
-      // Store in both memory and local storage
-      analysisCache.set(asin, {
-          analysis,
-          timestamp
-      });
-      
-      // Also store in chrome.storage
-      chrome.storage.local.set({
-          [`analysis_${asin}`]: {
-              analysis,
-              timestamp
-          }
-      });
-  } catch (error) {
-      console.error('Error caching analysis:', error);
-  }
+    const timestamp = Date.now();
+    analysisCache.set(asin, {
+        analysis,
+        timestamp
+    });
+}
+
+function getAnalysisFromCache(asin) {
+    const cached = analysisCache.get(asin);
+    if (!cached) return null;
+
+    const timeDiff = Date.now() - cached.timestamp;
+    if (timeDiff > 20 * 60 * 1000) { // 20 minutes
+        analysisCache.delete(asin);
+        return null;
+    }
+
+    return cached.analysis;
 }
 
 
@@ -80,20 +79,6 @@ function getAnalysisFromCache(asin) {
       });
   });
 }
-  
-// Add this function to initialize cache from storage when extension loads
-async function initializeCache() {
-  const data = await chrome.storage.local.get(null);
-  for (const [key, value] of Object.entries(data)) {
-      if (key.startsWith('analysis_')) {
-          const asin = key.replace('analysis_', '');
-          analysisCache.set(asin, value);
-      }
-  }
-}
-
-// Call this when extension loads
-initializeCache();
 
 // Create and inject the UI container
 function createUI() {
@@ -434,97 +419,75 @@ function init() {
     results: popup.querySelector('.results')
   };
 
-  // FAB click handler
 // FAB click handler
 elements.fab.addEventListener('click', () => {
-  const currentAsin = getAsin();
-  
   // Toggle popup visibility
   if (elements.popup.style.display === 'block') {
       elements.popup.style.display = 'none';
       return;
   }
-  
+
+  const currentAsin = getAsin();    
   elements.popup.style.display = 'block';
   
   const cachedAnalysis = getAnalysisFromCache(currentAsin);
-  if (cachedAnalysis) {
-      currentAnalysis = cachedAnalysis;
-      elements.popup.classList.add('showing-results');
-      elements.initialView.style.display = 'none';
-      elements.analysisContent.style.display = 'block';
-      elements.results.style.display = 'block';
-      elements.loadingSpinner.style.display = 'none';
-      
-      const domain = window.MarketplaceUtils.getCurrentDomain();
-      
-      const headerEl = elements.results.querySelector('.header-text');
-      const subject1El = elements.results.querySelector('.subject1-text');
-      const subject2El = elements.results.querySelector('.subject2-text');
-      
-      headerEl.textContent = cachedAnalysis.text.header;
-      subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-      subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-      
-      const subject1Container = subject1El.closest('.text-fit-container');
-      const subject2Container = subject2El.closest('.text-fit-container');
-      
-      requestAnimationFrame(() => {
-          fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
-      });
+  if (cachedAnalysis && cachedAnalysis.text) {
+      // Show cached results
+      showCachedResults(cachedAnalysis);
+  } else {
+      // Show initial view
+      elements.popup.classList.remove('showing-results');
+      elements.initialView.style.display = 'block';
+      elements.analysisContent.style.display = 'none';
+      elements.results.style.display = 'none';
+  }
+});
 
-      // Show confetti for cached results if appropriate
-      const priceGrade = cachedAnalysis.text.priceGrade || 'average';
-      if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
-          createConfettiAnimation(priceGrade);
-      }
-        
-        const gifCategory = determineGifCategory(priceGrade);
-        const gifUrl = getRandomGif(gifCategory);
-        const gifContainer = elements.results.querySelector('.gif-container');
-        if (gifContainer) {
-            const img = new Image();
-            img.src = gifUrl;
-            img.alt = "Price reaction";
-            img.style.maxHeight = "140px";
-            img.style.width = "auto";
-            img.style.borderRadius = "8px";
-            img.style.objectFit = "contain";
-            
-            setTimeout(() => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                const ratio = img.naturalWidth / img.naturalHeight;
-                const targetHeight = 140;
-                const targetWidth = targetHeight * ratio;
-                
-                canvas.width = targetWidth;
-                canvas.height = targetHeight;
-                
-                ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-                
-                const staticImg = new Image();
-                staticImg.src = canvas.toDataURL('image/png');
-                staticImg.style.maxHeight = "140px";
-                staticImg.style.width = "auto";
-                staticImg.style.borderRadius = "8px";
-                staticImg.style.objectFit = "contain";
-                
-                gifContainer.innerHTML = '';
-                gifContainer.appendChild(staticImg);
-            }, 4000);
-            
-            gifContainer.innerHTML = '';
-            gifContainer.appendChild(img);
-        }
-      } else {
-        elements.popup.classList.remove('showing-results');
-        elements.initialView.style.display = 'block';
-        elements.analysisContent.style.display = 'none';
-        elements.results.style.display = 'none';
-    }
+// Add helper function to show cached results
+function showCachedResults(cachedAnalysis) {
+  currentAnalysis = cachedAnalysis;
+  elements.popup.classList.add('showing-results');
+  elements.initialView.style.display = 'none';
+  elements.analysisContent.style.display = 'block';
+  elements.results.style.display = 'block';
+  elements.loadingSpinner.style.display = 'none';
+  
+  const headerEl = elements.results.querySelector('.header-text');
+  const subject1El = elements.results.querySelector('.subject1-text');
+  const subject2El = elements.results.querySelector('.subject2-text');
+  
+  headerEl.textContent = cachedAnalysis.text.header;
+  subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+  subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+  
+  const subject1Container = subject1El.closest('.text-fit-container');
+  const subject2Container = subject2El.closest('.text-fit-container');
+  
+  requestAnimationFrame(() => {
+      fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
   });
+
+  const priceGrade = cachedAnalysis.text.priceGrade || 'average';
+  if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
+      createConfettiAnimation(priceGrade);
+  }
+  
+  const gifCategory = determineGifCategory(priceGrade);
+  const gifUrl = getRandomGif(gifCategory);
+  const gifContainer = elements.results.querySelector('.gif-container');
+  if (gifContainer) {
+      const img = new Image();
+      img.src = gifUrl;
+      img.alt = "Price reaction";
+      img.style.maxHeight = "140px";
+      img.style.width = "auto";
+      img.style.borderRadius = "8px";
+      img.style.objectFit = "contain";
+      
+      gifContainer.innerHTML = '';
+      gifContainer.appendChild(img);
+  }
+}
 
 // Inside init() function, replace the existing analyzeButton click handler
 elements.analyzeButton.addEventListener('click', async () => {
