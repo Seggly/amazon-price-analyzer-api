@@ -384,35 +384,49 @@ function init() {
   };
 
   // FAB click handler
-  elements.fab.addEventListener('click', () => {
-    const currentAsin = getAsin();
-    elements.popup.style.display = 'block';
-    
-    const cachedAnalysis = getAnalysisFromCache(currentAsin);
-    if (cachedAnalysis) {
-        currentAnalysis = cachedAnalysis;
-        elements.popup.classList.add('showing-results');
-        elements.initialView.style.display = 'none';
-        elements.analysisContent.style.display = 'block';
-        elements.results.style.display = 'block';
-        elements.loadingSpinner.style.display = 'none';
-        
-        headerEl.textContent = cachedAnalysis.text.header;
-        subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-        subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-        
-        const subject1Container = subject1El.closest('.text-fit-container');
-        const subject2Container = subject2El.closest('.text-fit-container');
-        
-        requestAnimationFrame(() => {
-            fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
-        });
+// FAB click handler
+elements.fab.addEventListener('click', () => {
+  const currentAsin = getAsin();
+  
+  // Toggle popup visibility
+  if (elements.popup.style.display === 'block') {
+      elements.popup.style.display = 'none';
+      return;
+  }
+  
+  elements.popup.style.display = 'block';
+  
+  const cachedAnalysis = getAnalysisFromCache(currentAsin);
+  if (cachedAnalysis) {
+      currentAnalysis = cachedAnalysis;
+      elements.popup.classList.add('showing-results');
+      elements.initialView.style.display = 'none';
+      elements.analysisContent.style.display = 'block';
+      elements.results.style.display = 'block';
+      elements.loadingSpinner.style.display = 'none';
+      
+      const domain = window.MarketplaceUtils.getCurrentDomain();
+      
+      const headerEl = elements.results.querySelector('.header-text');
+      const subject1El = elements.results.querySelector('.subject1-text');
+      const subject2El = elements.results.querySelector('.subject2-text');
+      
+      headerEl.textContent = cachedAnalysis.text.header;
+      subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+      subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+      
+      const subject1Container = subject1El.closest('.text-fit-container');
+      const subject2Container = subject2El.closest('.text-fit-container');
+      
+      requestAnimationFrame(() => {
+          fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
+      });
 
-        // Show confetti for cached results if appropriate
-        const priceGrade = cachedAnalysis.text.priceGrade || 'average';
-        if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
-            createConfettiAnimation(priceGrade);
-        }
+      // Show confetti for cached results if appropriate
+      const priceGrade = cachedAnalysis.text.priceGrade || 'average';
+      if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
+          createConfettiAnimation(priceGrade);
+      }
         
         const gifCategory = determineGifCategory(priceGrade);
         const gifUrl = getRandomGif(gifCategory);
@@ -453,7 +467,7 @@ function init() {
             gifContainer.innerHTML = '';
             gifContainer.appendChild(img);
         }
-    } else {
+      } else {
         elements.popup.classList.remove('showing-results');
         elements.initialView.style.display = 'block';
         elements.analysisContent.style.display = 'none';
