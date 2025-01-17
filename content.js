@@ -1,14 +1,11 @@
-import { getCurrentDomain, formatPrice } from './marketplaceUtils.js';
-
 let currentAnalysis = null;
 let currentAsin = null;
 let elements = null;
 
-// Add this right after your imports
-const currentDomain = getCurrentDomain();
+// Check marketplace support
+const currentDomain = window.MarketplaceUtils.getCurrentDomain();
 if (!currentDomain) {
   console.error('Unsupported Amazon marketplace');
-  // Don't initialize the extension
 } else {
   init();
 }
@@ -400,9 +397,12 @@ function init() {
         elements.results.style.display = 'block';
         elements.loadingSpinner.style.display = 'none';
         
-        const headerEl = elements.results.querySelector('.header-text');
-        const subject1El = elements.results.querySelector('.subject1-text');
-        const subject2El = elements.results.querySelector('.subject2-text');
+        const domain = window.MarketplaceUtils.getCurrentDomain();
+        const formattedText = {
+          header: formatPriceInText(cachedAnalysis.text.header, domain),
+          subject1: formatPriceInText(cachedAnalysis.text.subject1, domain),
+          subject2: formatPriceInText(cachedAnalysis.text.subject2, domain)
+        };
         
         headerEl.textContent = cachedAnalysis.text.header;
         subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
@@ -472,7 +472,7 @@ function init() {
 elements.analyzeButton.addEventListener('click', async () => {
   const asin = getAsin();
   currentAsin = asin;
-  const domain = getCurrentDomain(); // Add this line
+  const domain = window.MarketplaceUtils.getCurrentDomain(); // Add this line
 
   if (!asin) {
     alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
@@ -531,7 +531,6 @@ elements.analyzeButton.addEventListener('click', async () => {
       const gifUrl = getRandomGif(gifCategory);
       const gifContainer = elements.results.querySelector('.gif-container');
       if (gifContainer) {
-          // Your existing GIF handling code remains the same
           const img = new Image();
           img.src = gifUrl;
           img.alt = "Price reaction";
@@ -540,7 +539,6 @@ elements.analyzeButton.addEventListener('click', async () => {
           img.style.borderRadius = "8px";
           img.style.objectFit = "contain";
           
-          // Rest of your existing GIF code...
           gifContainer.innerHTML = '';
           gifContainer.appendChild(img);
       }
@@ -581,11 +579,10 @@ elements.analyzeButton.addEventListener('click', async () => {
   // Initialize variation change watcher
   watchForVariationChanges();
 }
-// Add this helper function at the bottom of your file
 function formatPriceInText(text, domain) {
   return text.replace(/\$\d+(\.\d{2})?/g, match => {
     const price = parseFloat(match.replace('$', ''));
-    return formatPrice(price, domain);
+    return window.MarketplaceUtils.formatPrice(price, domain);
   });
 }
 // Start the extension
