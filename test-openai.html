@@ -45,6 +45,17 @@
     
     <div class="input-section">
         <input type="text" id="asin" placeholder="Enter Amazon ASIN" value="B08X3QVGMS">
+        <select id="marketplace">
+            <option value="1">amazon.com (US)</option>
+            <option value="2">amazon.co.uk (UK)</option>
+            <option value="3">amazon.de (Germany)</option>
+            <option value="4">amazon.fr (France)</option>
+            <option value="5">amazon.co.jp (Japan)</option>
+            <option value="6">amazon.ca (Canada)</option>
+            <option value="8">amazon.it (Italy)</option>
+            <option value="9">amazon.es (Spain)</option>
+            <option value="10">amazon.in (India)</option>
+        </select>
         <button onclick="testGeneration()">Generate Text</button>
     </div>
 
@@ -108,55 +119,64 @@
             }
         }
 
-        async function testGeneration() {
-            const asin = document.getElementById('asin').value;
-            clearResults();
-            setLoading(true);
+            async function testGeneration() {
+    const asin = document.getElementById('asin').value;
+    const domain = document.getElementById('marketplace').value;
+    clearResults();
+    setLoading(true);
 
-            try {
-                // First get price analysis
-                const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ asin })
-                });
-                
-                const analysisData = await analysisResponse.json();
-                document.getElementById('analysisData').textContent = JSON.stringify(analysisData, null, 2);
+    try {
+        // First get price analysis
+        const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                asin,
+                domain: parseInt(domain) // Send domain as number
+            })
+        });
+        
+        const analysisData = await analysisResponse.json();
+        document.getElementById('analysisData').textContent = JSON.stringify(analysisData, null, 2);
 
-                if (analysisData.success) {
-                    // Then generate text
-                    const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ analysis: analysisData.analysis })
-                    });
-
-                    const textData = await textResponse.json();
-
-                    // Display OpenAI debug info
-                    if (textData.debug) {
-                        document.getElementById('promptSent').textContent = textData.debug.prompt || 'No prompt data';
-                        document.getElementById('rawResponse').textContent = textData.debug.rawResponse || 'No raw response';
-                        document.getElementById('parsedSections').textContent = 
-                            JSON.stringify(textData.debug.parsedSections || [], null, 2);
+        if (analysisData.success) {
+            // Then generate text
+            const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    analysis: analysisData.analysis,
+                    marketplace: {
+                        domain: domain
                     }
+                })
+            });
 
-                    if (textData.success) {
-                        displayResults(textData.text);
-                    } else {
-                        throw new Error(textData.error || 'Failed to generate text');
-                    }
-                } else {
-                    throw new Error(analysisData.error || 'Failed to analyze price');
-                }
-            } catch (error) {
-                console.error('Full error:', error);
-                showError(error.message, JSON.stringify(error, null, 2));
-            } finally {
-                setLoading(false);
+            const textData = await textResponse.json();
+
+            // Display OpenAI debug info
+            if (textData.debug) {
+                document.getElementById('promptSent').textContent = textData.debug.prompt || 'No prompt data';
+                document.getElementById('rawResponse').textContent = textData.debug.rawResponse || 'No raw response';
+                document.getElementById('parsedSections').textContent = 
+                    JSON.stringify(textData.debug.parsedSections || [], null, 2);
             }
+
+            if (textData.success) {
+                displayResults(textData.text);
+            } else {
+                throw new Error(textData.error || 'Failed to generate text');
+            }
+        } else {
+            throw new Error(analysisData.error || 'Failed to analyze price');
         }
+    } catch (error) {
+        console.error('Full error:', error);
+        showError(error.message, JSON.stringify(error, null, 2));
+    } finally {
+        setLoading(false);
+    }
+}
     </script>
 </body>
 </html>
