@@ -28,8 +28,7 @@
     "https://*.amazon.sg/*",
     "https://*.amazon.sa/*",
     "https://*.amazon.be/*",
-    "https://amazon-price-analyzer-api.vercel.app/*",
-    "https://api.keepa.com/*"
+    "https://amazon-price-analyzer-api.vercel.app/*"
   ],
   "content_scripts": [
     {
@@ -66,9 +65,7 @@
     "resources": [
       "icons/*",
       "gifs/*",
-      "fonts/Baloo2/*",
-      "lib/confetti.js",
-      "marketplaceUtils.js"
+      "fonts/Baloo2/*"
     ],
     "matches": [
       "https://*.amazon.com/*",
