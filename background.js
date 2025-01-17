@@ -17,12 +17,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function analyzePrice(asin, domain) {
   try {
-    // Debug logging for domain conversion
     console.log('Processing request for:', { domain, asin });
     const keepaDomain = convertToKeepaDomain(domain);
     console.log('Converted domain:', { originalDomain: domain, keepaDomain });
 
-    // First API call - Keepa Analysis
     const keepaResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -32,7 +30,6 @@ async function analyzePrice(asin, domain) {
       })
     });
     
-    // Log the Keepa response status
     console.log('Keepa API response status:', keepaResponse.status);
     
     if (!keepaResponse.ok) {
@@ -46,11 +43,18 @@ async function analyzePrice(asin, domain) {
     }
     
     const analysisData = await keepaResponse.json();
+    console.log('Keepa analysis data:', analysisData); // Added this log
+
     if (!analysisData.success) {
       throw new Error(analysisData.error || 'Failed to analyze price');
     }
     
-    // Second API call - Text Generation
+    // Log the data we're sending to text generation
+    console.log('Sending to text generation:', { 
+      analysis: analysisData.analysis,
+      marketplace: { domain }
+    });
+
     const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -62,9 +66,12 @@ async function analyzePrice(asin, domain) {
       })
     });
     
-    console.log('Text generation API response status:', textResponse.status);
-    
     if (!textResponse.ok) {
+      const errorText = await textResponse.text();
+      console.error('Text generation error details:', {
+        status: textResponse.status,
+        errorText: await textResponse.text()
+      });
       throw new Error(`Text generation API error: ${textResponse.status}`);
     }
     
