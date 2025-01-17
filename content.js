@@ -580,8 +580,11 @@ elements.analyzeButton.addEventListener('click', async () => {
   watchForVariationChanges();
 }
 function formatPriceInText(text, domain) {
-  return text.replace(/\$\d+(\.\d{2})?/g, match => {
-    const price = parseFloat(match.replace('$', ''));
+  // This regex matches prices like $39.00 and preserves the decimal places
+  return text.replace(/\$(\d+\.\d{2}|\d+)/g, (match) => {
+    // Remove the $ and parse as float
+    const price = parseFloat(match.substring(1));
+    // Use the MarketplaceUtils to format the price
     return window.MarketplaceUtils.formatPrice(price, domain);
   });
 }
