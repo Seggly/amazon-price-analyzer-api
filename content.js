@@ -397,13 +397,6 @@ function init() {
         elements.results.style.display = 'block';
         elements.loadingSpinner.style.display = 'none';
         
-        const domain = window.MarketplaceUtils.getCurrentDomain();
-        const formattedText = {
-          header: formatPriceInText(cachedAnalysis.text.header, domain),
-          subject1: formatPriceInText(cachedAnalysis.text.subject1, domain),
-          subject2: formatPriceInText(cachedAnalysis.text.subject2, domain)
-        };
-        
         headerEl.textContent = cachedAnalysis.text.header;
         subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
         subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
@@ -495,14 +488,6 @@ elements.analyzeButton.addEventListener('click', async () => {
     if (response && response.success && response.text) {
       currentAnalysis = response;
       cacheAnalysis(asin, response);
-
-      // Format prices according to marketplace
-      const formattedText = {
-        ...response.text,
-        header: formatPriceInText(response.text.header, domain),
-        subject1: formatPriceInText(response.text.subject1, domain),
-        subject2: formatPriceInText(response.text.subject2, domain)
-      };
 
       elements.loadingSpinner.style.display = 'none';
       elements.results.style.display = 'block';
