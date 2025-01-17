@@ -1,4 +1,3 @@
-/* Font declarations - these are all needed */
 @font-face {
   font-family: 'Baloo2';
   src: url(chrome-extension://__MSG_@@extension_id__/fonts/Baloo2/Baloo2-Bold.ttf) format('truetype');
@@ -23,14 +22,12 @@
   font-weight: 600;
 }
 
-/* Core container styles */
 #amazon-price-analyzer-container {
   position: relative;
   z-index: 2147483647;
   font-family: 'Baloo2', sans-serif;
 }
 
-/* FAB Button */
 #price-analyzer-fab {
   position: fixed;
   top: 120px;
@@ -61,7 +58,6 @@
   transform: scale(1.1);
 }
 
-/* Popup Container */
 #price-analyzer-popup {
   position: fixed;
   top: 50%;
@@ -84,10 +80,9 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  padding: 12px;
+  padding: 12px; /* Reduced from 32px */
 }
 
-/* Close Button */
 .close-button {
   position: absolute;
   top: 12px;
@@ -101,15 +96,32 @@
   z-index: 10;
 }
 
-/* Results Section */
+/* Results View Styles */
 .results {
   height: 100%;
-  padding: 12px;
+  padding: 12px; /* Reduced from 32px */
   display: flex;
   flex-direction: column;
 }
 
+.results-header {
+  position: relative;
+  margin-bottom: 8px; /* Reduced from 20px */
+}
+
+.tiny-mascot {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.tiny-mascot img {
+  width: 48px;
+  height: 48px;
+}
+
 .header-text {
+  font-family: 'Baloo2';
   font-weight: 700;
   font-size: 40px;
   line-height: 1.2;
@@ -119,8 +131,8 @@
 }
 
 .fixed-content-box {
-  height: 220px;
-  margin: 0;
+  height: 220px; /* Increased from 160px */
+  margin: 0;  /* Remove margin since we're controlling gaps from outside */
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -134,15 +146,17 @@
 
 .insight-section .title, 
 .buy-section .title {
+  font-family: 'Baloo2';
   font-weight: 700;
   font-size: 20px;
   margin-bottom: 1px;
+  color: #000000;
 }
 
 .text-fit-container {
-  flex: 1;
+  flex: 1;  /* Take remaining space */
   position: relative;
-  min-height: 0;
+  min-height: 0;  /* Important for flex containers */
 }
 
 .subject1-text, .subject2-text {
@@ -152,20 +166,27 @@
   margin: 0;
   padding: 0;
   display: flex;
-  align-items: center;
-  font-weight: normal;
+  align-items: center;  /* Center text vertically */
+  font-family: 'Baloo2';
+  font-weight: normal;  /* This will use the Regular variant */
 }
 
-/* Results Footer */
+/* Make the titles bold */
+.subject1-text strong, .subject2-text strong {
+  font-weight: 700;
+  font-family: 'Baloo2';
+}
+
+/* Footer Section */
 .results-footer {
   position: absolute;
   bottom: 12px;
   left: 12px;
   right: 12px;
-  margin-top: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  margin-top: 8px; /* Add gap between content and footer */
+  display: flex;  /* Add this */
+  flex-direction: column;  /* Add this */
+  align-items: center;  /* Add this */
 }
 
 .gif-container {
@@ -174,7 +195,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 0 4px 0;
+  margin: 0 0 4px 0; /* Only keep bottom margin for spacing with button */
 }
 
 .gif-container img {
@@ -184,37 +205,99 @@
   object-fit: contain;
 }
 
-/* Buttons */
-.track-button, .analyze-button {
+.track-button {
+  width: 200px;  /* Fixed width instead of max-width */
+  max-width: 200px;
   background: #FF4500;
   color: white;
   border: none;
   border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  width: 100%;
-  font-family: 'Baloo2';
-}
-
-.track-button {
-  width: 200px;
   padding: 10px 0;
   font-size: 12px;
-  margin: 0 0 4px 0;
-}
-
-.analyze-button {
-  padding: 16px 0;
-  font-size: 20px;
-  max-width: 400px;
-  margin-bottom: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 4px 0; /* Only keep bottom margin for spacing with button */
+  font-family: 'Baloo2';
 }
 
 .track-button:hover {
   background: #E63E00;
 }
 
-/* Loading Spinner */
+.results .disclaimer {
+  font-size: 9px;
+  color: rgba(0, 0, 0, 0.6);
+  text-align: center;
+  width: 100%;
+  margin: 0 auto;
+  line-height: 1.2; /* Reduced line height */
+  font-family: 'Baloo2';
+}
+
+.initial-view {
+  padding: 32px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mascot {
+  height: 96px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  align-items: center;
+  justify-content: center;
+}
+
+.mascot img {
+  width: auto;
+  height: 96px;
+}
+
+
+.initial-view h2 {
+  font-family: 'Baloo2';
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1.2;
+  margin-bottom: 24px;
+  color: #000000;
+  text-align: center;
+  max-width: 360px;
+}
+
+.analyze-button {
+  background: #FF4500;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 0;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 16px;
+  font-family: 'Baloo2';
+}
+
+.initial-view .disclaimer {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.7);
+  text-align: center;
+  max-width: 360px;
+  line-height: 1.4;
+  font-family: 'Baloo2';
+}
+
 .loading-spinner {
   position: absolute;
   top: 50%;
@@ -230,6 +313,14 @@
   z-index: 10;
 }
 
+.loading-spinner p {
+  margin: 16px 0 0 0;
+  font-family: 'Baloo2';
+  font-size: 20px;
+  color: #000000;
+  text-align: center;
+}
+
 .spinner {
   width: 40px;
   height: 40px;
@@ -237,26 +328,4 @@
   border-top: 4px solid #FF5100;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Utility Classes */
-.disclaimer {
-  font-size: 9px;
-  color: rgba(0, 0, 0, 0.6);
-  text-align: center;
-  width: 100%;
-  margin: 0 auto;
-  line-height: 1.2;
-}
-
-.initial-view .disclaimer {
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.7);
-  max-width: 360px;
-  line-height: 1.4;
 }
