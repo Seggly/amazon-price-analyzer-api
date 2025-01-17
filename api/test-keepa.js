@@ -342,33 +342,73 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
   }
   
-  if (req.method === 'POST') {
-    try {
-      const { asin, domain = 1 } = req.body; // Get domain from request, default to US (1)
+  try {
+      const { asin, domain = 1 } = req.body;
+      console.log('Received request:', { asin, domain });
+
+      if (!asin) {
+          return res.status(400).json({ 
+              success: false, 
+              error: 'ASIN is required' 
+          });
+      }
+
       const keepaApiKey = process.env.KEEPA_API_KEY;
+      if (!keepaApiKey) {
+          return res.status(500).json({ 
+              success: false, 
+              error: 'Keepa API key not configured' 
+          });
+      }
+
+      // Make sure domain is a number
+      const keepaDomain = parseInt(domain) || 1;
+      
+      console.log('Calling Keepa API with:', { asin, keepaDomain });
       
       // Include domain in Keepa API request
-      const response = await fetch(
-        `https://api.keepa.com/product?key=${keepaApiKey}&domain=${domain}&asin=${asin}&maxLength=90`
-      );
+      const keepaUrl = `https://api.keepa.com/product?key=${keepaApiKey}&domain=${keepaDomain}&asin=${asin}&maxLength=90`;
+      const response = await fetch(keepaUrl);
       
+      if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Keepa API error:', {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorText
+          });
+          return res.status(response.status).json({
+              success: false,
+              error: `Keepa API error: ${response.status} - ${errorText}`
+          });
+      }
+
       const keepaData = await response.json();
+      
+      // Check if Keepa returned an error
+      if (keepaData.error) {
+          console.error('Keepa returned error:', keepaData.error);
+          return res.status(400).json({
+              success: false,
+              error: `Keepa error: ${keepaData.error}`
+          });
+      }
+
       const result = processKeepaData(keepaData);
       
       res.status(200).json({
-        success: true,
-        asin: asin,
-        domain: domain,
-        analysis: result.analysis,
-        priceHistory: result.priceHistory
+          success: true,
+          asin: asin,
+          domain: keepaDomain,
+          analysis: result.analysis,
+          priceHistory: result.priceHistory
       });
-    } catch (error) {
+  } catch (error) {
+      console.error('Handler error:', error);
       res.status(500).json({
-        success: false,
-        error: error.message
+          success: false,
+          error: error.message || 'An unexpected error occurred',
+          details: error.toString()
       });
-    }
-  } else {
-    res.status(405).json({ error: 'Method not allowed' });
   }
 }

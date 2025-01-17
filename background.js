@@ -17,18 +17,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function analyzePrice(asin, domain) {
   try {
+    // Convert domain string to Keepa domain number
+    const keepaDomain = convertToKeepaDomain(domain);
+    console.log('Sending request with:', { asin, keepaDomain, originalDomain: domain });
+
     // First API call - Keepa Analysis
     const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         asin,
-        domain
+        domain: keepaDomain // Send the numeric domain ID
       })
     });
     
+    // Add response logging
     if (!analysisResponse.ok) {
-      throw new Error(`Keepa API error: ${analysisResponse.status}`);
+      const errorText = await analysisResponse.text();
+      console.error('Keepa API error details:', {
+        status: analysisResponse.status,
+        statusText: analysisResponse.statusText,
+        errorText
+      });
+      throw new Error(`Keepa API error: ${analysisResponse.status} - ${errorText}`);
     }
     
     const analysisData = await analysisResponse.json();
@@ -66,4 +77,30 @@ async function analyzePrice(asin, domain) {
     console.error('Analysis failed:', error);
     throw error;
   }
+}
+// Add this helper function
+function convertToKeepaDomain(domain) {
+  const domainMap = {
+    'amazon.com': 1,
+    'amazon.co.uk': 2,
+    'amazon.de': 3,
+    'amazon.fr': 4,
+    'amazon.co.jp': 5,
+    'amazon.ca': 6,
+    'amazon.it': 8,
+    'amazon.es': 9,
+    'amazon.in': 10,
+    'amazon.com.br': 11,
+    'amazon.com.mx': 12,
+    'amazon.com.au': 13,
+    'amazon.nl': 14,
+    'amazon.tr': 15,
+    'amazon.ae': 16,
+    'amazon.pl': 17,
+    'amazon.se': 18,
+    'amazon.sg': 19,
+    'amazon.sa': 20,
+    'amazon.be': 21
+  };
+  return domainMap[domain] || 1; // Default to US (1) if domain not found
 }
