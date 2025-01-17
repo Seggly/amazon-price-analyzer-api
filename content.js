@@ -1,15 +1,10 @@
+// Global variables
 let currentAnalysis = null;
 let currentAsin = null;
 let elements = null;
+let analysisCache = new Map();
 
-// Check marketplace support
-const currentDomain = window.MarketplaceUtils.getCurrentDomain();
-if (!currentDomain) {
-  console.error('Unsupported Amazon marketplace');
-} else {
-  init();
-}
-
+// Basic Utility Functions
 function clearAnalysis() {
     currentAnalysis = null;
     if (elements) {
@@ -20,633 +15,533 @@ function clearAnalysis() {
     }
 }
 
-let analysisCache = new Map();
+// ASIN Extraction
+function getAsin() {
+    const patterns = [
+        /\/dp\/([A-Z0-9]{10})/,
+        /\/product\/([A-Z0-9]{10})/,
+        /\/gp\/product\/([A-Z0-9]{10})/,
+        /\/?([A-Z0-9]{10})(\/|\?|$)/
+    ];
 
-// Cache functions
+    for (const pattern of patterns) {
+        const match = window.location.pathname.match(pattern);
+        if (match && match[1]) return match[1];
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const asinParam = urlParams.get('asin');
+    if (asinParam && asinParam.match(/^[A-Z0-9]{10}$/)) {
+        return asinParam;
+    }
+
+    const asinElement = document.querySelector('[data-asin]');
+    if (asinElement && asinElement.getAttribute('data-asin').match(/^[A-Z0-9]{10}$/)) {
+        return asinElement.getAttribute('data-asin');
+    }
+
+    return null;
+}
+
+// Variation Changes Watcher
+function watchForVariationChanges() {
+    let lastUrl = location.href;
+    const urlObserver = new MutationObserver(() => {
+        const newAsin = getAsin();
+        if (location.href !== lastUrl && newAsin !== currentAsin) {
+            lastUrl = location.href;
+            currentAsin = newAsin;
+            currentAnalysis = null;
+            clearAnalysis();
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        const variationElement = event.target.closest('[data-defaultasin], [data-dp-url], .swatchSelect');
+        if (variationElement) {
+            setTimeout(() => {
+                const newAsin = getAsin();
+                if (newAsin !== currentAsin) {
+                    currentAsin = newAsin;
+                    currentAnalysis = null;
+                    clearAnalysis();
+                }
+            }, 100);
+        }
+    });
+
+    urlObserver.observe(document, { subtree: true, childList: true });
+}
+
+// Cache Management Functions
+async function initializeCache() {
+    try {
+        const data = await chrome.storage.local.get(null);
+        const now = Date.now();
+        
+        for (const [key, value] of Object.entries(data)) {
+            if (key.startsWith('price_analysis_')) {
+                const timeDiff = now - value.timestamp;
+                if (timeDiff <= 20 * 60 * 1000) {
+                    // Still valid, add to memory cache
+                    const asin = key.replace('price_analysis_', '');
+                    analysisCache.set(asin, value);
+                } else {
+                    // Expired, remove it
+                    await chrome.storage.local.remove(key);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error initializing cache:', error);
+    }
+}
+
 async function cacheAnalysis(asin, analysis) {
-  try {
-      const timestamp = Date.now();
-      const cacheData = {
-          analysis,
-          timestamp
-      };
-      
-      // Save to chrome.storage
-      await chrome.storage.local.set({
-          [`price_analysis_${asin}`]: cacheData
-      });
-      
-      // Also save to memory for quick access
-      analysisCache.set(asin, cacheData);
-  } catch (error) {
-      console.error('Error caching analysis:', error);
-  }
+    try {
+        const timestamp = Date.now();
+        const cacheData = {
+            analysis,
+            timestamp
+        };
+        
+        // Save to both storage and memory
+        await chrome.storage.local.set({
+            [`price_analysis_${asin}`]: cacheData
+        });
+        analysisCache.set(asin, cacheData);
+    } catch (error) {
+        console.error('Error caching analysis:', error);
+    }
 }
 
 async function getAnalysisFromCache(asin) {
-  try {
-      // Try memory cache first
-      const memoryCache = analysisCache.get(asin);
-      if (memoryCache) {
-          const timeDiff = Date.now() - memoryCache.timestamp;
-          if (timeDiff <= 20 * 60 * 1000) { // Less than 20 minutes
-              return memoryCache.analysis;
-          }
-          // If expired, clean up
-          analysisCache.delete(asin);
-          await chrome.storage.local.remove(`price_analysis_${asin}`);
-          return null;
-      }
+    try {
+        // Try memory cache first
+        const memoryCache = analysisCache.get(asin);
+        if (memoryCache) {
+            const timeDiff = Date.now() - memoryCache.timestamp;
+            if (timeDiff <= 20 * 60 * 1000) {
+                return memoryCache.analysis;
+            }
+            // Expired, clean up
+            analysisCache.delete(asin);
+            await chrome.storage.local.remove(`price_analysis_${asin}`);
+            return null;
+        }
 
-      // Try storage cache
-      const result = await chrome.storage.local.get(`price_analysis_${asin}`);
-      const storedCache = result[`price_analysis_${asin}`];
-      
-      if (storedCache) {
-          const timeDiff = Date.now() - storedCache.timestamp;
-          if (timeDiff <= 20 * 60 * 1000) { // Less than 20 minutes
-              // Save to memory cache
-              analysisCache.set(asin, storedCache);
-              return storedCache.analysis;
-          }
-          // If expired, clean up
-          await chrome.storage.local.remove(`price_analysis_${asin}`);
-      }
-      
-      return null;
-  } catch (error) {
-      console.error('Error getting cached analysis:', error);
-      return null;
-  }
-}
-
-// Add this initialization function
-async function initializeCache() {
-  try {
-      const data = await chrome.storage.local.get(null);
-      const now = Date.now();
-      
-      for (const [key, value] of Object.entries(data)) {
-          if (key.startsWith('price_analysis_')) {
-              const timeDiff = now - value.timestamp;
-              if (timeDiff <= 20 * 60 * 1000) {
-                  // Still valid, add to memory cache
-                  const asin = key.replace('price_analysis_', '');
-                  analysisCache.set(asin, value);
-              } else {
-                  // Expired, remove it
-                  await chrome.storage.local.remove(key);
-              }
-          }
-      }
-  } catch (error) {
-      console.error('Error initializing cache:', error);
-  }
-}
-
-// Create and inject the UI container
-function createUI() {
-  const container = document.createElement('div');
-  container.id = 'amazon-price-analyzer-container';
-  
- // In createUI function, modify fab creation
-const fab = document.createElement('button');
-fab.id = 'price-analyzer-fab';
-fab.innerHTML = `<img src="${chrome.runtime.getURL('icons/icon48.png')}" alt="Price Analyzer" />`;
-fab.style.zIndex = '999999';  // Make sure button is clickable
-
-// Add these styles to the image directly to ensure it doesn't interfere with clicks
-const fabImg = fab.querySelector('img');
-if (fabImg) {
-    fabImg.style.pointerEvents = 'none';  // This prevents the image from capturing clicks
-}
-  // Create the popup
-  const popup = document.createElement('div');
-  popup.id = 'price-analyzer-popup';
-  popup.style.display = 'none';
-  popup.innerHTML = `
-    <div class="popup-content">
-      <button class="close-button">×</button>
-      
-      <div class="initial-view">
-        <div class="mascot">
-          <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
-        </div>
-        <h2>Don't Buy Until Our AI Check The Price First!</h2>
-        <button class="analyze-button">Analyze The Price</button>
-        <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
-      </div>
-
-      <div class="analysis-content" style="display: none;">
-        <div class="loading-spinner" style="display: none;">
-          <div class="spinner"></div>
-          <p>Analyzing price history...</p>
-        </div>
+        // Try storage cache if not in memory
+        const result = await chrome.storage.local.get(`price_analysis_${asin}`);
+        const storedCache = result[`price_analysis_${asin}`];
         
-        <div class="results" style="display: none;">
-          <div class="results-header">
-            <div class="tiny-mascot">
-              <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
-            </div>
-            <h2 class="header-text"></h2>
-          </div>
-
-<div class="fixed-content-box">
-  <div class="insight-section">
-    <div class="title"><strong>💡 Price Insight:</strong></div>
-    <div class="text-fit-container">
-      <p class="subject1-text"></p>
-    </div>
-  </div>
-
-  <div class="buy-section">
-    <div class="title"><strong>🤔 Should You Buy Now?</strong></div>
-    <div class="text-fit-container">
-      <p class="subject2-text"></p>
-    </div>
-  </div>
-</div>
-
-          <div class="results-footer">
-            <div class="gif-container"></div>
-            <button class="track-button">Price Tracking Comming Soon</button>
-            <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  container.appendChild(fab);
-  container.appendChild(popup);
-  document.body.appendChild(container);
-  
-  return { fab, popup };
-}
-
-// Extract ASIN from Amazon URL
-function getAsin() {
-  const patterns = [
-    /\/dp\/([A-Z0-9]{10})/,
-    /\/product\/([A-Z0-9]{10})/,
-    /\/gp\/product\/([A-Z0-9]{10})/,
-    /\/?([A-Z0-9]{10})(\/|\?|$)/
-  ];
-
-  for (const pattern of patterns) {
-    const match = window.location.pathname.match(pattern);
-    if (match && match[1]) {
-      return match[1];
+        if (storedCache) {
+            const timeDiff = Date.now() - storedCache.timestamp;
+            if (timeDiff <= 20 * 60 * 1000) {
+                // Still valid, add to memory cache
+                analysisCache.set(asin, storedCache);
+                return storedCache.analysis;
+            }
+            // Expired, clean up
+            await chrome.storage.local.remove(`price_analysis_${asin}`);
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error getting cached analysis:', error);
+        return null;
     }
-  }
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const asinParam = urlParams.get('asin');
-  if (asinParam && asinParam.match(/^[A-Z0-9]{10}$/)) {
-    return asinParam;
-  }
-
-  const asinElement = document.querySelector('[data-asin]');
-  if (asinElement && asinElement.getAttribute('data-asin').match(/^[A-Z0-9]{10}$/)) {
-    return asinElement.getAttribute('data-asin');
-  }
-
-  return null;
 }
 
-// Type text effect
-async function typeText(element, text) {
-  element.textContent = text;  // Show text immediately
-}
+// UI Creation and Text Handling
+function createUI() {
+    const container = document.createElement('div');
+    container.id = 'amazon-price-analyzer-container';
+    
+    const fab = document.createElement('button');
+    fab.id = 'price-analyzer-fab';
+    fab.innerHTML = `<img src="${chrome.runtime.getURL('icons/icon48.png')}" alt="Price Analyzer" />`;
+    fab.style.zIndex = '999999';  
 
-function determineGifCategory(priceGrade) {
-  if (!priceGrade) return 'average-price';
-  
-  switch(priceGrade.toLowerCase()) {
-    case 'excellent':
-      return 'excellent-price';
-    case 'good':
-      return 'good-price';
-    case 'average':
-      return 'average-price';
-    case 'not-good':
-      return 'not-good-price';
-    case 'bad-price':
-      return 'bad-price';
-    default:
-      return 'average-price';
-  }
-}
+    const fabImg = fab.querySelector('img');
+    if (fabImg) {
+        fabImg.style.pointerEvents = 'none';
+    }
 
-function getRandomGif(category) {
-  try {
-      // Reduce number of GIFs to what you actually have
-      const maxGifs = 10; // Adjust this number based on how many GIFs you actually have
-      const randomNumber = Math.floor(Math.random() * maxGifs) + 1;
-      const gifUrl = chrome.runtime.getURL(`gifs/${category}/${randomNumber}.gif`);
-      console.log('Attempting to load GIF:', gifUrl);
-      return gifUrl;
-  } catch (error) {
-      console.error('Error generating GIF URL:', error);
-      // Return a fallback GIF
-      return chrome.runtime.getURL('gifs/default.gif');
-  }
-}
+    const popup = document.createElement('div');
+    popup.id = 'price-analyzer-popup';
+    popup.style.display = 'none';
+    popup.innerHTML = `
+        <div class="popup-content">
+            <button class="close-button">×</button>
+            
+            <div class="initial-view">
+                <div class="mascot">
+                    <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+                </div>
+                <h2>Don't Buy Until Our AI Check The Price First!</h2>
+                <button class="analyze-button">Analyze The Price</button>
+                <p class="disclaimer">*Clicking "Analyze The Price" will redirect you via our affiliate link. We may earn a commission at no cost to you.</p>
+            </div>
 
-function watchForVariationChanges() {
-  let lastUrl = location.href;
-  const urlObserver = new MutationObserver(() => {
-      const newAsin = getAsin();
-      if (location.href !== lastUrl && newAsin !== currentAsin) {
-          lastUrl = location.href;
-          currentAsin = newAsin;
-          currentAnalysis = null;
-          clearAnalysis();
-      }
-  });
+            <div class="analysis-content" style="display: none;">
+                <div class="loading-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing price history...</p>
+                </div>
+                
+                <div class="results" style="display: none;">
+                    <div class="results-header">
+                        <div class="tiny-mascot">
+                            <img src="${chrome.runtime.getURL('icons/icon128.png')}" alt="Mascot" />
+                        </div>
+                        <h2 class="header-text"></h2>
+                    </div>
 
-  // Watch specifically for clicks on variation buttons, not hovers
-  document.addEventListener('click', (event) => {
-      // Check if clicked element is a variation button/swatch
-      const variationElement = event.target.closest('[data-defaultasin], [data-dp-url], .swatchSelect');
-      if (variationElement) {
-          setTimeout(() => {  // Give Amazon time to update the ASIN
-              const newAsin = getAsin();
-              if (newAsin !== currentAsin) {
-                  currentAsin = newAsin;
-                  currentAnalysis = null;
-                  clearAnalysis();
-              }
-          }, 100);
-      }
-  });
+                    <div class="fixed-content-box">
+                        <div class="insight-section">
+                            <div class="title"><strong>💡 Price Insight:</strong></div>
+                            <div class="text-fit-container">
+                                <p class="subject1-text"></p>
+                            </div>
+                        </div>
 
-  // Set up observers
-  urlObserver.observe(document, { subtree: true, childList: true });
+                        <div class="buy-section">
+                            <div class="title"><strong>🤔 Should You Buy Now?</strong></div>
+                            <div class="text-fit-container">
+                                <p class="subject2-text"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="results-footer">
+                        <div class="gif-container"></div>
+                        <button class="track-button">Price Tracking Coming Soon</button>
+                        <p class="disclaimer">*The price analysis is based on publicly available data. If you make a purchase through this page, we may earn a commission at no extra cost to you.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(fab);
+    container.appendChild(popup);
+    document.body.appendChild(container);
+    
+    return { fab, popup };
 }
 
 function fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container) {
-  if (!subject1El || !subject1Container || !subject2El || !subject2Container) return;
+    if (!subject1El || !subject1Container || !subject2El || !subject2Container) return;
 
-  // Function to find max possible font size for one container
-  const findMaxFontSize = (element, container) => {
-      let fontSize = 10;
-      element.style.fontSize = `${fontSize}px`;
-      element.style.lineHeight = '1.3';
+    const findMaxFontSize = (element, container) => {
+        let fontSize = 10;
+        element.style.fontSize = `${fontSize}px`;
+        element.style.lineHeight = '1.3';
 
-      while (fontSize < 100 &&
-             element.scrollHeight <= container.clientHeight &&
-             element.scrollWidth <= container.clientWidth) {
-          fontSize++;
-          element.style.fontSize = `${fontSize}px`;
-      }
-      return fontSize - 1; // Step back one size
-  };
+        while (fontSize < 100 &&
+               element.scrollHeight <= container.clientHeight &&
+               element.scrollWidth <= container.clientWidth) {
+            fontSize++;
+            element.style.fontSize = `${fontSize}px`;
+        }
+        return fontSize - 1;
+    };
 
-  // Find max font size for each container
-  const size1 = findMaxFontSize(subject1El, subject1Container);
-  const size2 = findMaxFontSize(subject2El, subject2Container);
+    const size1 = findMaxFontSize(subject1El, subject1Container);
+    const size2 = findMaxFontSize(subject2El, subject2Container);
+    const finalSize = Math.min(size1, size2);
 
-  // Use the smaller of the two sizes
-  const finalSize = Math.min(size1, size2);
-
-  // Apply the same font size to both elements
-  subject1El.style.fontSize = `${finalSize}px`;
-  subject2El.style.fontSize = `${finalSize}px`;
-  subject1El.style.lineHeight = '1.3';
-  subject2El.style.lineHeight = '1.3';
-
-  console.log('Final font size for both sections:', finalSize);
+    subject1El.style.fontSize = `${finalSize}px`;
+    subject2El.style.fontSize = `${finalSize}px`;
+    subject1El.style.lineHeight = '1.3';
+    subject2El.style.lineHeight = '1.3';
 }
 
-function getConfettiColors(priceGrade) {
-  switch(priceGrade.toLowerCase()) {
-    case 'excellent':
-      return [[255, 215, 0], [144, 238, 144], [152, 251, 152]]; // Gold and greens
-    case 'good':
-      return [[135, 206, 235], [144, 238, 144], [255, 255, 255]]; // Blue and light green
-    case 'average':
-      return [[255, 182, 193], [135, 206, 235], [255, 255, 255]]; // Light colors
-    default:
-      return null;
-  }
-}
-
-function createConfettiAnimation(priceGrade) {
-  console.log('Creating confetti animation for grade:', priceGrade);
-  const colors = getConfettiColors(priceGrade);
-  console.log('Confetti colors:', colors);
-  
-  if (!colors) {
-    console.log('No colors returned for grade:', priceGrade);
-    return;
-  }
-
-  // Create and configure canvas
-  const canvas = document.createElement('canvas');
-  canvas.style.position = 'absolute';
-  canvas.style.top = '0';
-  canvas.style.left = '0';
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
-  canvas.style.pointerEvents = 'none';
-  canvas.style.zIndex = '1000';
-
-  // Add canvas to popup
-  const popup = document.querySelector('#price-analyzer-popup');
-  if (!popup) {
-    console.error('Popup element not found');
-    return;
-  }
-  
-  popup.appendChild(canvas);
-
-  // Set canvas size to match popup dimensions
-  canvas.width = popup.clientWidth;
-  canvas.height = popup.clientHeight;
-  
-  const ctx = canvas.getContext('2d');
-  const particles = [];
-  const particleCount = 150; // Increased particle count
-  
-  // Create particles with explosion effect
-  for (let i = 0; i < particleCount; i++) {
-    const angle = (Math.random() * Math.PI * 2);
-    const velocity = 8 + Math.random() * 6; // Increased initial velocity
-    particles.push({
-      x: canvas.width * 0.5, // Start from middle
-      y: canvas.height * 0.3, // Start from upper third
-      radius: Math.random() * 3 + 2, // Slightly larger particles
-      color: colors[Math.floor(Math.random() * colors.length)],
-      velocity: velocity,
-      angle: angle,
-      gravity: 0.2, // Increased gravity
-      drag: 0.96, // Reduced drag for faster movement
-      opacity: 1
-    });
-  }
-
-  // Animation
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (let i = 0; i < particles.length; i++) {
-      let p = particles[i];
-      
-      // Update particle position
-      p.x += Math.cos(p.angle) * p.velocity;
-      p.y += Math.sin(p.angle) * p.velocity + p.gravity;
-      
-      // Apply drag and gravity
-      p.velocity *= p.drag;
-      p.opacity -= 0.02; // Faster fade
-
-      // Draw particle
-      if (p.opacity > 0) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
-        ctx.fillStyle = `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${p.opacity})`;
-        ctx.fill();
-      }
-    }
-
-    // Remove faded particles
-    particles.forEach((particle, index) => {
-      if (particle.opacity <= 0) {
-        particles.splice(index, 1);
-      }
-    });
-
-    if (particles.length > 0) {
-      requestAnimationFrame(animate);
-    } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      canvas.remove();
-    }
-  }
-
-  animate();
-}
-
-// Then fix the init function
-async function init() {
-  try {
-      // First initialize cache
-      await initializeCache();
-      
-      // Then create UI
-      const { fab, popup } = createUI();
-
-      // Initialize elements
-      elements = {
-          fab: fab,
-          popup: popup,
-          closeButton: popup.querySelector('.close-button'),
-          analyzeButton: popup.querySelector('.analyze-button'),
-          initialView: popup.querySelector('.initial-view'),
-          analysisContent: popup.querySelector('.analysis-content'),
-          loadingSpinner: popup.querySelector('.loading-spinner'),
-          results: popup.querySelector('.results')
-      };
-
-      // Add event listeners
-      elements.fab.addEventListener('click', async () => {
-          if (elements.popup.style.display === 'block') {
-              elements.popup.style.display = 'none';
-              return;
-          }
-
-          const currentAsin = getAsin();    
-          elements.popup.style.display = 'block';
-          
-          try {
-              const cachedAnalysis = await getAnalysisFromCache(currentAsin);
-              if (cachedAnalysis && cachedAnalysis.text) {
-                  showCachedResults(cachedAnalysis);
-              } else {
-                  elements.popup.classList.remove('showing-results');
-                  elements.initialView.style.display = 'block';
-                  elements.analysisContent.style.display = 'none';
-                  elements.results.style.display = 'none';
-              }
-          } catch (error) {
-              console.error('Error retrieving cache:', error);
-              elements.popup.classList.remove('showing-results');
-              elements.initialView.style.display = 'block';
-              elements.analysisContent.style.display = 'none';
-              elements.results.style.display = 'none';
-          }
-      });
-
-      // Add other event listeners...
-      elements.closeButton.addEventListener('click', () => {
-          elements.popup.style.display = 'none';
-      });
-
-      // Outside click handler
-      window.addEventListener('click', (event) => {
-          if (!elements.popup.contains(event.target) && event.target !== elements.fab) {
-              elements.popup.style.display = 'none';
-          }
-      });
-
-      // Initialize variation change watcher
-      watchForVariationChanges();
-
-  } catch (error) {
-      console.error('Error initializing extension:', error);
-  }
-}
-
-
-// Add helper function to show cached results
-function showCachedResults(cachedAnalysis) {
-  currentAnalysis = cachedAnalysis;
-  elements.popup.classList.add('showing-results');
-  elements.initialView.style.display = 'none';
-  elements.analysisContent.style.display = 'block';
-  elements.results.style.display = 'block';
-  elements.loadingSpinner.style.display = 'none';
-  
-  const headerEl = elements.results.querySelector('.header-text');
-  const subject1El = elements.results.querySelector('.subject1-text');
-  const subject2El = elements.results.querySelector('.subject2-text');
-  
-  headerEl.textContent = cachedAnalysis.text.header;
-  subject1El.textContent = cachedAnalysis.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-  subject2El.textContent = cachedAnalysis.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-  
-  const subject1Container = subject1El.closest('.text-fit-container');
-  const subject2Container = subject2El.closest('.text-fit-container');
-  
-  requestAnimationFrame(() => {
-      fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
-  });
-
-  const priceGrade = cachedAnalysis.text.priceGrade || 'average';
-  if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
-      createConfettiAnimation(priceGrade);
-  }
-  
-  const gifCategory = determineGifCategory(priceGrade);
-  const gifUrl = getRandomGif(gifCategory);
-  const gifContainer = elements.results.querySelector('.gif-container');
-  if (gifContainer) {
-      const img = new Image();
-      img.src = gifUrl;
-      img.alt = "Price reaction";
-      img.style.maxHeight = "140px";
-      img.style.width = "auto";
-      img.style.borderRadius = "8px";
-      img.style.objectFit = "contain";
-      
-      gifContainer.innerHTML = '';
-      gifContainer.appendChild(img);
-  }
-}
-
-// Inside init() function, replace the existing analyzeButton click handler
-elements.analyzeButton.addEventListener('click', async () => {
-  const asin = getAsin();
-  currentAsin = asin;
-  const domain = window.MarketplaceUtils.getCurrentDomain(); // Add this line
-
-  if (!asin) {
-    alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
-    return;
-  }
-
-  try {
+function showLoadingState() {
     elements.popup.classList.add('showing-results');
     elements.initialView.style.display = 'none';
     elements.analysisContent.style.display = 'block';
     elements.loadingSpinner.style.display = 'flex';
     elements.results.style.display = 'none';
+}
 
-    const response = await chrome.runtime.sendMessage({ 
-      type: 'ANALYZE_PRICE', 
-      asin,
-      domain // Add this line
+function showInitialState() {
+    elements.popup.classList.remove('showing-results');
+    elements.initialView.style.display = 'block';
+    elements.analysisContent.style.display = 'none';
+    elements.results.style.display = 'none';
+}
+
+// Results Display Functions
+function showResults(analysisData) {
+    const headerEl = elements.results.querySelector('.header-text');
+    const subject1El = elements.results.querySelector('.subject1-text');
+    const subject2El = elements.results.querySelector('.subject2-text');
+    
+    // Display text content
+    headerEl.textContent = analysisData.text.header;
+    subject1El.textContent = analysisData.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+    subject2El.textContent = analysisData.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+    
+    // Handle text fitting
+    const subject1Container = subject1El.closest('.text-fit-container');
+    const subject2Container = subject2El.closest('.text-fit-container');
+    requestAnimationFrame(() => {
+        fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
+    });
+
+    // Handle animations and GIF
+    const priceGrade = analysisData.text.priceGrade || 'average';
+    if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
+        createConfettiAnimation(priceGrade);
+    }
+    
+    showReactionGif(priceGrade);
+}
+
+// Animation & GIF Functions
+function getConfettiColors(priceGrade) {
+    const colorMap = {
+        excellent: [[255, 215, 0], [144, 238, 144], [152, 251, 152]], // Gold and greens
+        good: [[135, 206, 235], [144, 238, 144], [255, 255, 255]], // Blue and light green
+        average: [[255, 182, 193], [135, 206, 235], [255, 255, 255]] // Light colors
+    };
+    return colorMap[priceGrade.toLowerCase()] || null;
+}
+
+function createConfettiAnimation(priceGrade) {
+    const colors = getConfettiColors(priceGrade);
+    if (!colors) return;
+
+    const canvas = document.createElement('canvas');
+    Object.assign(canvas.style, {
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: '1000'
+    });
+
+    const popup = document.querySelector('#price-analyzer-popup');
+    if (!popup) return;
+    
+    popup.appendChild(canvas);
+    canvas.width = popup.clientWidth;
+    canvas.height = popup.clientHeight;
+    
+    const ctx = canvas.getContext('2d');
+    const particles = createParticles(canvas.width, canvas.height, colors);
+    animateParticles(ctx, canvas, particles);
+}
+
+function createParticles(width, height, colors) {
+    return Array.from({ length: 150 }, () => ({
+        x: width * 0.5,
+        y: height * 0.3,
+        radius: Math.random() * 3 + 2,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        velocity: 8 + Math.random() * 6,
+        angle: Math.random() * Math.PI * 2,
+        gravity: 0.2,
+        drag: 0.96,
+        opacity: 1
+    }));
+}
+
+function animateParticles(ctx, canvas, particles) {
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (const p of particles) {
+            p.x += Math.cos(p.angle) * p.velocity;
+            p.y += Math.sin(p.angle) * p.velocity + p.gravity;
+            p.velocity *= p.drag;
+            p.opacity -= 0.02;
+
+            if (p.opacity > 0) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${p.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        particles = particles.filter(p => p.opacity > 0);
+
+        if (particles.length > 0) {
+            requestAnimationFrame(animate);
+        } else {
+            canvas.remove();
+        }
+    }
+
+    animate();
+}
+
+function showReactionGif(priceGrade) {
+    const category = determineGifCategory(priceGrade);
+    const gifUrl = getRandomGif(category);
+    const gifContainer = elements.results.querySelector('.gif-container');
+    
+    if (!gifContainer) return;
+
+    const img = new Image();
+    Object.assign(img, {
+        src: gifUrl,
+        alt: "Price reaction",
+        style: {
+            maxHeight: "140px",
+            width: "auto",
+            borderRadius: "8px",
+            objectFit: "contain"
+        }
     });
     
-    if (response && response.success && response.text) {
-      currentAnalysis = response;
-      cacheAnalysis(asin, response);
+    gifContainer.innerHTML = '';
+    gifContainer.appendChild(img);
+}
 
-      elements.loadingSpinner.style.display = 'none';
-      elements.results.style.display = 'block';
+function determineGifCategory(priceGrade) {
+    const categories = {
+        excellent: 'excellent-price',
+        good: 'good-price',
+        average: 'average-price',
+        'not-good': 'not-good-price',
+        'bad-price': 'bad-price'
+    };
+    return categories[priceGrade.toLowerCase()] || 'average-price';
+}
 
-      const headerEl = elements.results.querySelector('.header-text');
-      const subject1El = elements.results.querySelector('.subject1-text');
-      const subject2El = elements.results.querySelector('.subject2-text');
-      
-      headerEl.textContent = response.text.header;
-      subject1El.textContent = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-      subject2El.textContent = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
-      
-      const subject1Container = subject1El.closest('.text-fit-container');
-      const subject2Container = subject2El.closest('.text-fit-container');
-      
-      requestAnimationFrame(() => {
-          fitTextToContainer(subject1El, subject1Container, subject2El, subject2Container);
-      });
-
-      const priceGrade = response.text.priceGrade || 'average';
-      if (['excellent', 'good', 'average'].includes(priceGrade.toLowerCase())) {
-          createConfettiAnimation(priceGrade);
-      }
-      
-      const gifCategory = determineGifCategory(priceGrade);
-      const gifUrl = getRandomGif(gifCategory);
-      const gifContainer = elements.results.querySelector('.gif-container');
-      if (gifContainer) {
-          const img = new Image();
-          img.src = gifUrl;
-          img.alt = "Price reaction";
-          img.style.maxHeight = "140px";
-          img.style.width = "auto";
-          img.style.borderRadius = "8px";
-          img.style.objectFit = "contain";
-          
-          gifContainer.innerHTML = '';
-          gifContainer.appendChild(img);
-      }
+function getRandomGif(category) {
+    try {
+        const maxGifs = 10;
+        const randomNumber = Math.floor(Math.random() * maxGifs) + 1;
+        return chrome.runtime.getURL(`gifs/${category}/${randomNumber}.gif`);
+    } catch (error) {
+        console.error('Error generating GIF URL:', error);
+        return chrome.runtime.getURL('gifs/default.gif');
     }
-  } catch (error) {
-    console.error('Error during price analysis:', error);
-    currentAnalysis = null;
-    elements.loadingSpinner.style.display = 'none';
-    elements.results.style.display = 'block';
+}
+// Event Handler Functions
+async function handleAnalyzeButtonClick() {
+    const asin = getAsin();
+    currentAsin = asin;
+    const domain = window.MarketplaceUtils.getCurrentDomain();
+
+    if (!asin) {
+        alert("Sorry, couldn't find the product ID. Please make sure you're on a product page.");
+        return;
+    }
+
+    try {
+        showLoadingState();
+        const response = await chrome.runtime.sendMessage({ 
+            type: 'ANALYZE_PRICE', 
+            asin,
+            domain
+        });
+        
+        if (response && response.success && response.text) {
+            currentAnalysis = response;
+            await cacheAnalysis(asin, response);
+
+            elements.loadingSpinner.style.display = 'none';
+            elements.results.style.display = 'block';
+            showResults(response);
+        }
+    } catch (error) {
+        console.error('Error during price analysis:', error);
+        currentAnalysis = null;
+        elements.loadingSpinner.style.display = 'none';
+        elements.results.style.display = 'block';
+        showError();
+    }
+}
+
+async function handleFabClick() {
+    if (elements.popup.style.display === 'block') {
+        elements.popup.style.display = 'none';
+        return;
+    }
+
+    const currentAsin = getAsin();    
+    elements.popup.style.display = 'block';
     
-    const headerEl = elements.results.querySelector('.header-text');
-    if (headerEl) {
-        headerEl.textContent = 'Oops! Something went wrong. Please try again.';
+    try {
+        const cachedAnalysis = await getAnalysisFromCache(currentAsin);
+        if (cachedAnalysis && cachedAnalysis.text) {
+            elements.popup.classList.add('showing-results');
+            elements.initialView.style.display = 'none';
+            elements.analysisContent.style.display = 'block';
+            elements.results.style.display = 'block';
+            elements.loadingSpinner.style.display = 'none';
+            showResults(cachedAnalysis);
+        } else {
+            showInitialState();
+        }
+    } catch (error) {
+        console.error('Error retrieving cache:', error);
+        showInitialState();
     }
+}
 
+function showError() {
+    const headerEl = elements.results.querySelector('.header-text');
     const subject1El = elements.results.querySelector('.subject1-text');
     const subject2El = elements.results.querySelector('.subject2-text');
     const gifContainer = elements.results.querySelector('.gif-container');
     
+    if (headerEl) headerEl.textContent = 'Oops! Something went wrong. Please try again.';
     if (subject1El) subject1El.textContent = '';
     if (subject2El) subject2El.textContent = '';
     if (gifContainer) gifContainer.innerHTML = '';
-  }
-});
+}
 
-  // Close button click handler
-  elements.closeButton.addEventListener('click', () => {
-    elements.popup.style.display = 'none';
-  });
+// Main Initialization
+async function init() {
+    try {
+        await initializeCache();
+        const { fab, popup } = createUI();
 
-  // Outside click handler
-  window.addEventListener('click', (event) => {
-    if (!elements.popup.contains(event.target) && event.target !== elements.fab) {
-      elements.popup.style.display = 'none';
+        // Initialize elements
+        elements = {
+            fab,
+            popup,
+            closeButton: popup.querySelector('.close-button'),
+            analyzeButton: popup.querySelector('.analyze-button'),
+            initialView: popup.querySelector('.initial-view'),
+            analysisContent: popup.querySelector('.analysis-content'),
+            loadingSpinner: popup.querySelector('.loading-spinner'),
+            results: popup.querySelector('.results')
+        };
+
+        // Add event listeners
+        elements.fab.addEventListener('click', handleFabClick);
+        elements.analyzeButton.addEventListener('click', handleAnalyzeButtonClick);
+        elements.closeButton.addEventListener('click', () => {
+            elements.popup.style.display = 'none';
+        });
+
+        // Outside click handler
+        window.addEventListener('click', (event) => {
+            if (!elements.popup.contains(event.target) && event.target !== elements.fab) {
+                elements.popup.style.display = 'none';
+            }
+        });
+
+        // Initialize variation change watcher
+        watchForVariationChanges();
+    } catch (error) {
+        console.error('Error initializing extension:', error);
     }
-  });
+}
 
-  // Initialize variation change watcher
-  watchForVariationChanges();
-
-// Start the extension
-init();
+// Start the extension based on marketplace support
+const currentDomain = window.MarketplaceUtils.getCurrentDomain();
+if (!currentDomain) {
+    console.error('Unsupported Amazon marketplace');
+} else {
+    init();
+}
