@@ -22,62 +22,86 @@ function clearAnalysis() {
 
 let analysisCache = new Map();
 
-function cacheAnalysis(asin, analysis) {
-    const timestamp = Date.now();
-    analysisCache.set(asin, {
-        analysis,
-        timestamp
-    });
+// Cache functions
+async function cacheAnalysis(asin, analysis) {
+  try {
+      const timestamp = Date.now();
+      const cacheData = {
+          analysis,
+          timestamp
+      };
+      
+      // Save to chrome.storage
+      await chrome.storage.local.set({
+          [`price_analysis_${asin}`]: cacheData
+      });
+      
+      // Also save to memory for quick access
+      analysisCache.set(asin, cacheData);
+  } catch (error) {
+      console.error('Error caching analysis:', error);
+  }
 }
 
-function getAnalysisFromCache(asin) {
-    const cached = analysisCache.get(asin);
-    if (!cached) return null;
-
-    const timeDiff = Date.now() - cached.timestamp;
-    if (timeDiff > 20 * 60 * 1000) { // 20 minutes
-        analysisCache.delete(asin);
-        return null;
-    }
-
-    return cached.analysis;
-}
-
-
-function getAnalysisFromCache(asin) {
-  // First try memory cache
-  const cached = analysisCache.get(asin);
-  if (cached) {
-      const timeDiff = Date.now() - cached.timestamp;
-      if (timeDiff > 20 * 60 * 1000) { // 20 minutes
+async function getAnalysisFromCache(asin) {
+  try {
+      // Try memory cache first
+      const memoryCache = analysisCache.get(asin);
+      if (memoryCache) {
+          const timeDiff = Date.now() - memoryCache.timestamp;
+          if (timeDiff <= 20 * 60 * 1000) { // Less than 20 minutes
+              return memoryCache.analysis;
+          }
+          // If expired, clean up
           analysisCache.delete(asin);
-          chrome.storage.local.remove(`analysis_${asin}`);
+          await chrome.storage.local.remove(`price_analysis_${asin}`);
           return null;
       }
-      return cached.analysis;
+
+      // Try storage cache
+      const result = await chrome.storage.local.get(`price_analysis_${asin}`);
+      const storedCache = result[`price_analysis_${asin}`];
+      
+      if (storedCache) {
+          const timeDiff = Date.now() - storedCache.timestamp;
+          if (timeDiff <= 20 * 60 * 1000) { // Less than 20 minutes
+              // Save to memory cache
+              analysisCache.set(asin, storedCache);
+              return storedCache.analysis;
+          }
+          // If expired, clean up
+          await chrome.storage.local.remove(`price_analysis_${asin}`);
+      }
+      
+      return null;
+  } catch (error) {
+      console.error('Error getting cached analysis:', error);
+      return null;
   }
-  
-  // If not in memory, try chrome.storage
-  return new Promise((resolve) => {
-      chrome.storage.local.get(`analysis_${asin}`, (result) => {
-          const storedData = result[`analysis_${asin}`];
-          if (!storedData) {
-              resolve(null);
-              return;
+}
+
+// Add this initialization function
+async function initializeCache() {
+  try {
+      const data = await chrome.storage.local.get(null);
+      const now = Date.now();
+      
+      for (const [key, value] of Object.entries(data)) {
+          if (key.startsWith('price_analysis_')) {
+              const timeDiff = now - value.timestamp;
+              if (timeDiff <= 20 * 60 * 1000) {
+                  // Still valid, add to memory cache
+                  const asin = key.replace('price_analysis_', '');
+                  analysisCache.set(asin, value);
+              } else {
+                  // Expired, remove it
+                  await chrome.storage.local.remove(key);
+              }
           }
-          
-          const timeDiff = Date.now() - storedData.timestamp;
-          if (timeDiff > 20 * 60 * 1000) { // 20 minutes
-              chrome.storage.local.remove(`analysis_${asin}`);
-              resolve(null);
-              return;
-          }
-          
-          // Restore to memory cache
-          analysisCache.set(asin, storedData);
-          resolve(storedData.analysis);
-      });
-  });
+      }
+  } catch (error) {
+      console.error('Error initializing cache:', error);
+  }
 }
 
 // Create and inject the UI container
@@ -295,153 +319,185 @@ function fitTextToContainer(subject1El, subject1Container, subject2El, subject2C
   console.log('Final font size for both sections:', finalSize);
 }
 
-function init() {
-  const { fab, popup } = createUI();
+function getConfettiColors(priceGrade) {
+  switch(priceGrade.toLowerCase()) {
+    case 'excellent':
+      return [[255, 215, 0], [144, 238, 144], [152, 251, 152]]; // Gold and greens
+    case 'good':
+      return [[135, 206, 235], [144, 238, 144], [255, 255, 255]]; // Blue and light green
+    case 'average':
+      return [[255, 182, 193], [135, 206, 235], [255, 255, 255]]; // Light colors
+    default:
+      return null;
+  }
+}
 
-  function getConfettiColors(priceGrade) {
-    switch(priceGrade.toLowerCase()) {
-      case 'excellent':
-        return [[255, 215, 0], [144, 238, 144], [152, 251, 152]]; // Gold and greens
-      case 'good':
-        return [[135, 206, 235], [144, 238, 144], [255, 255, 255]]; // Blue and light green
-      case 'average':
-        return [[255, 182, 193], [135, 206, 235], [255, 255, 255]]; // Light colors
-      default:
-        return null;
-    }
+function createConfettiAnimation(priceGrade) {
+  console.log('Creating confetti animation for grade:', priceGrade);
+  const colors = getConfettiColors(priceGrade);
+  console.log('Confetti colors:', colors);
+  
+  if (!colors) {
+    console.log('No colors returned for grade:', priceGrade);
+    return;
+  }
+
+  // Create and configure canvas
+  const canvas = document.createElement('canvas');
+  canvas.style.position = 'absolute';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  canvas.style.pointerEvents = 'none';
+  canvas.style.zIndex = '1000';
+
+  // Add canvas to popup
+  const popup = document.querySelector('#price-analyzer-popup');
+  if (!popup) {
+    console.error('Popup element not found');
+    return;
   }
   
-  function createConfettiAnimation(priceGrade) {
-    console.log('Creating confetti animation for grade:', priceGrade);
-    const colors = getConfettiColors(priceGrade);
-    console.log('Confetti colors:', colors);
-    
-    if (!colors) {
-      console.log('No colors returned for grade:', priceGrade);
-      return;
+  popup.appendChild(canvas);
+
+  // Set canvas size to match popup dimensions
+  canvas.width = popup.clientWidth;
+  canvas.height = popup.clientHeight;
+  
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  const particleCount = 150; // Increased particle count
+  
+  // Create particles with explosion effect
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (Math.random() * Math.PI * 2);
+    const velocity = 8 + Math.random() * 6; // Increased initial velocity
+    particles.push({
+      x: canvas.width * 0.5, // Start from middle
+      y: canvas.height * 0.3, // Start from upper third
+      radius: Math.random() * 3 + 2, // Slightly larger particles
+      color: colors[Math.floor(Math.random() * colors.length)],
+      velocity: velocity,
+      angle: angle,
+      gravity: 0.2, // Increased gravity
+      drag: 0.96, // Reduced drag for faster movement
+      opacity: 1
+    });
+  }
+
+  // Animation
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < particles.length; i++) {
+      let p = particles[i];
+      
+      // Update particle position
+      p.x += Math.cos(p.angle) * p.velocity;
+      p.y += Math.sin(p.angle) * p.velocity + p.gravity;
+      
+      // Apply drag and gravity
+      p.velocity *= p.drag;
+      p.opacity -= 0.02; // Faster fade
+
+      // Draw particle
+      if (p.opacity > 0) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+        ctx.fillStyle = `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${p.opacity})`;
+        ctx.fill();
+      }
     }
-  
-    // Create and configure canvas
-    const canvas = document.createElement('canvas');
-    canvas.style.position = 'absolute';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.pointerEvents = 'none';
-    canvas.style.zIndex = '1000';
-  
-    // Add canvas to popup
-    const popup = document.querySelector('#price-analyzer-popup');
-    if (!popup) {
-      console.error('Popup element not found');
-      return;
-    }
-    
-    popup.appendChild(canvas);
-  
-    // Set canvas size to match popup dimensions
-    canvas.width = popup.clientWidth;
-    canvas.height = popup.clientHeight;
-    
-    const ctx = canvas.getContext('2d');
-    const particles = [];
-    const particleCount = 150; // Increased particle count
-    
-    // Create particles with explosion effect
-    for (let i = 0; i < particleCount; i++) {
-      const angle = (Math.random() * Math.PI * 2);
-      const velocity = 8 + Math.random() * 6; // Increased initial velocity
-      particles.push({
-        x: canvas.width * 0.5, // Start from middle
-        y: canvas.height * 0.3, // Start from upper third
-        radius: Math.random() * 3 + 2, // Slightly larger particles
-        color: colors[Math.floor(Math.random() * colors.length)],
-        velocity: velocity,
-        angle: angle,
-        gravity: 0.2, // Increased gravity
-        drag: 0.96, // Reduced drag for faster movement
-        opacity: 1
-      });
-    }
-  
-    // Animation
-    function animate() {
+
+    // Remove faded particles
+    particles.forEach((particle, index) => {
+      if (particle.opacity <= 0) {
+        particles.splice(index, 1);
+      }
+    });
+
+    if (particles.length > 0) {
+      requestAnimationFrame(animate);
+    } else {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-      for (let i = 0; i < particles.length; i++) {
-        let p = particles[i];
-        
-        // Update particle position
-        p.x += Math.cos(p.angle) * p.velocity;
-        p.y += Math.sin(p.angle) * p.velocity + p.gravity;
-        
-        // Apply drag and gravity
-        p.velocity *= p.drag;
-        p.opacity -= 0.02; // Faster fade
-  
-        // Draw particle
-        if (p.opacity > 0) {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
-          ctx.fillStyle = `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${p.opacity})`;
-          ctx.fill();
-        }
-      }
-  
-      // Remove faded particles
-      particles.forEach((particle, index) => {
-        if (particle.opacity <= 0) {
-          particles.splice(index, 1);
-        }
-      });
-  
-      if (particles.length > 0) {
-        requestAnimationFrame(animate);
-      } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        canvas.remove();
-      }
+      canvas.remove();
     }
-  
-    animate();
   }
 
-  // Store all elements in our global elements object
-  elements = {
-    fab: fab,
-    popup: popup,
-    closeButton: popup.querySelector('.close-button'),
-    analyzeButton: popup.querySelector('.analyze-button'),
-    initialView: popup.querySelector('.initial-view'),
-    analysisContent: popup.querySelector('.analysis-content'),
-    loadingSpinner: popup.querySelector('.loading-spinner'),
-    results: popup.querySelector('.results')
-  };
+  animate();
+}
 
-// FAB click handler
-elements.fab.addEventListener('click', () => {
-  // Toggle popup visibility
-  if (elements.popup.style.display === 'block') {
-      elements.popup.style.display = 'none';
-      return;
-  }
+// Then fix the init function
+async function init() {
+  try {
+      // First initialize cache
+      await initializeCache();
+      
+      // Then create UI
+      const { fab, popup } = createUI();
 
-  const currentAsin = getAsin();    
-  elements.popup.style.display = 'block';
-  
-  const cachedAnalysis = getAnalysisFromCache(currentAsin);
-  if (cachedAnalysis && cachedAnalysis.text) {
-      // Show cached results
-      showCachedResults(cachedAnalysis);
-  } else {
-      // Show initial view
-      elements.popup.classList.remove('showing-results');
-      elements.initialView.style.display = 'block';
-      elements.analysisContent.style.display = 'none';
-      elements.results.style.display = 'none';
+      // Initialize elements
+      elements = {
+          fab: fab,
+          popup: popup,
+          closeButton: popup.querySelector('.close-button'),
+          analyzeButton: popup.querySelector('.analyze-button'),
+          initialView: popup.querySelector('.initial-view'),
+          analysisContent: popup.querySelector('.analysis-content'),
+          loadingSpinner: popup.querySelector('.loading-spinner'),
+          results: popup.querySelector('.results')
+      };
+
+      // Add event listeners
+      elements.fab.addEventListener('click', async () => {
+          if (elements.popup.style.display === 'block') {
+              elements.popup.style.display = 'none';
+              return;
+          }
+
+          const currentAsin = getAsin();    
+          elements.popup.style.display = 'block';
+          
+          try {
+              const cachedAnalysis = await getAnalysisFromCache(currentAsin);
+              if (cachedAnalysis && cachedAnalysis.text) {
+                  showCachedResults(cachedAnalysis);
+              } else {
+                  elements.popup.classList.remove('showing-results');
+                  elements.initialView.style.display = 'block';
+                  elements.analysisContent.style.display = 'none';
+                  elements.results.style.display = 'none';
+              }
+          } catch (error) {
+              console.error('Error retrieving cache:', error);
+              elements.popup.classList.remove('showing-results');
+              elements.initialView.style.display = 'block';
+              elements.analysisContent.style.display = 'none';
+              elements.results.style.display = 'none';
+          }
+      });
+
+      // Add other event listeners...
+      elements.closeButton.addEventListener('click', () => {
+          elements.popup.style.display = 'none';
+      });
+
+      // Outside click handler
+      window.addEventListener('click', (event) => {
+          if (!elements.popup.contains(event.target) && event.target !== elements.fab) {
+              elements.popup.style.display = 'none';
+          }
+      });
+
+      // Initialize variation change watcher
+      watchForVariationChanges();
+
+  } catch (error) {
+      console.error('Error initializing extension:', error);
   }
-});
+}
+
 
 // Add helper function to show cached results
 function showCachedResults(cachedAnalysis) {
@@ -591,6 +647,6 @@ elements.analyzeButton.addEventListener('click', async () => {
 
   // Initialize variation change watcher
   watchForVariationChanges();
-}
 
 // Start the extension
+init();
