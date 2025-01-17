@@ -496,9 +496,9 @@ elements.analyzeButton.addEventListener('click', async () => {
       const subject1El = elements.results.querySelector('.subject1-text');
       const subject2El = elements.results.querySelector('.subject2-text');
       
-      headerEl.textContent = formattedText.header;
-      subject1El.textContent = formattedText.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
-      subject2El.textContent = formattedText.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
+      headerEl.textContent = response.text.header;
+      subject1El.textContent = response.text.subject1.replace(/💡\s*Price Insight:\s*/g, '').trim();
+      subject2El.textContent = response.text.subject2.replace(/🤔\s*Should You Buy Now\?\s*/g, '').trim();
       
       const subject1Container = subject1El.closest('.text-fit-container');
       const subject2Container = subject2El.closest('.text-fit-container');
