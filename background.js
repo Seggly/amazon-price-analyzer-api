@@ -17,13 +17,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function analyzePrice(asin, domain) {
   try {
+    // Convert domain string to Keepa domain number
+    const keepaDomain = convertToKeepaDomain(domain);
+
     // First API call - Keepa Analysis
     const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         asin,
-        domain: keepaDomain
+        domain: keepaDomain // Send the numeric domain ID
       })
     });
     
@@ -37,7 +40,7 @@ async function analyzePrice(asin, domain) {
       throw new Error(analysisData.error || 'Failed to analyze price');
     }
     
-    // Second API call - Text Generation - Send raw data without formatting
+    // Second API call - Text Generation
     const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -69,7 +72,7 @@ async function analyzePrice(asin, domain) {
   }
 }
 
-// Add this helper function
+// Helper function for domain conversion
 function convertToKeepaDomain(domain) {
   const domainMap = {
     'amazon.com': 1,
