@@ -19,15 +19,10 @@ async function analyzePrice(asin, domain) {
   try {
     // Convert domain string to Keepa domain number
     const keepaDomain = convertToKeepaDomain(domain);
-
-    // First API call - Keepa Analysis
-    const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        asin,
-        domain: keepaDomain // Send the numeric domain ID
-      })
+    console.log('Domain info:', { 
+      originalDomain: domain,
+      keepaDomain: keepaDomain,
+      asin: asin 
     });
     
     if (!analysisResponse.ok) {
@@ -96,5 +91,7 @@ function convertToKeepaDomain(domain) {
     'amazon.sa': 20,
     'amazon.be': 21
   };
-  return domainMap[domain] || 1; // Default to US (1) if domain not found
+  const result = domainMap[domain] || 1;
+  console.log(`Converted ${domain} to Keepa domain: ${result}`);
+  return result;
 }
