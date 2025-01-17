@@ -17,28 +17,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function analyzePrice(asin, domain) {
   try {
-    // Convert domain string to Keepa domain number
-    const keepaDomain = convertToKeepaDomain(domain);
-    console.log('Sending request with:', { asin, keepaDomain, originalDomain: domain });
-
     // First API call - Keepa Analysis
     const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         asin,
-        domain: keepaDomain // Send the numeric domain ID
+        domain: keepaDomain
       })
     });
     
-    // Add response logging
     if (!analysisResponse.ok) {
       const errorText = await analysisResponse.text();
-      console.error('Keepa API error details:', {
-        status: analysisResponse.status,
-        statusText: analysisResponse.statusText,
-        errorText
-      });
       throw new Error(`Keepa API error: ${analysisResponse.status} - ${errorText}`);
     }
     
@@ -47,7 +37,7 @@ async function analyzePrice(asin, domain) {
       throw new Error(analysisData.error || 'Failed to analyze price');
     }
     
-    // Second API call - Text Generation
+    // Second API call - Text Generation - Send raw data without formatting
     const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
