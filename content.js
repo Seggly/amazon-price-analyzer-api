@@ -24,25 +24,76 @@ let analysisCache = new Map();
 
 // Add this function with your other utility functions
 function cacheAnalysis(asin, analysis) {
-    const timestamp = Date.now();
-    analysisCache.set(asin, {
-        analysis,
-        timestamp
-    });
+  const timestamp = Date.now();
+  try {
+      // Store in both memory and local storage
+      analysisCache.set(asin, {
+          analysis,
+          timestamp
+      });
+      
+      // Also store in chrome.storage
+      chrome.storage.local.set({
+          [`analysis_${asin}`]: {
+              analysis,
+              timestamp
+          }
+      });
+  } catch (error) {
+      console.error('Error caching analysis:', error);
+  }
 }
+
 
 function getAnalysisFromCache(asin) {
-    const cached = analysisCache.get(asin);
-    if (!cached) return null;
-
-    const timeDiff = Date.now() - cached.timestamp;
-    if (timeDiff > 20 * 60 * 1000) { // 20 minutes
-        analysisCache.delete(asin);
-        return null;
-    }
-
-    return cached.analysis;
+  // First try memory cache
+  const cached = analysisCache.get(asin);
+  if (cached) {
+      const timeDiff = Date.now() - cached.timestamp;
+      if (timeDiff > 20 * 60 * 1000) { // 20 minutes
+          analysisCache.delete(asin);
+          chrome.storage.local.remove(`analysis_${asin}`);
+          return null;
+      }
+      return cached.analysis;
+  }
+  
+  // If not in memory, try chrome.storage
+  return new Promise((resolve) => {
+      chrome.storage.local.get(`analysis_${asin}`, (result) => {
+          const storedData = result[`analysis_${asin}`];
+          if (!storedData) {
+              resolve(null);
+              return;
+          }
+          
+          const timeDiff = Date.now() - storedData.timestamp;
+          if (timeDiff > 20 * 60 * 1000) { // 20 minutes
+              chrome.storage.local.remove(`analysis_${asin}`);
+              resolve(null);
+              return;
+          }
+          
+          // Restore to memory cache
+          analysisCache.set(asin, storedData);
+          resolve(storedData.analysis);
+      });
+  });
 }
+  
+// Add this function to initialize cache from storage when extension loads
+async function initializeCache() {
+  const data = await chrome.storage.local.get(null);
+  for (const [key, value] of Object.entries(data)) {
+      if (key.startsWith('analysis_')) {
+          const asin = key.replace('analysis_', '');
+          analysisCache.set(asin, value);
+      }
+  }
+}
+
+// Call this when extension loads
+initializeCache();
 
 // Create and inject the UI container
 function createUI() {
