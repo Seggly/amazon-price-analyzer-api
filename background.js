@@ -17,20 +17,35 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function analyzePrice(asin, domain) {
   try {
-    // Convert domain string to Keepa domain number
+    // Debug logging for domain conversion
+    console.log('Processing request for:', { domain, asin });
     const keepaDomain = convertToKeepaDomain(domain);
-    console.log('Domain info:', { 
-      originalDomain: domain,
-      keepaDomain: keepaDomain,
-      asin: asin 
+    console.log('Converted domain:', { originalDomain: domain, keepaDomain });
+
+    // First API call - Keepa Analysis
+    const keepaResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        asin,
+        domain: keepaDomain
+      })
     });
     
-    if (!analysisResponse.ok) {
-      const errorText = await analysisResponse.text();
-      throw new Error(`Keepa API error: ${analysisResponse.status} - ${errorText}`);
+    // Log the Keepa response status
+    console.log('Keepa API response status:', keepaResponse.status);
+    
+    if (!keepaResponse.ok) {
+      const errorText = await keepaResponse.text();
+      console.error('Keepa API error details:', {
+        status: keepaResponse.status,
+        statusText: keepaResponse.statusText,
+        errorText
+      });
+      throw new Error(`Keepa API error: ${keepaResponse.status} - ${errorText}`);
     }
     
-    const analysisData = await analysisResponse.json();
+    const analysisData = await keepaResponse.json();
     if (!analysisData.success) {
       throw new Error(analysisData.error || 'Failed to analyze price');
     }
@@ -46,6 +61,8 @@ async function analyzePrice(asin, domain) {
         }
       })
     });
+    
+    console.log('Text generation API response status:', textResponse.status);
     
     if (!textResponse.ok) {
       throw new Error(`Text generation API error: ${textResponse.status}`);
@@ -67,8 +84,8 @@ async function analyzePrice(asin, domain) {
   }
 }
 
-// Helper function for domain conversion
 function convertToKeepaDomain(domain) {
+  console.log('Converting domain:', domain);
   const domainMap = {
     'amazon.com': 1,
     'amazon.co.uk': 2,
