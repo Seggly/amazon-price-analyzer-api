@@ -1,10 +1,9 @@
-// background.js
+// Handle price analysis requests
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'ANALYZE_PRICE') {
     analyzePrice(request.asin, request.domain)
       .then(sendResponse)
       .catch(error => {
-        console.error('Analysis error:', error);
         sendResponse({ 
           success: false, 
           error: error.message || 'An error occurred during analysis',
@@ -15,67 +14,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
+// Main analysis function
 async function analyzePrice(asin, domain) {
   try {
-    console.log('Processing request for:', { domain, asin });
     const keepaDomain = convertToKeepaDomain(domain);
-    console.log('Converted domain:', { originalDomain: domain, keepaDomain });
-
+    
+    // Get price analysis from Keepa
     const keepaResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        asin,
-        domain: keepaDomain
-      })
+      body: JSON.stringify({ asin, domain: keepaDomain })
     });
     
-    console.log('Keepa API response status:', keepaResponse.status);
-    
     if (!keepaResponse.ok) {
-      const errorText = await keepaResponse.text();
-      console.error('Keepa API error details:', {
-        status: keepaResponse.status,
-        statusText: keepaResponse.statusText,
-        errorText
-      });
-      throw new Error(`Keepa API error: ${keepaResponse.status} - ${errorText}`);
+      throw new Error(`Keepa API error: ${keepaResponse.status}`);
     }
     
     const analysisData = await keepaResponse.json();
-    console.log('Keepa analysis data:', analysisData);
-
     if (!analysisData.success) {
       throw new Error(analysisData.error || 'Failed to analyze price');
     }
-    
-    // Log the data we're sending to text generation
-    const textGenerationData = { 
-      analysis: analysisData.analysis,
-      marketplace: { domain }
-    };
-    console.log('Sending to text generation:', textGenerationData);
 
+    // Get text generation for analysis
     const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(textGenerationData)
+      body: JSON.stringify({ 
+        analysis: analysisData.analysis,
+        marketplace: { domain }
+      })
     });
-    
-    console.log('Text generation response status:', textResponse.status);
 
     if (!textResponse.ok) {
-      const errorData = await textResponse.text();
-      console.error('Text generation error:', {
-        status: textResponse.status,
-        error: errorData
-      });
-      throw new Error(`Text generation API error: ${textResponse.status} - ${errorData}`);
+      throw new Error(`Text generation API error: ${textResponse.status}`);
     }
     
     const textData = await textResponse.json();
-    console.log('Text generation response data:', textData);
-
     if (!textData.success) {
       throw new Error(textData.error || 'Failed to generate text');
     }
@@ -86,13 +60,12 @@ async function analyzePrice(asin, domain) {
       analysis: analysisData.analysis
     };
   } catch (error) {
-    console.error('Analysis failed:', error);
     throw error;
   }
 }
 
+// Domain conversion utility
 function convertToKeepaDomain(domain) {
-  console.log('Converting domain:', domain);
   const domainMap = {
     'amazon.com': 1,
     'amazon.co.uk': 2,
@@ -115,7 +88,5 @@ function convertToKeepaDomain(domain) {
     'amazon.sa': 20,
     'amazon.be': 21
   };
-  const result = domainMap[domain] || 1;
-  console.log(`Converted ${domain} to Keepa domain: ${result}`);
-  return result;
+  return domainMap[domain] || 1; // Default to US if domain not found
 }
