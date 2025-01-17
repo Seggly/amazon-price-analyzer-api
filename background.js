@@ -1,6 +1,4 @@
 // background.js
-import { getKeepaDomain } from './marketplaceUtils.js';
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'ANALYZE_PRICE') {
     analyzePrice(request.asin, request.domain)
@@ -19,16 +17,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function analyzePrice(asin, domain) {
   try {
-    // Get Keepa domain ID for the current marketplace
-    const keepaDomain = getKeepaDomain(domain);
-
     // First API call - Keepa Analysis
     const analysisResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/test-keepa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         asin,
-        domain: keepaDomain
+        domain
       })
     });
     
@@ -41,12 +36,6 @@ async function analyzePrice(asin, domain) {
       throw new Error(analysisData.error || 'Failed to analyze price');
     }
     
-    // Add marketplace info to the analysis data
-    analysisData.analysis.marketplace = {
-      domain: domain,
-      keepaDomain: keepaDomain
-    };
-
     // Second API call - Text Generation
     const textResponse = await fetch('https://amazon-price-analyzer-api.vercel.app/api/generate-text', {
       method: 'POST',
@@ -54,8 +43,7 @@ async function analyzePrice(asin, domain) {
       body: JSON.stringify({ 
         analysis: analysisData.analysis,
         marketplace: {
-          domain: domain,
-          keepaDomain: keepaDomain
+          domain: domain
         }
       })
     });
@@ -72,11 +60,7 @@ async function analyzePrice(asin, domain) {
     return {
       success: true,
       text: textData.text,
-      analysis: analysisData.analysis,
-      marketplace: {
-        domain: domain,
-        keepaDomain: keepaDomain
-      }
+      analysis: analysisData.analysis
     };
   } catch (error) {
     console.error('Analysis failed:', error);
